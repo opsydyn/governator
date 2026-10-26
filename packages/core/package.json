@@ -1,0 +1,30 @@
+{
+  "name": "@governanator/core",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "bun --bun tsdown",
+    "prepack": "bun run build"
+  },
+  "dependencies": {
+    "@governanator/protocol": "workspace:*",
+    "effect": "4.0.6"
+  }
+}

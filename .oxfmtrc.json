@@ -1,0 +1,9 @@
+{
+  "ignorePatterns": [
+    "**/dist/**",
+    "bun.lock",
+    ".moon/cache/**",
+    ".superpowers/**",
+    "docs/reference/**"
+  ]
+}

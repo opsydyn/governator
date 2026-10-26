@@ -1,0 +1,36 @@
+name: Release (disabled M0 template)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release:
+    # Deliberately disabled until publishing is explicitly approved and packages qualify.
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.15.0"
+          registry-url: "https://registry.npmjs.org"
+      - run: bun install --frozen-lockfile
+      - uses: changesets/action@v1
+        with:
+          publish: bun run release
+          version: bun run version
+          title: "chore: release"
+          commit: "chore: release"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

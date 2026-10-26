@@ -1,0 +1,44 @@
+tasks:
+  typecheck:
+    command: "bun --bun tsc --noEmit"
+    inputs:
+      [
+        "packages/*/src/**/*",
+        "packages/*/package.json",
+        "scripts/**/*",
+        "tests/**/*",
+        "tsconfig.json",
+        "bun.lock",
+      ]
+  lint:
+    command: "bun --bun oxlint --deny-warnings --config oxlint.config.ts packages scripts tests"
+    inputs: ["packages/*/src/**/*", "scripts/**/*", "tests/**/*", "oxlint.config.ts", "bun.lock"]
+  format:
+    command: "bun --bun oxfmt --check ."
+    options:
+      cache: false
+  test:
+    command: "bun --bun vitest run"
+    inputs:
+      [
+        "packages/*/src/**/*",
+        "packages/*/package.json",
+        "tests/**/*",
+        "governance/**/*",
+        "scripts/**/*",
+        "bun.lock",
+        "vitest.config.ts",
+      ]
+  boundaries:
+    command: "bun run boundaries"
+    options:
+      cache: false
+  protocol:
+    command: "bun run protocol:check"
+    options:
+      cache: false
+  check:
+    deps: ["typecheck", "lint", "format", "test", "boundaries", "protocol"]
+    command: "bun --version"
+    options:
+      cache: false

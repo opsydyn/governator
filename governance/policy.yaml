@@ -1,0 +1,25 @@
+# Demo policy. No human approvals or real test adapter are configured.
+{
+  "schemaVersion": 1,
+  "policyVersion": "local-demo-v1",
+  "requirements":
+    {
+      "stable":
+        {
+          "checks":
+            [
+              { "id": "unit-test", "acceptedProducers": ["demo-vitest"], "maxAgeHours": 24 },
+              { "id": "documentation", "acceptedProducers": ["demo-docs"], "maxAgeHours": 24 },
+            ],
+        },
+    },
+  "transitions":
+    {
+      "draft": ["candidate"],
+      "candidate": ["stable"],
+      "stable": ["deprecated"],
+      "deprecated": ["retired"],
+      "retired": [],
+    },
+  "waivers": { "enabled": true, "maxDurationDays": 14, "disallowFor": ["ownership"] },
+}

@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "enum": [1]
+    },
+    "evaluatedAt": {
+      "type": "string"
+    },
+    "policyVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commit": {
+      "type": "string"
+    },
+    "repository": {
+      "type": "string",
+      "minLength": 1
+    },
+    "assurance": {
+      "type": "string",
+      "enum": ["demo", "unverified", "verified-inputs"]
+    },
+    "target": {
+      "type": "string",
+      "enum": ["draft", "candidate", "stable", "deprecated", "retired"]
+    },
+    "publication": {
+      "type": "string",
+      "enum": ["unknown"]
+    },
+    "deployment": {
+      "type": "string",
+      "enum": ["unknown"]
+    },
+    "adoption": {
+      "type": "string",
+      "enum": ["unknown"]
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "componentId": {
+            "type": "string"
+          },
+          "lifecycle": {
+            "type": "string",
+            "enum": ["draft", "candidate", "stable", "deprecated", "retired"]
+          },
+          "target": {
+            "type": "string",
+            "enum": ["draft", "candidate", "stable", "deprecated", "retired"]
+          },
+          "package": {
+            "type": "string",
+            "minLength": 1
+          },
+          "contractVersion": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gate": {
+            "type": "string",
+            "enum": ["ready", "blocked", "insufficient_evidence"]
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "check": {
+                  "type": "string",
+                  "enum": [
+                    "ownership",
+                    "documentation",
+                    "unit-test",
+                    "accessibility",
+                    "design-approval",
+                    "visual-review",
+                    "compatibility-report",
+                    "changelog",
+                    "owner-approval",
+                    "migration-guide",
+                    "consumer-impact"
+                  ]
+                },
+                "result": {
+                  "type": "string",
+                  "enum": ["passed", "failed", "missing", "expired", "waived"]
+                },
+                "reason": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "evidenceIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "required": ["check", "result", "reason", "evidenceIds"],
+              "additionalProperties": false
+            }
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "activeWaivers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "componentId",
+          "lifecycle",
+          "target",
+          "package",
+          "contractVersion",
+          "packageVersion",
+          "gate",
+          "checks",
+          "reasons",
+          "activeWaivers"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "evaluatedAt",
+    "policyVersion",
+    "commit",
+    "repository",
+    "assurance",
+    "target",
+    "publication",
+    "deployment",
+    "adoption",
+    "decisions"
+  ],
+  "additionalProperties": false
+}

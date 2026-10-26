@@ -1,0 +1,36 @@
+{
+  "name": "@governanator/cli",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "bin": {
+    "governanator": "./dist/main.mjs"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "bun --bun tsdown",
+    "prepack": "bun run build"
+  },
+  "dependencies": {
+    "@governanator/core": "workspace:*",
+    "@governanator/protocol": "workspace:*",
+    "@governanator/versioning": "workspace:*",
+    "effect": "4.0.6",
+    "yaml": "2.9.1"
+  }
+}

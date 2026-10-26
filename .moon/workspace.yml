@@ -1,0 +1,6 @@
+projects:
+  workspace: "."
+  protocol: "packages/protocol"
+  core: "packages/core"
+  versioning: "packages/versioning"
+  cli: "packages/cli"
