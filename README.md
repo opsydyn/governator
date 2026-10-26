@@ -2,7 +2,7 @@
 
 Offline design-system governance: a component's status should show its evidence.
 
-M0 implements a deterministic policy engine, component/package version semantics, digest-checked baseline fixtures and a local CLI. Storybook and MCP arrive in later milestones. All workspace packages are private; nothing has been published.
+M0 implements a deterministic policy engine, component/package version semantics, digest-checked baseline fixtures and a local CLI. The first M1 slice adds genuine Vitest report import and source-bound local test checks. Storybook and MCP arrive later. All workspace packages are private; nothing has been published.
 
 ## Run locally
 
@@ -37,7 +37,7 @@ bun packages/cli/dist/main.mjs evaluate --demo --at 2026-10-26T12:00:00.000Z --c
 
 Exit codes: **0** satisfied policy, **1** blocked or insufficient evidence, **2** invalid inputs/runtime error. `validate` checks file shape, references and contained source paths; it does not approve a component. `--root PATH` selects another repository. `--target` selects a lifecycle policy. Unknown components/options and unsupported formats are errors.
 
-Without `--demo`, evaluation uses Git HEAD, requires tracked source/story files and rejects dirty governance/source inputs. It never accepts demo evidence or approval/attestation flags. M0 has no external trust adapter, so the demo's stable requirements cannot pass in normal mode. M0 is committed locally. Normal-mode evaluation of the demo registry still yields missing proof because its records are explicitly demo evidence.
+Without `--demo`, evaluation uses Git HEAD, requires tracked source/story files and rejects dirty governance/source inputs. It never accepts demo evidence or approval/attestation flags. M0 is committed locally. Normal-mode evaluation of the demo registry still yields missing proof because its records are explicitly demo evidence. For a real repository, [Vitest evidence commands](docs/test-evidence.md) can import reports as unverified data or run a source-bound local check; no external trust adapter is implemented.
 
 ## Packages
 
@@ -48,10 +48,10 @@ Without `--demo`, evaluation uses Git HEAD, requires tracked source/story files 
 | `@governanator/versioning` | Private SemVer checks, package bump aggregation and baseline verification                |
 | `@governanator/cli`        | Bun application: filesystem, Git, clock, error mapping and presentation                  |
 
-See [architecture](docs/architecture.md), [governance model](docs/governance-model.md), [threat model](docs/threat-model.md), [release conventions](docs/releasing.md), [verification](docs/verification.md), and the [original handoff](docs/reference/CODEX_HANDOFF_DESIGN_SYSTEM_GOVERNANCE.md).
+See [architecture](docs/architecture.md), [governance model](docs/governance-model.md), [test evidence](docs/test-evidence.md), [threat model](docs/threat-model.md), [release conventions](docs/releasing.md), [M0 verification](docs/verification.md), and the [original handoff](docs/reference/CODEX_HANDOFF_DESIGN_SYSTEM_GOVERNANCE.md).
 
 ## M0 boundary and next milestone
 
 Versioning consumes explicitly classified changes. It does **not** extract TypeScript APIs or decide whether a visual/behavior change is compatible. An unknown classification blocks eligibility. A major requires independently verified review/migration requirements; merely choosing a major is insufficient.
 
-M1 adds a real test-report importer, API extraction/diff, Changesets intent validation, exact release-candidate checks and the Storybook addon with clean-consumer tarball tests. M2 adds read-only MCP. M3 adds verified external approval, publication and deployment adapters. Publication, deployment and adoption stay `unknown` in M0.
+The first M1 slice implements the Vitest report importer/local runner. M1 still needs API extraction/diff, Changesets intent validation, exact release-candidate checks and the Storybook addon with clean-consumer tarball tests. M2 adds read-only MCP. M3 adds verified external approval, publication and deployment adapters. Publication, deployment and adoption stay `unknown`.

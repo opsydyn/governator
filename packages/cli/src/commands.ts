@@ -1,6 +1,11 @@
 import { basename, resolve } from "node:path";
-import { evaluate, ensure } from "@governanator/core";
+import { realpath, readFile } from "node:fs/promises";
+import { evaluate, ensure, importVitest } from "@governanator/core";
 import { loadProject } from "./files.ts";
+import { containedFile } from "./files.ts";
+import { git } from "./source.ts";
+import { runLocalCheck, readMappedTests } from "./evidence.ts";
+import type { GovernanceReport } from "@governanator/protocol";
 
 export interface CliResult {
   readonly code: 0 | 1 | 2;
@@ -10,9 +15,11 @@ export interface CliResult {
 const help = `governanator validate [--root PATH]
 governanator evaluate [--root PATH] [--target stable] [--component ID]
   [--at YYYY-MM-DDTHH:mm:ss.sssZ] [--format json|text] [--demo]
+governanator evidence import --format vitest --file PATH --mapping PATH [--root PATH] [--commit SHA] [--report-root PATH]
+governanator check --mapping PATH [--root PATH] [--target stable] [--component ID] [--format json|text]
 
 Demo mode accepts only labelled demo evidence and never proves publication or deployment.
-Normal evaluation uses Git HEAD and requires tracked source files; M0 has no external trust adapters.
+Raw imports remain unverified. Local check executes installed Vitest 4 in a clean repository; it proves only that local process, never external approval or publication.
 `;
 function options(args: readonly string[]): {
   command: string;
@@ -21,14 +28,26 @@ function options(args: readonly string[]): {
 } {
   if (!args.length || args[0] === "--help")
     return { command: "help", values: new Map(), demo: false };
-  const command = args[0] ?? "";
-  ensure(command === "validate" || command === "evaluate", `Unknown command: ${command}`);
+  const importing = args[0] === "evidence";
+  if (importing) ensure(args[1] === "import", "Expected evidence import");
+  const command = importing ? "import" : (args[0] ?? "");
+  ensure(
+    ["validate", "evaluate", "check", "import"].includes(command),
+    `Unknown command: ${command}`,
+  );
   const values = new Map<string, string>();
   let demo = false;
-  const allowed = new Set(["--root", "--target", "--component", "--at", "--format"]);
-  for (let i = 1; i < args.length; i++) {
+  const allowed = new Set(
+    command === "import"
+      ? ["--root", "--format", "--file", "--mapping", "--commit", "--report-root"]
+      : command === "check"
+        ? ["--root", "--format", "--mapping", "--target", "--component"]
+        : ["--root", "--target", "--component", "--at", "--format"],
+  );
+  for (let i = importing ? 2 : 1; i < args.length; i++) {
     const key = args[i] ?? "";
     if (key === "--demo") {
+      ensure(command === "evaluate", "--demo is only valid for evaluate");
       ensure(!demo, "Duplicate --demo");
       demo = true;
       continue;
@@ -40,24 +59,50 @@ function options(args: readonly string[]): {
     values.set(key, value);
   }
   ensure(
-    !values.has("--format") || ["json", "text"].includes(values.get("--format") ?? ""),
-    "Format must be json or text",
+    !values.has("--format") ||
+      (command === "import" ? ["vitest"] : ["json", "text"]).includes(values.get("--format") ?? ""),
+    command === "import" ? "Import format must be vitest" : "Format must be json or text",
   );
   return { command, values, demo };
-}
-function git(root: string, args: string[]): string {
-  const result = Bun.spawnSync(["git", "-C", root, ...args], { stdout: "pipe", stderr: "pipe" });
-  ensure(
-    result.exitCode === 0,
-    `Git source verification failed: ${result.stderr.toString().trim()}`,
-  );
-  return result.stdout.toString().trim();
 }
 export async function executeCli(args: readonly string[]): Promise<CliResult> {
   const { command, values, demo } = options(args);
   if (command === "help") return { code: 0, stdout: help, stderr: "" };
   const root = resolve(values.get("--root") ?? ".");
   const project = await loadProject(root);
+  if (command === "import") {
+    ensure(
+      values.get("--format") === "vitest" && values.has("--file") && values.has("--mapping"),
+      "evidence import requires --format vitest --file PATH --mapping PATH",
+    );
+    const mapping = await readMappedTests(root, project, values.get("--mapping") ?? "");
+    const imported = importVitest(
+      JSON.parse(await readFile(await containedFile(root, values.get("--file") ?? ""), "utf8")),
+      {
+        root: values.get("--report-root") ?? (await realpath(root)),
+        registry: project.registry,
+        mapping,
+        commit: values.get("--commit") ?? git(root, ["rev-parse", "--verify", "HEAD"]),
+        repository: `local:${basename(root)}`,
+      },
+    );
+    return { code: 0, stdout: JSON.stringify(imported, null, 2) + "\n", stderr: "" };
+  }
+  if (command === "check") {
+    ensure(values.has("--mapping"), "check requires --mapping PATH");
+    if (values.has("--component"))
+      ensure(
+        project.registry.components.some((c) => c.id === values.get("--component")),
+        "Unknown component",
+      );
+    const checked = await runLocalCheck(
+      root,
+      values.get("--mapping") ?? "",
+      values.get("--target") ?? "stable",
+    );
+    const result = renderReport(checked.report, values);
+    return { ...result, stderr: `Local run proof: ${checked.receiptPath}\n` };
+  }
   if (command === "validate")
     return {
       code: 0,
@@ -91,6 +136,9 @@ export async function executeCli(args: readonly string[]): Promise<CliResult> {
     verifiedEvidenceDigests: {},
     verifiedWaiverDigests: {},
   });
+  return renderReport(report, values);
+}
+function renderReport(report: GovernanceReport, values: Map<string, string>): CliResult {
   const selected = values.get("--component");
   if (selected)
     ensure(
