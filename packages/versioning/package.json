@@ -26,6 +26,8 @@
   "dependencies": {
     "@governanator/core": "workspace:*",
     "@governanator/protocol": "workspace:*",
-    "semver": "7.8.5"
+    "effect": "4.0.6",
+    "semver": "7.8.5",
+    "typescript": "5.9.3"
   }
 }

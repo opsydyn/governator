@@ -4,3 +4,6 @@ projects:
   core: "packages/core"
   versioning: "packages/versioning"
   cli: "packages/cli"
+  demo-ui: "packages/demo-ui"
+  storybook-addon: "packages/storybook-addon"
+  storybook: "apps/storybook-demo"

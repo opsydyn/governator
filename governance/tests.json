@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "mappings": [
+    {
+      "componentId": "ui.button",
+      "files": ["tests/demo-ui.test.ts"]
+    },
+    {
+      "componentId": "ui.select",
+      "files": ["tests/demo-ui.test.ts"]
+    },
+    {
+      "componentId": "ui.alert",
+      "files": ["tests/demo-ui.test.ts"]
+    },
+    {
+      "componentId": "ui.legacy-alert",
+      "files": ["tests/demo-ui.test.ts"]
+    }
+  ]
+}

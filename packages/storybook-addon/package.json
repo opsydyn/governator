@@ -1,0 +1,39 @@
+{
+  "name": "@governanator/storybook-addon",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./preset": "./dist/preset.js",
+    "./manager": "./dist/manager.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "bun --bun tsdown",
+    "prepack": "bun run build"
+  },
+  "peerDependencies": {
+    "storybook": "^10.6.4"
+  },
+  "storybook": {
+    "displayName": "Governanator Governance",
+    "supportedFrameworks": [
+      "react",
+      "vue3",
+      "web-components",
+      "html",
+      "angular",
+      "svelte"
+    ]
+  }
+}

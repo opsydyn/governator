@@ -2,6 +2,7 @@
   "ignorePatterns": [
     "**/dist/**",
     "bun.lock",
+    "packages/storybook-addon/src/generated-validator.mjs",
     ".moon/cache/**",
     ".superpowers/**",
     "docs/reference/**"

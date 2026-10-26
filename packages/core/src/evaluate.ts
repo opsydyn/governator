@@ -141,6 +141,7 @@ function componentDecision(component: Component, input: Evaluation): typeof Deci
     package: component.package,
     contractVersion: component.contractVersion,
     packageVersion: component.packageVersion ?? null,
+    owners: component.owners,
     gate: blocked ? "blocked" : insufficient ? "insufficient_evidence" : "ready",
     checks,
     reasons,

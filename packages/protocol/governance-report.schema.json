@@ -73,6 +73,77 @@
               }
             ]
           },
+          "owners": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "compatibility": {
+            "type": "object",
+            "properties": {
+              "gate": {
+                "type": "string",
+                "enum": ["ready", "blocked", "insufficient_evidence"]
+              },
+              "minimumBump": {
+                "type": "string",
+                "enum": ["none", "patch", "minor", "major", "unknown"]
+              },
+              "baselineVersion": {
+                "type": "string"
+              },
+              "candidateVersion": {
+                "type": "string"
+              },
+              "baselineContractVersion": {
+                "type": "string"
+              },
+              "baselineDigest": {
+                "type": "string",
+                "minLength": 1
+              },
+              "candidateDigest": {
+                "type": "string",
+                "minLength": 1
+              },
+              "changes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "reasons": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "limitations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "gate",
+              "minimumBump",
+              "baselineVersion",
+              "candidateVersion",
+              "baselineContractVersion",
+              "baselineDigest",
+              "candidateDigest",
+              "changes",
+              "reasons",
+              "limitations"
+            ],
+            "additionalProperties": false
+          },
           "gate": {
             "type": "string",
             "enum": ["ready", "blocked", "insufficient_evidence"]

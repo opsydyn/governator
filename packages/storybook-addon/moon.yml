@@ -1,0 +1,5 @@
+tasks:
+  build:
+    command: "bun run build"
+    inputs: ["src/**/*", "package.json", "tsdown.config.ts", "tsconfig.json", "/bun.lock"]
+    outputs: ["dist"]

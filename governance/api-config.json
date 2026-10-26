@@ -1,0 +1,30 @@
+{
+  "packageId": "@example/ui",
+  "packageVersion": "8.4.2",
+  "components": [
+    {
+      "componentId": "ui.button",
+      "exportName": "Button",
+      "propsExport": "ButtonProps",
+      "contractVersion": "1.2.1"
+    },
+    {
+      "componentId": "ui.select",
+      "exportName": "Select",
+      "propsExport": "SelectProps",
+      "contractVersion": "1.0.0-rc.1"
+    },
+    {
+      "componentId": "ui.alert",
+      "exportName": "Alert",
+      "propsExport": "AlertProps",
+      "contractVersion": "1.0.0"
+    },
+    {
+      "componentId": "ui.legacy-alert",
+      "exportName": "LegacyAlert",
+      "propsExport": "AlertProps",
+      "contractVersion": "1.0.0"
+    }
+  ]
+}

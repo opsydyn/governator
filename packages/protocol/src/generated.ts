@@ -18,6 +18,19 @@ export interface GovernanceReport {
     package: string;
     contractVersion: string;
     packageVersion: string | null;
+    owners?: string[];
+    compatibility?: {
+      gate: "ready" | "blocked" | "insufficient_evidence";
+      minimumBump: "none" | "patch" | "minor" | "major" | "unknown";
+      baselineVersion: string;
+      candidateVersion: string;
+      baselineContractVersion: string;
+      baselineDigest: string;
+      candidateDigest: string;
+      changes: string[];
+      reasons: string[];
+      limitations: string[];
+    };
     gate: "ready" | "blocked" | "insufficient_evidence";
     checks: {
       check:

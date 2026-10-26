@@ -1,17 +1,10 @@
-# Demo policy. No human approvals or real test adapter are configured.
 {
   "schemaVersion": 1,
-  "policyVersion": "local-demo-v1",
+  "policyVersion": "dogfood-local-unit-v1",
   "requirements":
     {
       "stable":
-        {
-          "checks":
-            [
-              { "id": "unit-test", "acceptedProducers": ["demo-vitest"], "maxAgeHours": 24 },
-              { "id": "documentation", "acceptedProducers": ["demo-docs"], "maxAgeHours": 24 },
-            ],
-        },
+        { "checks": [{ "id": "unit-test", "acceptedProducers": ["vitest"], "maxAgeHours": 24 }] },
     },
   "transitions":
     {

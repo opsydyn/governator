@@ -6,6 +6,7 @@ import { containedFile } from "./files.ts";
 import { git } from "./source.ts";
 import { runLocalCheck, readMappedTests } from "./evidence.ts";
 import type { GovernanceReport } from "@governanator/protocol";
+import { runContracts } from "./contracts.ts";
 
 export interface CliResult {
   readonly code: 0 | 1 | 2;
@@ -17,6 +18,8 @@ governanator evaluate [--root PATH] [--target stable] [--component ID]
   [--at YYYY-MM-DDTHH:mm:ss.sssZ] [--format json|text] [--demo]
 governanator evidence import --format vitest --file PATH --mapping PATH [--root PATH] [--commit SHA] [--report-root PATH]
 governanator check --mapping PATH [--root PATH] [--target stable] [--component ID] [--format json|text]
+governanator contracts snapshot --config PATH --declarations PATH [--root PATH]
+governanator contracts diff --baseline PATH --candidate PATH --baseline-digest PATH [--root PATH]
 
 Demo mode accepts only labelled demo evidence and never proves publication or deployment.
 Raw imports remain unverified. Local check executes installed Vitest 4 in a clean repository; it proves only that local process, never external approval or publication.
@@ -66,6 +69,7 @@ function options(args: readonly string[]): {
   return { command, values, demo };
 }
 export async function executeCli(args: readonly string[]): Promise<CliResult> {
+  if (args[0] === "contracts") return runContracts(args.slice(1));
   const { command, values, demo } = options(args);
   if (command === "help") return { code: 0, stdout: help, stderr: "" };
   const root = resolve(values.get("--root") ?? ".");

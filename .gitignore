@@ -7,3 +7,6 @@ coverage/
 artifacts/
 *.tgz
 .DS_Store
+
+storybook-static/
+apps/storybook-demo/public/governance-report.json

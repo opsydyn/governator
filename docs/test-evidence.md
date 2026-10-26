@@ -1,6 +1,6 @@
 # Vitest evidence — first M1 slice
 
-M0 is committed at `b7622ba`. This slice adds genuine Vitest 4 JSON import and an optional local producer-to-gate path. It does not complete M1's API diff/release checks or Storybook UI.
+M0 is committed at `b7622ba`. This slice adds genuine Vitest 4 JSON import and an optional local producer-to-gate path. This historical slice is followed by the [Storybook and contracts slice](storybook-contracts.md); M1 release enforcement remains open.
 
 ## Explicit mappings
 
@@ -15,7 +15,7 @@ Create a tracked `governance/tests.json` alongside the canonical registry and po
 
 The component must exist in that repository's registry, and every named test file must exist inside the repository. Files use exact, canonical relative paths. One component may require several files; all must contain completed passing assertions to produce passing evidence. A shared file can be deliberately mapped to more than one component, but this is a reviewed declaration of coverage, not an inferred guarantee.
 
-The M0 repository's UI entries are interface fixtures, not tested React components. Do not map its engine tests to those UI IDs merely to get a passing badge. Integration tests construct isolated repositories with a real Button behavior function and real Vitest executions to demonstrate the adapter. Real React/Storybook components remain later M1 work.
+M0 originally used interface fixtures. The current dogfood app has actual React components, mapped to tests/demo-ui.test.ts. Its evidence covers those component tests only; engine tests must not be mapped to UI IDs merely to get a passing badge. Integration tests also construct isolated repositories with a real Button behavior function and Vitest executions.
 
 ## Import an existing report
 

@@ -1,0 +1,84 @@
+import validate from "./generated-validator.mjs";
+import type { GovernanceReport } from "@governanator/protocol";
+export type ReportState =
+  | { status: "ready"; report: GovernanceReport }
+  | { status: "stale"; report: GovernanceReport; message: string }
+  | { status: "empty" | "error" | "loading"; message: string };
+export function decodeReport(raw: unknown, now = Date.now()): ReportState {
+  if (raw && typeof raw === "object" && "schemaVersion" in raw && raw.schemaVersion !== 1)
+    return {
+      status: "error",
+      message: "Unsupported report format. This addon supports governance schema 1.",
+    };
+  if (!validate(raw))
+    return {
+      status: "error",
+      message: "Malformed governance report. Generate a valid report with the CLI.",
+    };
+  if (new Set(raw.decisions.map((c) => c.componentId)).size !== raw.decisions.length)
+    return {
+      status: "error",
+      message: "Malformed governance report: duplicate component identities.",
+    };
+  const time = Date.parse(raw.evaluatedAt);
+  if (
+    !Number.isFinite(time) ||
+    new Date(time).toISOString() !== raw.evaluatedAt ||
+    time > now + 60_000
+  )
+    return { status: "error", message: "Invalid or future report evaluation time." };
+  if (now - time > 24 * 3_600_000)
+    return {
+      status: "stale",
+      report: raw,
+      message: "Unverified — this report is older than 24 hours. Generate a current snapshot.",
+    };
+  return { status: "ready", report: raw };
+}
+export type ReportFetcher = (url: string, options: RequestInit) => Promise<Response>;
+export async function loadReport(
+  url: string | undefined,
+  base: string,
+  now = Date.now(),
+  fetcher: ReportFetcher = (input, options) => fetch(input, options),
+  signal?: AbortSignal,
+): Promise<ReportState> {
+  if (!url)
+    return {
+      status: "empty",
+      message:
+        "Unverified — governance report not configured. Install the optional CLI to generate a report, then set parameters.governance.reportUrl.",
+    };
+  try {
+    const resolved = new URL(url, base);
+    const origin = new URL(base).origin;
+    if (
+      !["http:", "https:"].includes(resolved.protocol) ||
+      resolved.origin !== origin ||
+      resolved.username ||
+      resolved.password
+    )
+      return {
+        status: "error",
+        message: "Governance reports must use a same-origin HTTP(S) URL without credentials.",
+      };
+    const response = await fetcher(resolved.href, {
+      credentials: "omit",
+      redirect: "error",
+      cache: "no-store",
+      ...(signal ? { signal } : {}),
+    });
+    if (!response.ok)
+      return {
+        status: "error",
+        message: `Unverified — governance report unavailable (HTTP ${response.status}).`,
+      };
+    return decodeReport(await response.json(), now);
+  } catch {
+    return {
+      status: "error",
+      message:
+        "Unverified — governance report could not be loaded or parsed. Check the report URL and JSON format.",
+    };
+  }
+}

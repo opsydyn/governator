@@ -4,15 +4,27 @@ tasks:
     inputs:
       [
         "packages/*/src/**/*",
+        "apps/*/src/**/*",
+        "apps/*/.storybook/**/*",
         "packages/*/package.json",
+        "apps/*/package.json",
         "scripts/**/*",
         "tests/**/*",
         "tsconfig.json",
         "bun.lock",
       ]
   lint:
-    command: "bun --bun oxlint --deny-warnings --config oxlint.config.ts packages scripts tests"
-    inputs: ["packages/*/src/**/*", "scripts/**/*", "tests/**/*", "oxlint.config.ts", "bun.lock"]
+    command: "bun --bun oxlint --deny-warnings --config oxlint.config.ts packages apps scripts tests"
+    inputs:
+      [
+        "packages/*/src/**/*",
+        "apps/*/src/**/*",
+        "apps/*/.storybook/**/*",
+        "scripts/**/*",
+        "tests/**/*",
+        "oxlint.config.ts",
+        "bun.lock",
+      ]
   format:
     command: "bun --bun oxfmt --check ."
     options:
@@ -22,7 +34,10 @@ tasks:
     inputs:
       [
         "packages/*/src/**/*",
+        "apps/*/src/**/*",
+        "apps/*/.storybook/**/*",
         "packages/*/package.json",
+        "apps/*/package.json",
         "tests/**/*",
         "governance/**/*",
         "scripts/**/*",
@@ -37,8 +52,13 @@ tasks:
     command: "bun run protocol:check"
     options:
       cache: false
+  addon:
+    deps: ["storybook-addon:build"]
+    command: "bun run addon:check"
+    options:
+      cache: false
   check:
-    deps: ["typecheck", "lint", "format", "test", "boundaries", "protocol"]
+    deps: ["typecheck", "lint", "format", "test", "boundaries", "protocol", "addon"]
     command: "bun --version"
     options:
       cache: false

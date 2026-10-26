@@ -2,13 +2,13 @@
 
 The core evaluates validated data against an explicit policy, source identity and clock. It imports no Storybook, MCP or GitHub SDK. Pure evaluation does not read the filesystem, spawn processes or obtain current time. Canonical hashing uses Bun's compatible `node:crypto` implementation; it is deterministic for JSON inputs.
 
-The CLI is the application boundary. It loads YAML/JSON, resolves symlinks, checks files, obtains Git HEAD and injects time. Effect maps application failures into typed errors and CLI exit codes. Protocol serialization is JSON only. A future Storybook addon must not import the engine or Effect.
+The CLI is the application boundary. It loads YAML/JSON, resolves symlinks, checks files, obtains Git HEAD and injects time. Effect maps application failures into typed errors and CLI exit codes. Protocol serialization is JSON only. The read-only Storybook addon imports neither the engine nor Effect; it consumes the generated JSON protocol.
 
 ## Wire contract
 
 `packages/core/src/domain.ts` defines the internal Report schema. `bun run protocol:generate` creates the JSON Schema and immutable ordinary TypeScript types in `packages/protocol`. `bun run protocol:check` detects drift. Core output is checked against this generated type by TypeScript; runtime report roundtrip tests check the schema boundary.
 
-No engine/Effect types appear in the protocol. `bun run boundaries` scans source and built imports and rejects protocol runtime/peer/optional dependencies, external imports and dynamic imports. Protocol schema version 1 is the sole supported version in M0; the future addon must explicitly handle incompatible reports.
+No engine/Effect types appear in the protocol. `bun run boundaries` scans source and built imports and rejects protocol runtime/peer/optional dependencies, external imports and dynamic imports. Protocol schema version 1 is the sole supported version in M0; the addon explicitly rejects incompatible reports.
 
 ## Tooling
 

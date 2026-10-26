@@ -1,0 +1,13 @@
+dependsOn: ["demo-ui", "storybook-addon"]
+tasks:
+  dev:
+    command: "bun run dev"
+    deps: ["^:build"]
+    options:
+      cache: false
+      persistent: true
+  build:
+    command: "bun run build"
+    deps: ["^:build"]
+    inputs: ["src/**/*", ".storybook/**/*", "public/**/*", "package.json", "/bun.lock"]
+    outputs: ["storybook-static"]

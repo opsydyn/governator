@@ -2,11 +2,12 @@
   "name": "governanator-workspace",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "type": "module",
   "scripts": {
-    "build": "moon run protocol:build core:build versioning:build cli:build",
+    "build": "moon run protocol:build core:build versioning:build cli:build demo-ui:build storybook-addon:build",
     "typecheck": "moon run workspace:typecheck",
     "lint": "moon run workspace:lint",
     "format": "oxfmt .",
@@ -19,18 +20,29 @@
     "boundaries": "bun scripts/boundaries.ts",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "bun run check && bun run build && changeset publish"
+    "release": "bun run check && bun run build && changeset publish",
+    "storybook": "moon run storybook:dev",
+    "storybook:build": "moon run storybook:build",
+    "dogfood:report": "bun scripts/dogfood-report.ts",
+    "addon:validator": "bun scripts/addon-validator.ts",
+    "addon:check": "bun scripts/addon-validator.ts --check && bun scripts/addon-boundaries.ts"
   },
   "devDependencies": {
     "@changesets/cli": "2.31.0",
     "@moonrepo/cli": "2.6.4",
     "@opsydyn/oxlint-effect": "2.0.1",
     "@types/bun": "1.4.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "@types/semver": "7.8.0",
+    "ajv": "8.20.0",
     "json-schema-to-typescript": "16.0.0",
     "oxfmt": "0.74.0",
     "oxlint": "1.71.0",
     "publint": "0.3.21",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "storybook": "10.6.4",
     "tsdown": "0.22.3",
     "typescript": "5.9.3",
     "vitest": "4.1.12"
