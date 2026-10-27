@@ -3,5 +3,6 @@ tasks:
   build:
     command: "bun run build"
     deps: ["^:build"]
-    inputs: ["src/**/*", "package.json", "tsdown.config.ts", "/bun.lock"]
+    inputs:
+      ["src/**/*", "package.json", "tsdown.config.ts", "/bun.lock", "/scripts/safe-build-output.ts"]
     outputs: ["dist"]

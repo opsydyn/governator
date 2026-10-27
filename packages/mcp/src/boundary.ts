@@ -1,10 +1,12 @@
 import { QueryError } from "@governanator/query";
-import type { QueryService, ToolName } from "@governanator/query";
+import type { ToolName } from "@governanator/query";
 import type { CallToolResult } from "@modelcontextprotocol/server";
+
+import type { McpQueryService } from "./service.ts";
 
 /** MCP serialization/error boundary; domain checks remain in the shared query service. */
 export function callQueryTool(
-  service: QueryService,
+  service: McpQueryService,
   name: ToolName,
   args: unknown,
   signal: AbortSignal,

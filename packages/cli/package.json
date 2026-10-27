@@ -27,12 +27,20 @@
     "prepack": "bun run build"
   },
   "dependencies": {
+    "@changesets/parse": "0.4.3",
+    "semver": "7.8.5",
+    "tar": "7.5.22",
+    "typescript": "5.9.3",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
     "@governanator/core": "workspace:*",
     "@governanator/protocol": "workspace:*",
     "@governanator/query": "workspace:*",
     "@governanator/versioning": "workspace:*",
-    "effect": "4.0.6",
-    "tar": "7.5.22",
-    "yaml": "2.9.1"
+    "effect": "4.0.6"
+  },
+  "engines": {
+    "bun": ">=1.4.2"
   }
 }
