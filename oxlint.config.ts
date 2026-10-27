@@ -12,13 +12,40 @@ export default defineConfig({
   ],
   overrides: [
     {
+      // Private cryptographic wire boundary contains synchronous crypto, validation, and sanitized exceptions.
+      files: [
+        "packages/fixture-attestation/src/index.ts",
+        "packages/fixture-attestation/src/crypto.ts",
+      ],
+      rules: {
+        "linteffect/no-string-sentinel-const": "off",
+        "linteffect/no-if-statement": "off",
+        "linteffect/no-adhoc-domain-error": "off",
+        "linteffect/no-domain-logic-in-conditional": "off",
+        "linteffect/no-naked-object-state-update": "off",
+        "linteffect/no-magic-domain-string": "off",
+        "linteffect/no-model-overlay-cast": "off",
+        "linteffect/no-new-date-in-domain-logic": "off",
+        "linteffect/no-try-catch": "off",
+        "linteffect/no-node-platform-in-shared-code": "off",
+      },
+    },
+    {
+      // Disposable fixture keys are generated in memory for offline tests only.
+      files: ["tests/fixture-attestation-fixtures.ts", "tests/fixture-attestation.test.ts"],
+      rules: {
+        "linteffect/no-node-platform-in-shared-code": "off",
+        "linteffect/no-return-in-arrow": "off",
+      },
+    },
+    {
       // Private injected-transport adapter contains and sanitizes Promise/stream failures.
       files: ["packages/github-review/src/index.ts"],
       rules: { "linteffect/no-try-catch": "off", "linteffect/no-string-sentinel-const": "off" },
     },
     {
       // Lexical JSON wire validation must run before number precision is lost in decoding.
-      files: ["packages/github-review/src/json.ts"],
+      files: ["packages/github-review/src/json.ts", "packages/fixture-attestation/src/json.ts"],
       rules: { "linteffect/no-naked-object-state-update": "off" },
     },
     {

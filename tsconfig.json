@@ -20,6 +20,7 @@
       "@example/ui": ["./packages/demo-ui/src/index.ts"],
       "@governanator/query": ["./packages/query/src/index.ts"],
       "@governanator/query/*": ["./packages/query/src/*.ts"],
+      "@governanator/fixture-attestation": ["./packages/fixture-attestation/src/index.ts"],
       "@governanator/github-review": ["./packages/github-review/src/index.ts"]
     },
     "jsx": "react-jsx"

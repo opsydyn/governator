@@ -74,6 +74,13 @@
         "react": "^19.3.1",
       },
     },
+    "packages/fixture-attestation": {
+      "name": "@governanator/fixture-attestation",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.6",
+      },
+    },
     "packages/github-review": {
       "name": "@governanator/github-review",
       "version": "0.1.0",
@@ -267,6 +274,8 @@
     "@governanator/cli": ["@governanator/cli@workspace:packages/cli"],
 
     "@governanator/core": ["@governanator/core@workspace:packages/core"],
+
+    "@governanator/fixture-attestation": ["@governanator/fixture-attestation@workspace:packages/fixture-attestation"],
 
     "@governanator/github-review": ["@governanator/github-review@workspace:packages/github-review"],
 

@@ -10,3 +10,4 @@ projects:
   query: "packages/query"
   mcp: "packages/mcp"
   github-review: "packages/github-review"
+  fixture-attestation: "packages/fixture-attestation"
