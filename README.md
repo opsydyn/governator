@@ -44,6 +44,7 @@ CLI exit codes: **0** satisfied the requested check, **1** blocked/insufficient 
 | `@governanator/core`                | Private Effect schemas, deterministic evaluation and digests        |
 | `@governanator/versioning`          | Private API extraction/diff, SemVer and baseline checks             |
 | `@governanator/fixture-attestation` | Private offline verifier for fixture-signed candidate statements    |
+| `@governanator/fixture-policy`      | Private synthetic signed reviewer-policy lifecycle model            |
 | `@governanator/query`               | Private immutable snapshots and shared read queries                 |
 | `@governanator/mcp`                 | Private Bun stdio MCP adapter                                       |
 | `@governanator/cli`                 | Bun filesystem, Git, local test runner and presentation boundary    |
@@ -60,3 +61,5 @@ Hosted CI/required-check configuration, authenticated published baselines and re
 M3a introduces a private synthetic review-evidence evaluator for testing exact candidate, policy, reviewer-role and freshness bindings. Its results are fixtures only; normal release review stays unconfigured. See [M3a evidence and verification](docs/m3a-verification.md).
 
 M3b adds an inactive [GitHub source-review reader](docs/m3b-verification.md), tested with injected transport fixtures and returning only unverified observations. M3c adds a private [fixture attestation verifier](docs/m3c-verification.md) for exact candidate scope. Its cryptographic match is fixture-only and does not authorize ordinary releases or establish authenticated GitHub review. Independently protected reviewer authority and real-provider qualification remain future work; publication is a separate gate.
+
+M3d models a signed two-owner policy lifecycle with synthetic witnesses and in-memory state. It does not authorize releases. See [M3d verification](docs/m3d-verification.md).

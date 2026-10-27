@@ -3,7 +3,10 @@ import { lstat, readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 /** Keep the fixture verifier offline and confined to its own sources. */
-export function inspectFixtureAttestation(source: string): string[] {
+export function inspectFixtureAttestation(
+  source: string,
+  allowedIndexExpression: (expression: ts.BinaryExpression) => boolean = () => false,
+): string[] {
   const errors: string[] = [];
   const ast = ts.createSourceFile("fixture-attestation.ts", source, ts.ScriptTarget.Latest, true);
   const forbidden = new Set([
@@ -62,7 +65,8 @@ export function inspectFixtureAttestation(source: string): string[] {
       node.argumentExpression &&
       ((ts.isStringLiteralLike(node.argumentExpression) &&
         node.argumentExpression.text === "constructor") ||
-        ts.isBinaryExpression(node.argumentExpression) ||
+        (ts.isBinaryExpression(node.argumentExpression) &&
+          !allowedIndexExpression(node.argumentExpression)) ||
         ts.isTemplateExpression(node.argumentExpression))
     )
       errors.push("Fixture verifier dynamic property access is forbidden");
@@ -92,7 +96,10 @@ export function inspectFixtureManifest(manifest: Record<string, unknown>): strin
 }
 
 /** Inspect the entire source tree, rejecting files we cannot inspect and symbolic links. */
-export async function inspectFixtureSources(root: string): Promise<string[]> {
+export async function inspectFixtureSources(
+  root: string,
+  inspect: (source: string) => string[] = inspectFixtureAttestation,
+): Promise<string[]> {
   const errors: string[] = [];
   let count = 0;
   async function visit(path: string): Promise<void> {
@@ -105,7 +112,7 @@ export async function inspectFixtureSources(root: string): Promise<string[]> {
       errors.push(`Unexpected fixture verifier source file: ${path}`);
     } else {
       count++;
-      errors.push(...inspectFixtureAttestation(await readFile(path, "utf8")));
+      errors.push(...inspect(await readFile(path, "utf8")));
     }
   }
   await visit(root);
