@@ -32,9 +32,9 @@
 
 **Interfaces:** Both packages retain existing executable names and usable programmatic exports; Bun `>=1.4.2`. `@governanator/*` and Effect are bundled implementation details, with no unresolved private imports in emitted JavaScript or public declarations. Conventional third-party dependencies required by emitted runtime or public types are declared. Preserve effect/gate behavior.
 
-- [ ] Add failing tests for packed manifest, emitted imports/declarations and public type consumer; record RED against current packaging.
-- [ ] Implement bundling and accurate direct runtime dependencies, regenerate lock offline, build and pack, run focused tests, `publint`, strict declaration import and actual executable startup. Keep output cleaning away from dependency links. Commit locally.
-- [ ] Independent review; resolve Critical/Important findings with regressions and scoped re-review.
+- [x] Add failing tests for packed manifest, emitted imports/declarations and public type consumer; record RED against current packaging.
+- [x] Implement bundling and accurate direct runtime dependencies, regenerate lock offline, build and pack, run focused tests, `publint`, strict declaration import and actual executable startup. Keep output cleaning away from dependency links. Commit locally.
+- [x] Independent review; resolve Critical/Important findings with regressions and scoped re-review.
 
 ## Task 2: Independent CLI/MCP consumer qualification
 
@@ -42,9 +42,9 @@
 
 **Interfaces:** Install fresh packed CLI/MCP and declared dependencies without workspace links; run installed CLI evaluate/check/contracts/snapshot and MCP stdio. External fixture is an independent committed Git project with installed Vitest 4 and ignored artifacts. Sources reconstructed from Bun cache must preserve original dependency manifests.
 
-- [ ] Add regression checks that expose missing runtime/type dependencies and use installed binaries, including a nontrivial TypeScript declaration compatibility case, a real v2 test receipt, snapshot and fourteen-tool parity, and invalid MCP startup.
-- [ ] Implement a reproducible local-only fixture/qualification runner with isolated package caches; run against current tarballs. Record package-source provenance, commands and all limitations. If an offline dependency is missing, retain the failed check as open rather than faking a pass. Commit locally.
-- [ ] Independent review; fix important findings and re-review.
+- [x] Add regression checks that expose missing runtime/type dependencies and use installed binaries, including a nontrivial TypeScript declaration compatibility case, a real v2 test receipt, snapshot and fourteen-tool parity, and invalid MCP startup.
+- [x] Implement a reproducible local-only fixture/qualification runner with isolated package caches; run against current tarballs. Record package-source provenance, commands and all limitations. If an offline dependency is missing, retain the failed check as open rather than faking a pass. Commit locally.
+- [x] Independent review; fix important findings and re-review.
 
 ## Task 3: Addon qualification and consumer documentation
 
@@ -52,11 +52,11 @@
 
 **Interfaces:** Only React/Vite 10.6.4 is qualified unless tested otherwise. Pack the actual addon and test both npm and pnpm with strict peers in fresh independent Storybook consumers, including no-report and configured-report behavior. Preserve Storybook-only peer and current budgets.
 
-- [ ] Narrow unsupported framework metadata and document installation/setup for addon and Bun CLI/MCP, prerequisites and limitations; correct disabled publication instructions.
-- [ ] Build/pack actual addon and execute clean npm and pnpm consumer installations/builds using local source; check empty and configured reports. Record exact evidence and whether source is reconstructed or real registry, and keep blocked cases open. Commit locally.
-- [ ] Independent review; fix important findings and re-review.
+- [x] Narrow unsupported framework metadata and document installation/setup for addon and Bun CLI/MCP, prerequisites and limitations; correct disabled publication instructions.
+- [x] Build/pack actual addon and execute clean npm and pnpm consumer installations/builds using local source; check empty and configured reports. Record exact evidence and whether source is reconstructed or real registry, and keep blocked cases open. Commit locally.
+- [x] Independent review; fix important findings and re-review.
 
 ## Task 4: Whole-branch verification and integration
 
-- [ ] Run local full checks/build, independent whole-branch review and source-bound dogfood/Storybook/MCP verification; document observed results and remaining release gates.
+- [x] Run local full checks/build, independent whole-branch review and source-bound dogfood/Storybook/MCP verification; document observed results and remaining release gates.
 - [ ] Fast-forward local main; rerun appropriate final checks on the final commit. Never push or publish. Recommend the next bounded release step.
