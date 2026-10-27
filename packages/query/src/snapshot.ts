@@ -74,6 +74,7 @@ export async function createSnapshot(
     for (const path of [component.source, ...component.stories]) await read(path, "source", true);
   const report = decode(Report, await json(selection.report, "report"));
   currentTime(report.evaluatedAt, now, "Report");
+  const freshnessTimes = [now, Date.parse(report.evaluatedAt)];
   queryEnsure(
     report.commit === commit && report.policyVersion === project.policy.policyVersion,
     "Report source or policy does not match current source",
@@ -107,6 +108,7 @@ export async function createSnapshot(
     const inputs = await releaseInputs(root, selection.config, { safeDeclarations: true });
     release = decode(RecordedRelease, await json(selection.release, "release"));
     currentTime(release.evaluatedAt, now, "Release report");
+    freshnessTimes.push(Date.parse(release.evaluatedAt));
     queryEnsure(
       release.sourceCommit === commit && release.inputDigest === inputs.inputDigest,
       "Release source or inputs digest mismatch",
@@ -116,6 +118,7 @@ export async function createSnapshot(
       await json(release.candidateManifest, "candidate-manifest"),
     );
     currentTime(saved.createdAt, now, "Candidate");
+    freshnessTimes.push(Date.parse(saved.createdAt));
     queryEnsure(
       saved.commit === commit &&
         saved.config === inputs.configPath &&
@@ -206,6 +209,7 @@ export async function createSnapshot(
     repository: report.repository,
     policyVersion: report.policyVersion,
     generatedAt: new Date(now).toISOString(),
+    expiresAt: new Date(Math.min(...freshnessTimes) + 86_400_000).toISOString(),
     evaluatedAt: report.evaluatedAt,
     provenance,
     selection: {
@@ -250,6 +254,12 @@ export async function loadSnapshot(
   queryEnsure(digest(body) === expected, "Snapshot digest mismatch");
   currentTime(snapshot.generatedAt, now, "Snapshot");
   currentTime(snapshot.evaluatedAt, now, "Snapshot evidence");
+  validTimestamp(snapshot.expiresAt);
+  queryEnsure(
+    now <= Date.parse(snapshot.expiresAt),
+    "Snapshot candidate or release is stale or expired",
+    "stale_snapshot",
+  );
   decodeRegistry(snapshot.payload.registry);
   decodePolicy(snapshot.payload.policy);
   const selection: SnapshotSelection = {

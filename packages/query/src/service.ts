@@ -19,6 +19,7 @@ export function createQueryService(raw: QuerySnapshot) {
       Number.isFinite(now) &&
         now - Date.parse(snapshot.evaluatedAt) <= 86_400_000 &&
         now - Date.parse(snapshot.generatedAt) <= 86_400_000 &&
+        now <= Date.parse(snapshot.expiresAt) &&
         now >= Date.parse(snapshot.generatedAt) - 60_000,
       "Snapshot is stale, expired or future",
       "stale_snapshot",

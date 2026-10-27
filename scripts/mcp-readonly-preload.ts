@@ -28,7 +28,8 @@ Bun.spawnSync = ((...args: Parameters<typeof Bun.spawnSync>) => {
     command[5] === "-c" &&
     command[6] === "core.hooksPath=/dev/null" &&
     command[7] === "-C" &&
-    ["rev-parse", "ls-files", "status"].includes(String(command[9]))
+    (["rev-parse", "ls-files", "status"].includes(String(command[9])) ||
+      (command[9] === "config" && command.slice(10).join(" ") === "--null --list --name-only"))
   ) {
     startupGitReads++;
     return spawnSync(...args);

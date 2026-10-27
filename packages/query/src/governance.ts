@@ -1,4 +1,4 @@
-import { evaluate, decode } from "@governanator/core";
+import { evaluate, decode, digest } from "@governanator/core";
 import { queryEnsure, QueryScope } from "./domain.ts";
 import type { QuerySnapshot, QueryResult } from "./domain.ts";
 import type { Args, ToolName } from "./requests.ts";
@@ -30,6 +30,15 @@ export function createProjector(snapshot: QuerySnapshot) {
     const component = byId(id);
     const current = payload.candidate?.api.components.find((c) => c.componentId === id);
     const old = payload.baseline?.api.components.find((c) => c.componentId === id);
+    if (
+      requested &&
+      current &&
+      old &&
+      current.contractVersion === requested &&
+      old.contractVersion === requested &&
+      digest(current) !== digest(old)
+    )
+      return ambiguousContract(id, requested);
     const found =
       !requested || requested === current?.contractVersion
         ? current
@@ -60,6 +69,26 @@ export function createProjector(snapshot: QuerySnapshot) {
       publication: "unknown",
     };
   }
+  function ambiguousContract(id: string, version: string) {
+    return {
+      status: "unavailable",
+      reason: "ambiguous_contract_version",
+      componentId: id,
+      requestedVersion: version,
+      availableSources: [
+        {
+          source: "local-baseline-fixture",
+          artifactDigest: payload.baseline?.artifactDigest,
+          version,
+        },
+        {
+          source: "recorded-candidate",
+          artifactDigest: payload.candidate?.artifactDigest,
+          version,
+        },
+      ],
+    };
+  }
   function matchingRelease(args: Args) {
     return payload.release &&
       payload.release.packageId === args.packageId &&
@@ -72,6 +101,13 @@ export function createProjector(snapshot: QuerySnapshot) {
     const old = payload.baseline?.api.components.find((c) => c.componentId === component.id),
       next = payload.candidate?.api.components.find((c) => c.componentId === component.id);
     if (!diff || !old || !next) return { status: "not_configured", componentId: component.id };
+    if (
+      to !== "candidate" &&
+      old.contractVersion === next.contractVersion &&
+      to === old.contractVersion &&
+      digest(old) !== digest(next)
+    )
+      return ambiguousContract(component.id, to);
     const available = [...new Set([old.contractVersion, next.contractVersion])];
     if (
       args.fromVersion !== old.contractVersion ||

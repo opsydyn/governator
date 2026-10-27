@@ -103,14 +103,29 @@ export function git(root: string, args: string[]): string {
   return result.stdout.toString().trim();
 }
 export function cleanHead(root: string): string {
+  const configNames = git(root, ["config", "--null", "--list", "--name-only"]).split("\0");
+  ensure(
+    !configNames.some(
+      (name) =>
+        name.toLowerCase().startsWith("filter.") && /\.(clean|process)$/.test(name.toLowerCase()),
+    ),
+    "Unsupported Git clean/process filter configuration: source verification must not execute repository commands",
+  );
   const commit = git(root, ["rev-parse", "--verify", "HEAD"]);
+  ensure(
+    !git(root, ["ls-files", "--stage", "-z"])
+      .split("\0")
+      .some((entry) => entry.startsWith("160000 ")),
+    "Unsupported Git submodule/gitlink: nested repository configuration cannot be verified safely",
+  );
   const entries = git(root, ["ls-files", "-v", "-z"]).split("\0").filter(Boolean);
   ensure(
     !entries.some((entry) => entry.startsWith("S ") || /^[a-z] /.test(entry)),
     "Unsupported hidden Git index flags: assume-unchanged/skip-worktree can conceal source edits",
   );
   ensure(
-    git(root, ["status", "--porcelain", "--untracked-files=all"]).length === 0,
+    git(root, ["status", "--porcelain", "--untracked-files=all", "--ignore-submodules=all"])
+      .length === 0,
     "Dirty/uncommitted repository inputs cannot receive local test-run proof",
   );
   return commit;

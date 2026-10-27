@@ -92,6 +92,7 @@ export const SnapshotBody = Schema.Struct({
   repository: text,
   policyVersion: text,
   generatedAt: Timestamp,
+  expiresAt: Timestamp,
   evaluatedAt: Timestamp,
   provenance: Schema.Literals(["unverified-snapshot", "simulated-snapshot"]),
   selection: Schema.Struct({
