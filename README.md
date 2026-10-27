@@ -56,4 +56,6 @@ Local release enforcement: `bun run release:plan` blocks the deliberately insuff
 
 Hosted CI/required-check configuration, authenticated published baselines and real browser/accessibility/human acceptance remain unverified. M2 provides local read-only MCP; see the [launch and snapshot runbook](docs/mcp.md) and [M2 verification](docs/m2-verification.md). External approvals, publication and deployment need trusted adapters.
 
-Recommended next phase: M3 trusted reviewer evidence, scoped to exact source, policy, inputs and artifact. Hosted activation and publication remain separately authorized work.
+M3a introduces a private synthetic review-evidence evaluator for testing exact candidate, policy, reviewer-role and freshness bindings. Its results are fixtures only; normal release review stays unconfigured. See [M3a evidence and verification](docs/m3a-verification.md).
+
+Recommended next: design and qualify authenticated GitHub review and independently protected artifact-binding authority; keep publication a separate gate.

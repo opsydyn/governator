@@ -1,6 +1,6 @@
 # M3a review-evidence contract and local verifier design
 
-Status: proposed for review. M2 is integrated into local main at `877b5c9`. This document does not configure a provider, grant approval or authorize publication.
+Status: implemented locally; the real GitHub provider remains separate. M2 is integrated into local main at `877b5c9`. This document does not configure a provider, grant approval or authorize publication.
 
 ## Intent
 

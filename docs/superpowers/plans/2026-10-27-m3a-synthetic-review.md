@@ -32,10 +32,10 @@
 
 **Interfaces:** `evaluateSyntheticReview(raw: unknown)` accepts one schema-versioned input containing explicit expected candidate/repository/PR/policy scope and clock, a separate fixture-only authorization policy, complete/partial/unavailable/unknown fixture provider observations and separate synthetic artifact-binding claims. It returns a JSON-serializable schema-versioned result with `assurance: "simulated"`, `status: "matched" | "insufficient_evidence" | "not_required"`, stable explicit reasons, and no reusable approval capability. Invalid schemas throw via existing core decode conventions. Use `{schemaVersion: 1, scope, at, policy, provider, bindings}`. Scope carries repository/PR, commit, package/version, baseline/candidate/input/release-policy/authorization-policy digests and IDs, candidate creation time, distributed-change and major flags. Policy contains its own ID, membership completeness/freshness and bounded unique actor-ID assignments with active/revoked/unknown status and owner/API roles; its canonical tamper-detection digest must match the expected authorization-policy digest. The fixture provider contains matching repo/PR/head, availability/completeness, observation time and unique reviews with actor, commit, state, effective current/superseded/unknown, submitted and expiry timestamps. Separate bindings carry review/actor identity, all candidate scope fields, observation and expiry. Exact nested schemas and fixture builders are documented in module/tests; no API is added to CLI, MCP or public protocol.
 
-- [ ] Write failing tests for a full matching fixture and every scope, state, freshness, policy, authorization, pagination and ambiguity class in the spec. Run RED for missing module.
-- [ ] Implement validated, deterministic evaluation: derive eligible reviewer roles from policy, not claimed roles; enforce exact matching on all scopes and separate binding claim identity; one or more authorized current approvals may cover roles. Current changes requested, unclear effective state, duplicate/conflicting IDs, incomplete provider data and missing bindings fail closed. Same-scope recheck is idempotent; no durable one-use guarantee. No distributed change returns simulated `not_required`, never a matched review. Membership may predate candidate creation if current and fresh; do not invent a candidate-relative policy timestamp requirement.
-- [ ] Enforce bounded collection/input sizes and canonical timestamps; test immediately before/after candidate creation, clock, expiry and 24-hour boundaries. Confirm synthetic-only `assurance` and absence of trust-grant properties on every result.
-- [ ] Run focused tests, `bun run check` and `bun run build`; commit the independently testable module with its tests.
+- [x] Write failing tests for a full matching fixture and every scope, state, freshness, policy, authorization, pagination and ambiguity class in the spec. Run RED for missing module.
+- [x] Implement validated, deterministic evaluation: derive eligible reviewer roles from policy, not claimed roles; enforce exact matching on all scopes and separate binding claim identity; one or more authorized current approvals may cover roles. Current changes requested, unclear effective state, duplicate/conflicting IDs, incomplete provider data and missing bindings fail closed. Same-scope recheck is idempotent; no durable one-use guarantee. No distributed change returns simulated `not_required`, never a matched review. Membership may predate candidate creation if current and fresh; do not invent a candidate-relative policy timestamp requirement.
+- [x] Enforce bounded collection/input sizes and canonical timestamps; test immediately before/after candidate creation, clock, expiry and 24-hour boundaries. Confirm synthetic-only `assurance` and absence of trust-grant properties on every result.
+- [x] Run focused tests, `bun run check` and `bun run build`; commit the independently testable module with its tests.
 
 ## Task 2 — Integration isolation and operator documentation
 
@@ -43,9 +43,9 @@
 
 **Interfaces:** Test real `captureCandidate`/`checkCandidate` and M2 snapshot/query APIs; never route simulated matching result into trusted host context.
 
-- [ ] Test arbitrary serialized `{verified:true}`, claimed roles and simulated matching reports cannot make normal changed releases eligible; saved report/MCP results remain observations. Run tests and record direct outcomes.
-- [ ] Document actual fixture semantics, expected inputs, explicit local limitations, no external activation, test commands and next live-adapter requirements. Do not imply provider-authenticated review.
-- [ ] Run all checks and builds; preserve addon budget and generated plain protocol. Commit.
+- [x] Test arbitrary serialized `{verified:true}`, claimed roles and simulated matching reports cannot make normal changed releases eligible; saved report/MCP results remain observations. Run tests and record direct outcomes.
+- [x] Document actual fixture semantics, expected inputs, explicit local limitations, no external activation, test commands and next live-adapter requirements. Do not imply provider-authenticated review.
+- [x] Run all checks and builds; preserve addon budget and generated plain protocol. Commit.
 
 ## Task 3 — Review and integrate locally
 

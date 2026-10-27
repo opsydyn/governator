@@ -45,6 +45,6 @@ One fresh-context reviewer inspected `088be69..9907cb0`: three Important finding
 
 Hosted CI/required checks, actual Codex/client activation, authenticated reviewer identities/npm provenance, publication/deployment, and human browser/keyboard/a11y acceptance are unverified. Synchronous query computation is not preemptively cancellable mid-call. Git LFS/custom-filter and submodule repositories need a separately qualified source adapter. Existing SemVer-prefix and raw Vitest summary-counter limitations remain outside M2.
 
-Recommended next: a bounded M3 trusted-review adapter, binding authenticated reviewer identity, roles, source, policy, input/artifact digests, expiry and replay rules. This addresses the remaining normal-release review gap while retaining separate publication authority. Do not activate hosted services or publish as part of that recommendation.
+M3a now supplies a simulated-only review evaluator; see [M3a verification](m3a-verification.md). The next phase must qualify authenticated GitHub reviewer authority and an independent exact-artifact binding before a real review gate is enabled. Hosted activation and publication remain separate.
 
 See [launch runbook](mcp.md) and [execution decisions](superpowers/plans/2026-10-27-m2-progress.md).
