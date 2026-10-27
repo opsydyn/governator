@@ -1,6 +1,6 @@
 # M3c exact-artifact attestation design
 
-Status: **proposed**. This document designs a local, fixture-only verification slice. It does not approve a production trust model, enroll reviewers, connect GitHub, enable a release gate, or authorize publication. The reviewer-authority choice remains open.
+Status: **proposed**. The user selected a repository-owner-managed reviewer policy as the authority model. This document designs a local, fixture-only verification slice; it does not establish a protected production policy, enroll reviewers, connect GitHub, enable a release gate, or authorize publication.
 
 ## Intent and current state
 
@@ -10,11 +10,11 @@ A source review is not approval of a later tarball. A signature proves that a ke
 
 ## Approaches and recommendation
 
-1. **Operator-managed policy and offline signed statement — recommended for the next local prototype.** An explicitly supplied fixture policy maps test public keys to fixture identities and roles. A verifier checks exact signed statement bytes and compares the full candidate scope. This gives a testable artifact-binding primitive without infrastructure, but an operator must independently manage real enrollment, role changes, revocation, policy freshness and key custody. It does not itself meet the handoff's trusted GitHub-review requirement.
+1. **Repository-owner-managed policy and offline signed statement — selected authority model; recommended local prototype.** An explicitly supplied fixture policy maps test public keys to fixture identities and roles. A verifier checks exact signed statement bytes and compares the full candidate scope. This gives a testable artifact-binding primitive without infrastructure, but the repository owner must independently manage real enrollment, role changes, revocation, policy freshness and key custody. It does not itself meet the handoff's trusted GitHub-review requirement.
 2. **GitHub team policy and protected CI.** GitHub organization membership and repository protections can eventually inform reviewer authority; a separate authenticated artifact-binding mechanism is still needed. This aligns with the intended GitHub workflow, but requires a selected organization and repository, qualified access, effective-review semantics, current membership and independently verified protection configuration. CI provenance alone does not prove a human approved the exact artifact.
 3. **Dedicated approval broker or GitHub App.** A service can authenticate reviewers and issue artifact-bound statements while centralizing policy, revocation and audit. It adds deployment, operating, availability and identity-provider obligations that are not justified for the offline slice.
 
-The prototype assumes option 1 solely as an injected **fixture model**; the user has not yet chosen the eventual authority. Options 2 and 3 remain viable later providers. No local policy or key is to be accepted as production authority by implementing this design.
+The user selected option 1 for reviewer authority. The prototype exercises it solely as an injected **fixture model**; the policy's protection and operation are not yet established. Options 2 and 3 remain possible future integrations. No local policy or key is to be accepted as production authority by implementing this design.
 
 ## Proposed local contract
 
@@ -35,4 +35,4 @@ Exercise the actual real-candidate release check and saved snapshot/MCP path wit
 
 ## Later operational decisions
 
-Before production authorization, decide the independent authority for reviewer enrollment and roles; how keys map to verified GitHub identities; who can update, revoke and recover policy or keys; trusted time and maximum policy age; rollback-resistant checkpoints; effective GitHub review and membership semantics; any author/reviewer separation rule; protected release execution and exact-byte handoff; and durable replay or one-use needs. These are not solved by DSSE or a signed policy digest. The [DSSE scope](https://github.com/secure-systems-lab/dsse/blob/master/governance/02-scope.md) leaves trust establishment and authorization outside the envelope protocol. [TUF's update model](https://theupdateframework.github.io/specification/v1.0.36/) illustrates that rollback and freeze checks require previously trusted state and time; an offline fixture cannot establish current revocation on its own.
+Before production authorization, establish how the repository owner independently protects and administers reviewer enrollment and roles; how keys map to verified GitHub identities; who can update, revoke and recover policy or keys; trusted time and maximum policy age; rollback-resistant checkpoints; effective GitHub review and membership semantics; any author/reviewer separation rule; protected release execution and exact-byte handoff; and durable replay or one-use needs. These are not solved by DSSE or a signed policy digest. The [DSSE scope](https://github.com/secure-systems-lab/dsse/blob/master/governance/02-scope.md) leaves trust establishment and authorization outside the envelope protocol. [TUF's update model](https://theupdateframework.github.io/specification/v1.0.36/) illustrates that rollback and freeze checks require previously trusted state and time; an offline fixture cannot establish current revocation on its own.
