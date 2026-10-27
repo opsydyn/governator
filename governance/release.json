@@ -10,6 +10,7 @@
   "consumerFixtures": ["governance/consumer.tsx"],
   "changesets": [
     ".changeset/dogfood-breaking-button.md",
+    ".changeset/exact-release-candidates.md",
     ".changeset/m0-foundation.md",
     ".changeset/vitest-evidence.md"
   ],

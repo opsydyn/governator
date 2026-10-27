@@ -31,23 +31,23 @@
 **Files:** packages/versioning/src/{intent,release,release-schema}.ts; tests/release-policy.test.ts.
 **Interfaces:** parseIntent(contents) imports real Changeset format; assessRelease(validated baseline/candidate, classification, changesets, evidence/review context) returns plain structured gate/reasons/changes/remediation.
 
-- [ ] Write failing tests for missing/insufficient declarations, highest bump, exact intended version, runtime-only change, docs-only no-op, unknown classification, prerelease/0.x, demo reviewed major and ordinary untrusted major.
-- [ ] Run tests RED; implement Effect schemas, real parser and strict rules; run GREEN plus existing suite.
+- [x] Write failing tests for missing/insufficient declarations, highest bump, exact intended version, runtime-only change, docs-only no-op, unknown classification, prerelease/0.x, demo reviewed major and ordinary untrusted major.
+- [x] Run tests RED; implement Effect schemas, real parser and strict rules; run GREEN plus existing suite.
 
 ### Task 2: Exact candidate CLI
 
 **Files:** packages/cli/src/{release,archive}.ts; tests/release-cli.test.ts; packages/cli/src/commands.ts.
 **Interfaces:** release plan/check --config PATH --candidate PATH [--root PATH] [--demo]; release candidate --config PATH --out DIR [--root PATH]. Candidate capture rebuilds/packages the configured private package on clean tracked source; check inspects that tarball, recomputes API/file digests and inputs, reruns local mapped tests and checks source again.
 
-- [ ] Write real-process fixtures and RED tests for successful capture/check, version mismatch, runtime change, artifact/input/HEAD tampering, symlinks/unsafe archives, test failure and no network/publication.
-- [ ] Implement bounded archive reading without extraction, tracked inputs, exclusive ignored outputs, source/build/test freshness and CLI exit codes 0/1/2; GREEN plus full suite.
+- [x] Write real-process fixtures and RED tests for successful capture/check, version mismatch, runtime change, artifact/input/HEAD tampering, symlinks/unsafe archives, test failure and no network/publication.
+- [x] Implement bounded archive reading without extraction, tracked inputs, exclusive ignored outputs, source/build/test freshness and CLI exit codes 0/1/2; GREEN plus full suite.
 
 ### Task 3: End-to-end local release demonstration
 
 **Files:** governance/release*.json, governance/releases/*, .changeset/dogfood-breaking-button.md, fixtures release package, scripts/release-demo.ts, core/protocol optional release details, addon manager, scripts/dogfood-report.ts, .github/workflows/check.yml, docs.
 **Interfaces:** optional schema-v1 release summary embeds the exact CLI result; demo script creates isolated local repositories from the committed source and exercises patch/minor blocks, major with missing proof blocked, reviewed simulated major eligible_under_demo_policy, changed tarball blocked. No fake approved booleans, no deployment claims.
 
-- [ ] Test report roundtrip/consumer compatibility and demo matrix RED; implement real tarball baseline, actual Changeset, migration/impact/matrix documents and exact artifact-bound simulation.
-- [ ] Add local CI workflow required-check definition (cannot configure branch protection or execute hosted CI locally); run its commands and label hosted status unobserved.
-- [ ] Run full Moon checks/builds, Storybook build and browser release panel; independently review whole branch, fix Important regressions RED→GREEN; document remaining M1 gaps accurately.
-- [ ] Commit locally, generate source-bound report on clean final HEAD; no push/publication.
+- [x] Test report roundtrip/consumer compatibility and demo matrix RED; implement real tarball baseline, actual Changeset, migration/impact/matrix documents and exact artifact-bound simulation.
+- [x] Add local CI workflow required-check definition (cannot configure branch protection or execute hosted CI locally); run its commands and label hosted status unobserved.
+- [x] Run full Moon checks/builds, Storybook build and browser release panel; independently review whole branch, fix Important regressions RED→GREEN; document remaining M1 gaps accurately.
+- [x] Commit locally, generate source-bound report on clean final HEAD; no push/publication.

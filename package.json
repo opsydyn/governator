@@ -20,7 +20,7 @@
     "boundaries": "bun scripts/boundaries.ts",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "bun run check && bun run build && changeset publish",
+    "release": "bun scripts/publish-disabled.ts",
     "storybook": "moon run storybook:dev",
     "storybook:build": "moon run storybook:build",
     "dogfood:report": "bun scripts/dogfood-report.ts",

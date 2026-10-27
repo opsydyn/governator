@@ -17,3 +17,5 @@ Plan: docs/superpowers/plans/2026-10-27-release-candidates.md; base eb6434f.
 
 - Full package simulation: patch/minor blocked; major missing scoped review insufficient; exact simulated reviewed major eligible_under_demo_policy; normal mode still insufficient; changed artifact rejected. All cases ran real React package builds, tarballs, consumer compilation and mapped UI tests.
 - Integration correction: direct API roots are canonicalized (symlink/tmp alias regression RED→GREEN), and the dogfood config enumerates all three pending Changesets. Full local check now 114/114 tests; independent npm and strict-pnpm updated addon builds pass.
+
+- Ruling: root release command now fails closed without a trusted publishing adapter; local/simulated eligibility cannot flow into the former unchecked Changesets publish command. Cost: actual publication requires separate adapter activation, while the existing disabled Changesets workflow template is preserved.
