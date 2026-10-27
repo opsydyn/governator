@@ -5,6 +5,7 @@ export default defineConfig({
   format: ["esm"],
   dts: true,
   clean: true,
+  minify: true,
   platform: "browser",
   target: "es2022",
   outDir: "dist",

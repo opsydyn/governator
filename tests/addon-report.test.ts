@@ -58,7 +58,7 @@ describe("read-only addon report boundary", () => {
   });
   test("rejects malformed, duplicate, unsupported and future reports", () => {
     expect(decodeReport({ schemaVersion: 1 }, now).status).toBe("error");
-    expect(decodeReport({ ...report(), schemaVersion: 2 }, now)).toMatchObject({
+    expect(decodeReport({ ...report(), schemaVersion: 3 }, now)).toMatchObject({
       status: "error",
       message: expect.stringMatching(/unsupported/i),
     });
@@ -148,4 +148,22 @@ describe("read-only addon report boundary", () => {
     const result = await loadReport("/report.json", "http://localhost:6006", now, fetchFixture);
     expect(result.status).toBe("ready");
   });
+});
+
+test("addon accepts strict v2 and rejects inconsistent evidence and observation times", () => {
+  const snapshot = evaluate(evaluation(), 2);
+  expect(decodeReport(snapshot, now).status).toBe("ready");
+  for (const change of [
+    (r: any) => r.decisions[0].checks[0].evidence.pop(),
+    (r: any) => r.decisions[0].checks[0].evidence.push(r.decisions[0].checks[0].evidence[0]),
+    (r: any) => (r.decisions[0].checks[0].evidence[0].observedAt = "2026-10-26T11:00:00Z"),
+    (r: any) => (r.decisions[0].checks[0].evidence[0].id = "unselected"),
+    (r: any) => (r.decisions[0].checks[0].evidence[0].observedAt = "2026-10-27T11:00:00.000Z"),
+    (r: any) => (r.decisions[0].checks[0].evidence[0].observedAt = "2026-02-30T11:00:00.000Z"),
+    (r: any) => (r.decisions[0].checks[0].evidence[0].unexpected = true),
+  ]) {
+    const invalid = structuredClone(snapshot);
+    change(invalid);
+    expect(decodeReport(invalid, now).status).toBe("error");
+  }
 });

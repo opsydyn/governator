@@ -341,3 +341,70 @@ describe("panel interactions", () => {
     expect(container.textContent).toBe("");
   });
 });
+
+test("v1 renders explicitly unknown evidence details", async () => {
+  await act(async () => root.render(render()));
+  await flush();
+  expect(container.textContent).toContain("Producer (reported): unknown");
+  expect(container.textContent).toContain("Source: unknown");
+});
+
+test.each([
+  undefined,
+  "artifacts/results.json",
+  "javascript:alert(1)",
+  "data:text/html,<script>alert(1)</script>",
+  "https://user:secret@example.com/result",
+  "https://example.com/result",
+])("renders reported v2 provenance and safe source %s", async (sourceUrl) => {
+  const input = evaluation();
+  if (sourceUrl) Object.assign(input.evidence[0]!, { sourceUrl });
+  const snapshot = evaluate(input, 2);
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response(JSON.stringify(snapshot))),
+  );
+  await act(async () => root.render(render()));
+  await flush();
+  expect(container.textContent).toContain("Producer (reported): vitest");
+  expect(container.textContent).toContain("Provenance (reported): demo");
+  expect(container.textContent).toContain(input.evidence[0]!.observedAt);
+  expect(container.textContent).toContain("Age at evaluation:");
+  expect(container.textContent).toContain(sourceUrl ?? "Source: unknown");
+  const links = container.querySelectorAll("a");
+  expect(links.length).toBe(sourceUrl === "https://example.com/result" ? 1 : 0);
+  if (links[0]) {
+    expect(links[0].getAttribute("href")).toBe(sourceUrl);
+    links[0].focus();
+    expect(document.activeElement).toBe(links[0]);
+  }
+  expect(container.querySelector("script")).toBeNull();
+  const age = container.querySelector("[data-evidence-age]")?.textContent;
+  expect(age).toBeTruthy();
+  await act(async () => vi.advanceTimersByTime(60_000));
+  expect(container.querySelector("[data-evidence-age]")?.textContent).toBe(age);
+});
+
+test("v2 evidence disappears on report expiry and reload recovers a current snapshot", async () => {
+  const input = evaluation();
+  const snapshot = evaluate(input, 2);
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response(JSON.stringify(snapshot))),
+  );
+  await act(async () => root.render(render()));
+  await flush();
+  expect(container.textContent).toContain("Producer (reported): vitest");
+  await act(async () => vi.advanceTimersByTime(24 * 60 * 60 * 1000 + 1));
+  expect(container.textContent).toContain("older than 24 hours");
+  expect(container.textContent).not.toContain("Producer (reported): vitest");
+  const fresh = { ...snapshot, evaluatedAt: new Date().toISOString() };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response(JSON.stringify(fresh))),
+  );
+  await pressEnter(button("Reload report"));
+  await flush();
+  expect(container.textContent).toContain("Producer (reported): vitest");
+  expect(document.activeElement).toBe(button("Reload report"));
+});

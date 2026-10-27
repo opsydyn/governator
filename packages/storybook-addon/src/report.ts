@@ -1,3 +1,4 @@
+import { reportSemanticsValid } from "../../protocol/src/report-semantics.ts";
 import validate from "./generated-validator.mjs";
 import type { GovernanceReport } from "@governanator/protocol";
 export type ReportState =
@@ -5,12 +6,17 @@ export type ReportState =
   | { status: "stale"; report: GovernanceReport; message: string }
   | { status: "empty" | "error" | "loading"; message: string };
 export function decodeReport(raw: unknown, now = Date.now()): ReportState {
-  if (raw && typeof raw === "object" && "schemaVersion" in raw && raw.schemaVersion !== 1)
+  if (
+    raw &&
+    typeof raw === "object" &&
+    "schemaVersion" in raw &&
+    ![1, 2].includes(raw.schemaVersion as number)
+  )
     return {
       status: "error",
-      message: "Unsupported report format. This addon supports governance schema 1.",
+      message: "Unsupported report format. This addon supports governance schemas 1 and 2.",
     };
-  if (!validate(raw))
+  if (!validate(raw) || !reportSemanticsValid(raw))
     return {
       status: "error",
       message: "Malformed governance report. Generate a valid report with the CLI.",

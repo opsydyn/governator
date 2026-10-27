@@ -1,7 +1,7 @@
 import { Ajv2020 } from "ajv/dist/2020.js";
 import standaloneCode from "ajv/dist/standalone/index.js";
 const ajv = new Ajv2020({ strict: false, code: { source: true, esm: true } });
-const schema = await Bun.file("packages/protocol/governance-report.schema.json").json();
+const schema = await Bun.file("packages/protocol/governance-report-versioned.schema.json").json();
 const validate = ajv.compile(schema);
 const outputs = new Map([
   ["packages/storybook-addon/src/generated-validator.mjs", standaloneCode(ajv, validate)],

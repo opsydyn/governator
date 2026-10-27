@@ -26,7 +26,14 @@ function useFreshness(
   }, [state, setState]);
 }
 
-const css = `.gn-panel{font:13px/1.5 ui-sans-serif,system-ui,sans-serif;padding:22px 26px;min-height:250px}.gn-panel *{box-sizing:border-box}.gn-panel h2{font-size:20px;letter-spacing:-.4px;margin:0}.gn-panel h3{font-size:13px;margin:0 0 9px}.gn-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.gn-small{font-size:11px;opacity:.72}.gn-chips{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:10px 0}.gn-chip{border:1px solid currentColor;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:650}.gn-card{border:1px solid color-mix(in srgb,currentColor 20%,transparent);border-radius:8px;padding:15px 17px;margin-bottom:14px;background:color-mix(in srgb,currentColor 3%,transparent)}.gn-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.gn-table{border-collapse:collapse;width:100%;font-size:12px}.gn-table th,.gn-table td{text-align:left;padding:10px 9px;border-bottom:1px solid color-mix(in srgb,currentColor 14%,transparent);vertical-align:top}.gn-table th{font-size:10px;text-transform:uppercase;letter-spacing:.7px;opacity:.7}.gn-table td:last-child{max-width:430px}.gn-panel code{font-size:11px}.gn-panel ul{padding-left:18px;margin:6px 0}.gn-panel button{font:inherit;border:1px solid color-mix(in srgb,currentColor 30%,transparent);background:transparent;color:inherit;border-radius:5px;padding:5px 9px;cursor:pointer}.gn-panel button:focus-visible{outline:3px solid #6b9bff;outline-offset:2px}.gn-note{border-left:3px solid #d79729;padding-left:12px}.gn-table-wrap{overflow-x:auto}@media(max-width:700px){.gn-split{grid-template-columns:1fr}.gn-panel{padding:16px}}`;
+const css = `.gn-panel{font:13px/1.5 ui-sans-serif,system-ui,sans-serif;padding:22px 26px;min-height:250px}.gn-panel *{box-sizing:border-box}.gn-panel h2{font-size:20px;letter-spacing:-.4px;margin:0}.gn-panel h3{font-size:13px;margin:0 0 9px}.gn-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.gn-small{font-size:11px;opacity:.72}.gn-chips{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:10px 0}.gn-chip{border:1px solid currentColor;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:650}.gn-card{border:1px solid color-mix(in srgb,currentColor 20%,transparent);border-radius:8px;padding:15px 17px;margin-bottom:14px;background:color-mix(in srgb,currentColor 3%,transparent)}.gn-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.gn-table{border-collapse:collapse;width:100%;font-size:12px}.gn-table th,.gn-table td{text-align:left;padding:10px 9px;border-bottom:1px solid color-mix(in srgb,currentColor 14%,transparent);vertical-align:top}.gn-table th{font-size:10px;text-transform:uppercase;letter-spacing:.7px;opacity:.7}.gn-table td:last-child{max-width:430px}.gn-panel code{font-size:11px}.gn-panel ul{padding-left:18px;margin:6px 0}.gn-panel button{font:inherit;border:1px solid color-mix(in srgb,currentColor 30%,transparent);background:transparent;color:inherit;border-radius:5px;padding:5px 9px;cursor:pointer}.gn-panel a:focus-visible,.gn-panel button:focus-visible{outline:3px solid #6b9bff;outline-offset:2px}.gn-note{border-left:3px solid #d79729;padding-left:12px}.gn-table-wrap{overflow-x:auto}@media(max-width:700px){.gn-split{grid-template-columns:1fr}.gn-panel{padding:16px}}`;
+function sourceHref(source: string | undefined): string | undefined {
+  if (!source || !URL.canParse(source)) return undefined;
+  const url = new URL(source);
+  return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password
+    ? url.href
+    : undefined;
+}
 function CopyId({ id }: { id: string }) {
   const [feedback, setFeedback] = useState("");
   const generation = useRef(0);
@@ -291,6 +298,10 @@ function Panel() {
           )}
           <div className="gn-card">
             <h3>Evidence and next actions</h3>
+            <p className="gn-small">
+              Producer and provenance are reported information, not authentication. Evidence age is
+              measured at report evaluation, not live freshness.
+            </p>
             <div className="gn-table-wrap">
               <table className="gn-table">
                 <thead>
@@ -311,6 +322,52 @@ function Panel() {
                           ? check.evidenceIds.map((id) => (
                               <div key={id}>
                                 <code>{id}</code>
+                                {(() => {
+                                  const evidence =
+                                    report.schemaVersion === 2
+                                      ? report.decisions
+                                          .find(
+                                            (item) => item.componentId === component.componentId,
+                                          )
+                                          ?.checks.find((item) => item.check === check.check)
+                                          ?.evidence.find((item) => item.id === id)
+                                      : undefined;
+                                  const href = sourceHref(evidence?.sourceUrl);
+                                  return (
+                                    <div className="gn-small">
+                                      <div>
+                                        Producer (reported): {evidence?.producer ?? "unknown"}
+                                      </div>
+                                      <div>
+                                        Provenance (reported): {evidence?.provenance ?? "unknown"}
+                                      </div>
+                                      <div>
+                                        Observed:{" "}
+                                        {evidence ? (
+                                          <time dateTime={evidence.observedAt}>
+                                            {evidence.observedAt}
+                                          </time>
+                                        ) : (
+                                          "unknown"
+                                        )}
+                                      </div>
+                                      <div data-evidence-age>
+                                        Age at evaluation:{" "}
+                                        {evidence
+                                          ? `${Math.floor((Date.parse(report.evaluatedAt) - Date.parse(evidence.observedAt)) / 1000)} seconds`
+                                          : "unknown"}
+                                      </div>
+                                      <div>
+                                        Source:{" "}
+                                        {href ? (
+                                          <a href={href}>{evidence?.sourceUrl}</a>
+                                        ) : (
+                                          (evidence?.sourceUrl ?? "unknown")
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             ))
                           : "None"}
