@@ -1,6 +1,6 @@
 # M3b GitHub source-review reader design
 
-Status: proposed for review. M3a is implemented locally; this next slice does not activate a GitHub connection or enable release approvals.
+Status: approved for local implementation. M3a is implemented locally; this next slice does not activate a GitHub connection or enable release approvals.
 
 ## Intent
 

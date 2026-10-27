@@ -58,4 +58,4 @@ Hosted CI/required-check configuration, authenticated published baselines and re
 
 M3a introduces a private synthetic review-evidence evaluator for testing exact candidate, policy, reviewer-role and freshness bindings. Its results are fixtures only; normal release review stays unconfigured. See [M3a evidence and verification](docs/m3a-verification.md).
 
-Recommended next: the [private GitHub source-review reader design](docs/superpowers/specs/2026-10-27-m3b-github-review-reader-design.md), followed by independently protected review authority and artifact binding. Publication remains a separate gate.
+M3b adds an inactive [GitHub source-review reader](docs/m3b-verification.md), tested with injected transport fixtures and returning only unverified observations. Recommended next: independently protected reviewer authority and authenticated artifact binding, followed by separately authorized real-provider qualification. Publication remains a separate gate.

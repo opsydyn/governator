@@ -14,6 +14,7 @@
     ".changeset/m0-foundation.md",
     ".changeset/m2-readonly-mcp.md",
     ".changeset/m3a-synthetic-review.md",
+    ".changeset/m3b-github-review-reader.md",
     ".changeset/vitest-evidence.md"
   ],
   "classification": "governance/release-change.json",
