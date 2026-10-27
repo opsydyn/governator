@@ -1,3 +1,4 @@
+import { runInNewContext } from "node:vm";
 import { describe, expect, test } from "vitest";
 import { dssePae, verifyFixtureAttestations } from "../packages/fixture-attestation/src/index.ts";
 import { fixtureAttestations, hash } from "./fixture-attestation-fixtures.ts";
@@ -333,4 +334,25 @@ test("rejects independently signed malformed and ambiguous payload bytes", () =>
     f.input.envelopes = [f.signPayload(malformed)];
     expect(verifyFixtureAttestations(f.input).status).toBe("insufficient_evidence");
   }
+});
+
+test.each([
+  [
+    "cross-realm",
+    (length: number): SharedArrayBuffer => runInNewContext(`new SharedArrayBuffer(${length})`),
+  ],
+  [
+    "altered prototype",
+    (length: number): SharedArrayBuffer => {
+      const buffer = new SharedArrayBuffer(length);
+      Object.setPrototypeOf(buffer, null);
+      return buffer;
+    },
+  ],
+])("rejects shared backing with %s", (_name, create) => {
+  const f = fixtureAttestations();
+  const bytes = new Uint8Array(create(f.input.policyBytes.length));
+  bytes.set(f.input.policyBytes);
+  Object.assign(f.input, { policyBytes: bytes });
+  expect(verifyFixtureAttestations(f.input).status).toBe("insufficient_evidence");
 });

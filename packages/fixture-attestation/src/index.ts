@@ -7,6 +7,12 @@ export const PAYLOAD_TYPE = "application/vnd.in-toto+json";
 export const STATEMENT_TYPE = "https://in-toto.io/Statement/v1";
 export const PREDICATE_TYPE = "https://governanator.dev/attestation/reviewer-approval/v1";
 const DAY = 86_400_000;
+// The native accessor checks the ArrayBuffer internal slot across realms and does not
+// rely on a caller-controlled prototype or Symbol.toStringTag.
+const arrayBufferByteLength = Object.getOwnPropertyDescriptor(
+  ArrayBuffer.prototype,
+  "byteLength",
+)!.get!;
 const text = Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(256));
 const identity = Schema.Number.check(
   Schema.isInt(),
@@ -141,7 +147,9 @@ function copied(value: unknown, limit: number): Uint8Array {
   const length = Object.getOwnPropertyDescriptor(prototype, "byteLength")!.get!.call(
     value,
   ) as number;
-  check(length <= limit && !(buffer instanceof SharedArrayBuffer));
+  // Throws for SharedArrayBuffer, including foreign-realm and prototype-modified instances.
+  const backingLength = arrayBufferByteLength.call(buffer) as number;
+  check(length <= limit && offset + length <= backingLength);
   return new Uint8Array(buffer, offset, length).slice();
 }
 function base64(value: string, max: number): Buffer {
