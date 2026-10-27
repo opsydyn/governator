@@ -39,6 +39,8 @@ import "../packages/storybook-addon/src/manager.tsx";
 const snapshot = () => evaluate(evaluation());
 const deadline = Date.parse(at) + 24 * 60 * 60 * 1000;
 const response = (body = snapshot()) => new Response(JSON.stringify(body));
+let testIndex = 0;
+const caseUrl = (name: string) => `/freshness-${testIndex}/${name}.json`;
 let container: HTMLDivElement;
 let root: Root;
 const renderPanel = () => storybook.renderPanel?.({ active: true });
@@ -57,7 +59,8 @@ const flush = async () => {
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(deadline - 10);
-  storybook.params = { componentId: "ui.button", reportUrl: "/one.json" };
+  testIndex++;
+  storybook.params = { componentId: "ui.button", reportUrl: caseUrl("one") };
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.stubGlobal(
     "fetch",
@@ -89,12 +92,14 @@ describe("mounted freshness", () => {
     await act(async () => root.render(renderLabel()));
     await flush();
     expect(container.textContent).toContain("L ");
+    expect(fetch).toHaveBeenCalledTimes(1);
     await act(async () => root.render(null));
     vi.setSystemTime(deadline + 1);
     await act(async () => root.render(renderLabel()));
     await flush();
     expect(container.textContent).toContain("?");
     expect(container.textContent).not.toContain("L ");
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
   test.each(["visibilitychange", "focus"])(
     "%s revalidates after timers are suspended",
@@ -104,6 +109,7 @@ describe("mounted freshness", () => {
       );
       await flush();
       expect(container.textContent).toContain("Gate:");
+      expect(fetch).toHaveBeenCalledTimes(2);
       vi.setSystemTime(deadline + 1);
       await act(async () =>
         (event === "focus" ? window : document).dispatchEvent(new Event(event)),
@@ -114,10 +120,11 @@ describe("mounted freshness", () => {
   );
   test("an older response cannot replace the changed URL", async () => {
     let finish!: (response: Response) => void;
+    const initialUrl = storybook.params.reportUrl;
     vi.stubGlobal(
       "fetch",
       vi.fn((url: string) =>
-        url.endsWith("one.json")
+        url.endsWith(initialUrl)
           ? new Promise<Response>((resolve) => {
               finish = resolve;
             })
@@ -125,7 +132,7 @@ describe("mounted freshness", () => {
       ),
     );
     await act(async () => root.render(renderPanel()));
-    storybook.params = { ...storybook.params, reportUrl: "/two.json" };
+    storybook.params = { ...storybook.params, reportUrl: caseUrl("two") };
     await act(async () => root.render(renderPanel()));
     await flush();
     expect(container.textContent).toContain("Gate:");
@@ -156,7 +163,7 @@ describe("mounted freshness", () => {
         publishable: false,
       },
     };
-    storybook.params = { ...storybook.params, reportUrl: "/release.json" };
+    storybook.params = { ...storybook.params, reportUrl: caseUrl("release") };
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => new Response(JSON.stringify(report))),
@@ -190,7 +197,7 @@ describe("mounted freshness", () => {
   });
 
   test("sidebar clears the old URL while its replacement is pending", async () => {
-    storybook.params = { ...storybook.params, reportUrl: "/initial.json" };
+    storybook.params = { ...storybook.params, reportUrl: caseUrl("initial") };
     vi.stubGlobal(
       "fetch",
       vi.fn((url: string) =>
@@ -202,7 +209,7 @@ describe("mounted freshness", () => {
     await act(async () => root.render(renderLabel()));
     await flush();
     expect(container.textContent).toContain("L ");
-    storybook.params = { ...storybook.params, reportUrl: "/pending.json" };
+    storybook.params = { ...storybook.params, reportUrl: caseUrl("pending") };
     await act(async () => root.render(renderLabel()));
     expect(container.textContent).not.toContain("L ");
     expect(container.textContent).toContain("?");
@@ -210,7 +217,7 @@ describe("mounted freshness", () => {
 
   test("a superseded sidebar poll cannot replace the newer observation", async () => {
     vi.setSystemTime(Date.parse(at));
-    storybook.params = { ...storybook.params, reportUrl: "/poll.json" };
+    storybook.params = { ...storybook.params, reportUrl: caseUrl("poll") };
     let finish!: (response: Response) => void;
     let calls = 0;
     vi.stubGlobal(
