@@ -2,6 +2,8 @@
 
 Date: 2026-10-27. Audited local source `eb2e4d7` using the actual dogfood report and the local Storybook manager in the Codex in-app browser. This is a targeted audit, not a WCAG conformance assessment, full screen-reader test, visual-regression suite or human acceptance. No implementation changes were made.
 
+Follow-up verification is recorded separately in [Storybook freshness and accessibility verification](storybook-freshness-accessibility-verification.md).
+
 ## Findings
 
 1. **High — an expired report can continue to show ready while the panel remains open.** A temporary report was loaded while still within the 24-hour freshness limit. At 16:44:50 UTC, more than nine seconds after its 16:44:40 expiry, the panel still displayed `ui.button` and `Gate: ready`; selecting Reload then changed it to “Unverified — this report is older than 24 hours.” The panel calls `loadReport` only on initial load or explicit refresh ([manager.tsx](../../packages/storybook-addon/src/manager.tsx#L22)); the decoder checks age at load ([report.ts](../../packages/storybook-addon/src/report.ts#L23)). The release gate remained blocked, but the readiness indication was stale. Source inspection also shows sidebar labels poll every 60 seconds with a 30-second cache, so they can remain stale temporarily; this sidebar expiry delay was not timed in the browser. Validation uses a time captured before fetch, so a report crossing expiry while a slow response is in flight needs a regression. The release subreport also has a separate timestamp.

@@ -33,19 +33,19 @@
 
 **Interface:** Keep `decodeReport(raw, now)` semantics and `loadReport` as internal addon APIs; allow deterministic clock injection such that fetch validation uses the post-body time. A shared internal revalidation mechanism serves the mounted `Panel` and `SidebarLabel` and can determine the earliest expiry without trusting a cached pre-expiry result. Implementation may split view from Storybook hooks to make actual React components testable, without changing addon public runtime dependencies.
 
-- [ ] Add failing tests for report-only/release-only expiry at boundary and +1 ms, a slow fetch crossing expiry, pending older response after URL change, mounted panel expiry and sidebar cached expiry, plus visibility/focus after delayed timers. Use actual React rendering and controlled clocks/timers, not only decoder mocks. Run and record RED.
-- [ ] Implement current-time post-fetch decoding and shared lifecycle invalidation, preserving request cancellation and current report validation. Include stale release-specific regeneration guidance while retaining rejection of mismatched/future data. Run focused tests GREEN, TypeScript, lint/format, addon boundary and budget. Commit locally.
-- [ ] Obtain independent task security/spec review, fix Important findings with RED→GREEN regressions and scoped re-review.
+- [x] Add failing tests for report-only/release-only expiry at boundary and +1 ms, a slow fetch crossing expiry, pending older response after URL change, mounted panel expiry and sidebar cached expiry, plus visibility/focus after delayed timers. Use actual React rendering and controlled clocks/timers, not only decoder mocks. Run and record RED.
+- [x] Implement current-time post-fetch decoding and shared lifecycle invalidation, preserving request cancellation and current report validation. Include stale release-specific regeneration guidance while retaining rejection of mismatched/future data. Run focused tests GREEN, TypeScript, lint/format, addon boundary and budget. Commit locally.
+- [x] Obtain independent task security/spec review, fix Important findings with RED→GREEN regressions and scoped re-review.
 
 ## Task 2 — Panel focus, copy and unverified recovery
 
 **Files:** `packages/storybook-addon/src/manager.tsx` / extracted panel view, rendered tests in `tests/addon-panel-interactions.test.tsx`; docs as appropriate.
 
-- [ ] Test actual rendered panel: keyboard-triggered reload retains/restores focused Reload across ready/loading/error; alert/status announces result, automatic expiry does not steal focus; unmapped component has functioning Reload. Test copy success/reject, identity switch during pending promise and stale completion. Record tests RED before implementation.
-- [ ] Implement stable reload control and accessible live feedback, robust per-component copy state/error handling and unmapped recovery. Keep content accurate and preserve report validation/trust. Run focused rendered tests and full addon checks; commit locally.
-- [ ] Obtain independent task review, fix Important findings and scoped re-review.
+- [x] Test actual rendered panel: keyboard-triggered reload retains/restores focused Reload across ready/loading/error; alert/status announces result, automatic expiry does not steal focus; unmapped component has functioning Reload. Test copy success/reject, identity switch during pending promise and stale completion. Record tests RED before implementation.
+- [x] Implement stable reload control and accessible live feedback, robust per-component copy state/error handling and unmapped recovery. Keep content accurate and preserve report validation/trust. Run focused rendered tests and full addon checks; commit locally.
+- [x] Obtain independent task review, fix Important findings and scoped re-review.
 
 ## Task 3 — Browser qualification and local integration
 
-- [ ] Run full local check/build and review entire branch independently. Use local dogfood Storybook and CUA to repeat ready/blocked/unmapped/missing/stale scenarios, near-expiry panel + sidebar behavior, focus and copy across stories, keyboard disclosures and narrow layout. Temporary ignored report fixtures must be restored with verified checksum. Record actual observations and limitations.
+- [x] Run full local check/build and review entire branch independently. Use local dogfood Storybook and CUA to repeat ready/blocked/unmapped/missing/stale scenarios, near-expiry panel + sidebar behavior, focus and copy across stories, keyboard disclosures and narrow layout. Temporary ignored report fixtures must be restored with verified checksum. Record actual observations and limitations.
 - [ ] Fast-forward local main and regenerate source-bound dogfood/Storybook/MCP smoke on clean final commit. No push or publish. Recommend evidence-provenance protocol compatibility design as next independent slice.
