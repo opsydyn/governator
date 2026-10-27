@@ -1,9 +1,29 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { decodeReport, loadReport } from "../packages/storybook-addon/src/report.ts";
 import { evaluate } from "../packages/core/src/index.ts";
 import { evaluation, at } from "./fixtures.ts";
 const now = Date.parse(at);
 const report = () => evaluate(evaluation());
+const release = () => ({
+  gate: "blocked",
+  status: "not_eligible",
+  assurance: "unverified",
+  baselineVersion: "8.4.1",
+  candidateVersion: "8.4.2",
+  baselineDigest: "sha256:baseline",
+  candidateDigest: "sha256:candidate",
+  sourceCommit: "a".repeat(40),
+  evaluatedAt: at,
+  inputDigest: "sha256:inputs",
+  minimumBump: "major",
+  declaredBump: "patch",
+  candidateManifest: "artifacts/candidate/candidate.json",
+  affectedComponents: ["ui.button"],
+  reasons: ["Removed public tone prop requires major"],
+  remediation: ["Declare and review a major migration"],
+  publishable: false,
+});
+afterEach(() => vi.useRealTimers());
 function fetchFixture(_url: string, options: RequestInit): Promise<Response> {
   expect(options.credentials).toBe("omit");
   expect(options.redirect).toBe("error");
@@ -11,39 +31,24 @@ function fetchFixture(_url: string, options: RequestInit): Promise<Response> {
 }
 describe("read-only addon report boundary", () => {
   test("renders optional exact-candidate release data without changing eligibility", () => {
-    const release = {
-      gate: "blocked",
-      status: "not_eligible",
-      assurance: "unverified",
-      baselineVersion: "8.4.1",
-      candidateVersion: "8.4.2",
-      baselineDigest: "sha256:baseline",
-      candidateDigest: "sha256:candidate",
-      sourceCommit: "a".repeat(40),
-      evaluatedAt: at,
-      inputDigest: "sha256:inputs",
-      minimumBump: "major",
-      declaredBump: "patch",
-      candidateManifest: "artifacts/candidate/candidate.json",
-      affectedComponents: ["ui.button"],
-      reasons: ["Removed public tone prop requires major"],
-      remediation: ["Declare and review a major migration"],
-      publishable: false,
-    };
-    const snapshot = { ...report(), release };
+    const candidate = release();
+    const snapshot = { ...report(), release: candidate };
     expect(
-      decodeReport({ ...snapshot, release: { ...release, sourceCommit: "b".repeat(40) } }, now)
+      decodeReport({ ...snapshot, release: { ...candidate, sourceCommit: "b".repeat(40) } }, now)
         .status,
     ).toBe("error");
     expect(
       decodeReport(
-        { ...snapshot, release: { ...release, evaluatedAt: "2026-10-20T12:00:00.000Z" } },
+        { ...snapshot, release: { ...candidate, evaluatedAt: "2026-10-20T12:00:00.000Z" } },
         now,
       ).status,
     ).toBe("error");
-    expect(decodeReport(snapshot, now)).toMatchObject({ status: "ready", report: { release } });
+    expect(decodeReport(snapshot, now)).toMatchObject({
+      status: "ready",
+      report: { release: candidate },
+    });
     expect(
-      decodeReport({ ...snapshot, release: { ...release, publishable: true } }, now).status,
+      decodeReport({ ...snapshot, release: { ...candidate, publishable: true } }, now).status,
     ).toBe("error");
   });
   test("accepts the engine snapshot without recomputing or editing its decisions", () => {
@@ -68,6 +73,49 @@ describe("read-only addon report boundary", () => {
   });
   test("stale evidence never renders as current readiness", () => {
     expect(decodeReport(report(), now + 25 * 3_600_000)).toMatchObject({ status: "stale" });
+  });
+  test("governance expires one millisecond after the 24-hour boundary", () => {
+    expect(decodeReport(report(), now + 24 * 3_600_000).status).toBe("ready");
+    expect(decodeReport(report(), now + 24 * 3_600_000 + 1).status).toBe("stale");
+  });
+  test("release expiry rejects the report with regeneration guidance", () => {
+    const boundary = now + 24 * 3_600_000;
+    const snapshot = {
+      ...report(),
+      evaluatedAt: new Date(boundary).toISOString(),
+      release: release(),
+    };
+    expect(decodeReport(snapshot, boundary).status).toBe("ready");
+    expect(decodeReport(snapshot, boundary + 1)).toMatchObject({
+      status: "error",
+      message: expect.stringMatching(/generat/i),
+    });
+  });
+  test("validates a slow response after its body completes", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now + 24 * 3_600_000);
+    let finishBody!: (value: unknown) => void;
+    const body = new Promise<unknown>((resolve) => {
+      finishBody = resolve;
+    });
+    const response = new Response("{}");
+    response.json = () => body;
+    const pending = loadReport(
+      "/report.json",
+      "http://localhost:6006",
+      undefined,
+      async () => response,
+    );
+    await Promise.resolve();
+    vi.setSystemTime(now + 24 * 3_600_000 + 1);
+    finishBody(report());
+    expect(await pending).toMatchObject({ status: "stale" });
+  });
+  test("an explicit numeric time remains fixed while loading", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now + 25 * 3_600_000);
+    const result = await loadReport("/report.json", "http://localhost:6006", now, fetchFixture);
+    expect(result.status).toBe("ready");
   });
   test("no report configuration is an honest functional onboarding state", async () => {
     expect(await loadReport(undefined, "http://localhost:6006", now)).toMatchObject({

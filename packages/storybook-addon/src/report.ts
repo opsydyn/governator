@@ -33,12 +33,17 @@ export function decodeReport(raw: unknown, now = Date.now()): ReportState {
       raw.release.sourceCommit !== raw.commit ||
       !Number.isFinite(evaluated) ||
       new Date(evaluated).toISOString() !== raw.release.evaluatedAt ||
-      evaluated > now + 60_000 ||
-      now - evaluated > 24 * 3_600_000
+      evaluated > now + 60_000
     )
       return {
         status: "error",
-        message: "Release candidate snapshot is stale, invalid or belongs to another source.",
+        message: "Release candidate snapshot is invalid or belongs to another source.",
+      };
+    if (now - evaluated > 24 * 3_600_000)
+      return {
+        status: "error",
+        message:
+          "Unverified — release candidate snapshot is older than 24 hours. Generate a current release snapshot.",
       };
   }
   if (now - time > 24 * 3_600_000)
@@ -53,7 +58,7 @@ export type ReportFetcher = (url: string, options: RequestInit) => Promise<Respo
 export async function loadReport(
   url: string | undefined,
   base: string,
-  now = Date.now(),
+  now: number | (() => number) = Date.now,
   fetcher: ReportFetcher = (input, options) => fetch(input, options),
   signal?: AbortSignal,
 ): Promise<ReportState> {
@@ -87,7 +92,9 @@ export async function loadReport(
         status: "error",
         message: `Unverified — governance report unavailable (HTTP ${response.status}).`,
       };
-    return decodeReport(await response.json(), now);
+    const body: unknown = await response.json();
+    if (signal?.aborted) throw new Error("Report request aborted");
+    return decodeReport(body, typeof now === "function" ? now() : now);
   } catch {
     return {
       status: "error",
@@ -95,4 +102,20 @@ export async function loadReport(
         "Unverified — governance report could not be loaded or parsed. Check the report URL and JSON format.",
     };
   }
+}
+
+/** The first instant at which a validated observation is no longer current. */
+export function reportExpiry(report: GovernanceReport): number {
+  return (
+    Math.min(
+      Date.parse(report.evaluatedAt),
+      report.release ? Date.parse(report.release.evaluatedAt) : Infinity,
+    ) +
+    24 * 3_600_000 +
+    1
+  );
+}
+
+export function revalidateReport(state: ReportState): ReportState {
+  return state.status === "ready" ? decodeReport(state.report) : state;
 }

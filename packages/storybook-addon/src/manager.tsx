@@ -4,8 +4,27 @@ import type { API, HashEntry } from "storybook/manager-api";
 import { addons, types, useParameter } from "storybook/manager-api";
 import { AddonPanel } from "storybook/internal/components";
 import { useTheme } from "storybook/theming";
-import { loadReport } from "./report.ts";
+import { loadReport, reportExpiry, revalidateReport } from "./report.ts";
 import type { ReportState } from "./report.ts";
+
+function useFreshness(
+  state: ReportState,
+  setState: React.Dispatch<React.SetStateAction<ReportState>>,
+) {
+  useEffect(() => {
+    if (state.status !== "ready") return;
+    const revalidate = () => setState((current) => revalidateReport(current));
+    const delay = Math.max(0, reportExpiry(state.report) - Date.now());
+    const timer = setTimeout(revalidate, Math.min(delay, 2_147_483_647));
+    window.addEventListener("focus", revalidate);
+    document.addEventListener("visibilitychange", revalidate);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("focus", revalidate);
+      document.removeEventListener("visibilitychange", revalidate);
+    };
+  }, [state, setState]);
+}
 
 const css = `.gn-panel{font:13px/1.5 ui-sans-serif,system-ui,sans-serif;padding:22px 26px;min-height:250px}.gn-panel *{box-sizing:border-box}.gn-panel h2{font-size:20px;letter-spacing:-.4px;margin:0}.gn-panel h3{font-size:13px;margin:0 0 9px}.gn-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.gn-small{font-size:11px;opacity:.72}.gn-chips{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:10px 0}.gn-chip{border:1px solid currentColor;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:650}.gn-card{border:1px solid color-mix(in srgb,currentColor 20%,transparent);border-radius:8px;padding:15px 17px;margin-bottom:14px;background:color-mix(in srgb,currentColor 3%,transparent)}.gn-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.gn-table{border-collapse:collapse;width:100%;font-size:12px}.gn-table th,.gn-table td{text-align:left;padding:10px 9px;border-bottom:1px solid color-mix(in srgb,currentColor 14%,transparent);vertical-align:top}.gn-table th{font-size:10px;text-transform:uppercase;letter-spacing:.7px;opacity:.7}.gn-table td:last-child{max-width:430px}.gn-panel code{font-size:11px}.gn-panel ul{padding-left:18px;margin:6px 0}.gn-panel button{font:inherit;border:1px solid color-mix(in srgb,currentColor 30%,transparent);background:transparent;color:inherit;border-radius:5px;padding:5px 9px;cursor:pointer}.gn-panel button:focus-visible{outline:3px solid #6b9bff;outline-offset:2px}.gn-note{border-left:3px solid #d79729;padding-left:12px}.gn-table-wrap{overflow-x:auto}@media(max-width:700px){.gn-split{grid-template-columns:1fr}.gn-panel{padding:16px}}`;
 function Panel() {
@@ -18,20 +37,34 @@ function Panel() {
     message: "Loading governance snapshot…",
   });
   const [refresh, setRefresh] = useState(0);
+  const [stateKey, setStateKey] = useState({ url: params.reportUrl, refresh });
+  useFreshness(state, setState);
+  const currentState: ReportState =
+    stateKey.url === params.reportUrl && stateKey.refresh === refresh
+      ? revalidateReport(state)
+      : { status: "loading", message: "Loading governance snapshot…" };
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     let active = true;
+    setStateKey({ url: params.reportUrl, refresh });
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10_000);
+    const timeout = setTimeout(() => {
+      controller.abort();
+      if (active)
+        setState({
+          status: "error",
+          message: "Unverified — governance report request timed out. Reload the report.",
+        });
+    }, 10_000);
     if (params.reportUrl !== undefined && typeof params.reportUrl !== "string") {
       setState({ status: "error", message: "Governance reportUrl must be a string." });
       clearTimeout(timeout);
       return () => controller.abort();
     }
     setState({ status: "loading", message: "Loading governance snapshot…" });
-    void loadReport(reportUrl, window.location.href, Date.now(), fetch, controller.signal).then(
+    void loadReport(reportUrl, window.location.href, Date.now, fetch, controller.signal).then(
       (result) => {
-        if (active) setState(result);
+        if (active && !controller.signal.aborted) setState(revalidateReport(result));
         clearTimeout(timeout);
       },
     );
@@ -53,7 +86,7 @@ function Panel() {
         : theme.base === "dark"
           ? "#f2cf7f"
           : "#855800";
-  if (state.status !== "ready")
+  if (currentState.status !== "ready")
     return (
       <section
         className="gn-panel"
@@ -67,15 +100,18 @@ function Panel() {
           </div>
           <button onClick={() => setRefresh((value) => value + 1)}>Reload report</button>
         </div>
-        <div role={state.status === "error" ? "alert" : "status"} className="gn-card gn-note">
-          {state.message}
+        <div
+          role={currentState.status === "error" ? "alert" : "status"}
+          className="gn-card gn-note"
+        >
+          {currentState.message}
         </div>
         <p className="gn-small">
           A report is optional. This panel never grants approval or infers production deployment.
         </p>
       </section>
     );
-  const report = state.report;
+  const report = currentState.report;
   const component = report.decisions.find((item) => item.componentId === componentId);
   if (!component)
     return (
@@ -275,13 +311,9 @@ function sidebarReport(url: string): Promise<ReportState> {
   if (cached && Date.now() - cached.at < 30_000) return cached.promise;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10_000);
-  const promise = loadReport(
-    url,
-    window.location.href,
-    Date.now(),
-    fetch,
-    controller.signal,
-  ).finally(() => clearTimeout(timeout));
+  const promise = loadReport(url, window.location.href, Date.now, fetch, controller.signal).finally(
+    () => clearTimeout(timeout),
+  );
   sidebarReports.set(url, { at: Date.now(), promise });
   return promise;
 }
@@ -303,12 +335,19 @@ function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: 
       ? params.reportUrl
       : undefined;
   const [state, setState] = useState<ReportState>({ status: "empty", message: "Unverified" });
+  const [stateUrl, setStateUrl] = useState(url);
+  useFreshness(state, setState);
   useEffect(() => {
     let active = true;
+    let generation = 0;
     const update = () => {
+      const request = ++generation;
       if (url)
         void sidebarReport(url).then((value) => {
-          if (active) setState(value);
+          if (active && request === generation) {
+            setStateUrl(url);
+            setState(revalidateReport(value));
+          }
         });
       else setState({ status: "empty", message: "Unverified" });
     };
@@ -319,12 +358,16 @@ function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: 
       clearInterval(interval);
     };
   }, [url, componentId]);
+  const currentState =
+    stateUrl === url
+      ? revalidateReport(state)
+      : { status: "empty" as const, message: "Unverified" };
   const component =
-    state.status === "ready"
-      ? state.report.decisions.find((c) => c.componentId === componentId)
+    currentState.status === "ready"
+      ? currentState.report.decisions.find((c) => c.componentId === componentId)
       : undefined;
   const title = component
-    ? `Lifecycle: ${component.lifecycle}; readiness gate: ${component.gate}; release gate: ${state.status === "ready" ? (state.report.release?.gate ?? "unknown") : "unknown"}`
+    ? `Lifecycle: ${component.lifecycle}; readiness gate: ${component.gate}; release gate: ${currentState.status === "ready" ? (currentState.report.release?.gate ?? "unknown") : "unknown"}`
     : "Governance unverified: identity or current report unavailable";
   return (
     <span style={{ display: "flex", gap: 6, alignItems: "center", minWidth: 0 }}>
