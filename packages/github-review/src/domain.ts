@@ -105,6 +105,14 @@ export type ReviewResponse = {
 /** Caller owns credentials and MUST disable automatic redirects before sending them. */
 export type ReviewTransport = (url: string, request: ReviewRequest) => Promise<ReviewResponse>;
 
+type FailureDetails = Readonly<{ reason: ReviewReason; unavailable: boolean }>;
+const failureDetails = new WeakMap<object, FailureDetails>();
+
+/** No prototype or property inspection of an arbitrary thrown value. */
+export function collectionFailureDetails(value: unknown): FailureDetails | undefined {
+  return failureDetails.get(Object(value));
+}
+
 export class CollectionFailure extends Error {
   constructor(
     readonly reason: ReviewReason,
@@ -112,6 +120,7 @@ export class CollectionFailure extends Error {
   ) {
     super(reason);
     this.name = "CollectionFailure";
+    failureDetails.set(this, Object.freeze({ reason, unavailable }));
   }
 }
 export function requireCondition(condition: unknown, reason: ReviewReason): asserts condition {

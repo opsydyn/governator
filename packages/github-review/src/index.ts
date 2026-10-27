@@ -1,5 +1,6 @@
 import {
   CollectionFailure,
+  collectionFailureDetails,
   normalizeReview,
   parseOptions,
   parseScope,
@@ -41,6 +42,27 @@ const nativeByteLength: (this: Uint8Array) => number = Object.getOwnPropertyDesc
   "byteLength",
 )!.get!;
 const nativeSetBytes = Uint8Array.prototype.set;
+
+// Foreign callbacks/getters never select internal reason codes, even if they throw an actual
+// CollectionFailure imported from an internal module. Do not inspect the thrown value at all.
+function foreign<T>(reason: ReviewReason, work: () => T): T {
+  try {
+    return work();
+  } catch {
+    throw new CollectionFailure(reason);
+  }
+}
+async function foreignAsync<T>(
+  reason: ReviewReason,
+  work: () => Promise<T>,
+  unavailable = false,
+): Promise<T> {
+  try {
+    return await work();
+  } catch {
+    throw new CollectionFailure(reason, unavailable);
+  }
+}
 
 /**
  * Collect only unverified source observations. The caller supplies the collection clock and
@@ -142,34 +164,54 @@ export async function collectGithubReviews(
       const url = pageUrl(pullUrl, page);
       phase = "transport_unavailable";
       response = await bounded(() =>
-        transport(url, { method: "GET", redirect: "manual", signal: controller.signal }),
+        foreignAsync(
+          "transport_unavailable",
+          () => transport(url, { method: "GET", redirect: "manual", signal: controller.signal }),
+          true,
+        ),
       );
+      phase = "unsafe_response";
+      const metadata = foreign("unsafe_response", () => ({
+        status: response!.status,
+        redirected: response!.redirected,
+        url: response!.url,
+      }));
       requireCondition(
-        response.redirected === false &&
-          response.url === url &&
-          !(response.status >= 300 && response.status < 400),
+        Number.isInteger(metadata.status) &&
+          metadata.redirected === false &&
+          metadata.url === url &&
+          !(metadata.status >= 300 && metadata.status < 400),
         "unsafe_response",
       );
-      if (response.status !== 200) {
+      if (metadata.status !== 200) {
         const statuses = new Map<number, ReviewReason>([
           [401, "unauthorized"],
           [403, "forbidden"],
           [404, "not_found"],
           [429, "rate_limited"],
         ]);
-        throw new CollectionFailure(statuses.get(response.status) ?? "provider_unavailable", true);
+        throw new CollectionFailure(statuses.get(metadata.status) ?? "provider_unavailable", true);
       }
-      const next = nextPage(response.headers.get("link"), pullUrl, page);
+      phase = "invalid_pagination";
+      const link = foreign("invalid_pagination", () => response!.headers.get("link"));
+      const next = nextPage(link, pullUrl, page);
       phase = "body_unavailable";
-      reader = response.body.getReader();
+      reader = foreign("body_unavailable", () => response!.body.getReader());
       const chunks: Uint8Array[] = [];
       let pageBytes = 0;
       while (true) {
-        const chunk = await bounded(() => reader!.read());
-        if (chunk.done) break;
-        requireCondition(chunk.value instanceof Uint8Array, "body_unavailable");
+        const chunk = await bounded(() => foreignAsync("body_unavailable", () => reader!.read()));
+        const done = foreign("body_unavailable", () => chunk.done);
+        requireCondition(done === true || done === false, "body_unavailable");
+        if (done) break;
+        const value = foreign("body_unavailable", () => chunk.value);
+        requireCondition(value !== undefined, "body_unavailable");
+        requireCondition(
+          foreign("body_unavailable", () => value instanceof Uint8Array),
+          "body_unavailable",
+        );
         requireCondition(chunks.length < reviewLimits.chunksPerPage, "body_chunks_limit");
-        const byteLength = nativeByteLength.call(chunk.value);
+        const byteLength = foreign("body_unavailable", () => nativeByteLength.call(value));
         pageBytes += byteLength;
         totalBytes += byteLength;
         requireCondition(pageBytes <= reviewLimits.pageBytes, "page_bytes_limit");
@@ -177,10 +219,10 @@ export async function collectGithubReviews(
         // Intrinsic set reads TypedArray internal slots, bypassing slice/species/iterators and
         // shadowed properties. Always allocate an ordinary, independent view AFTER budget checks.
         const snapshot = new Uint8Array(byteLength);
-        nativeSetBytes.call(snapshot, chunk.value);
+        foreign("body_unavailable", () => nativeSetBytes.call(snapshot, value));
         chunks.push(snapshot);
       }
-      reader.releaseLock();
+      foreign("body_unavailable", () => reader!.releaseLock());
       reader = undefined;
       response = undefined;
       const bytes = new Uint8Array(pageBytes);
@@ -207,10 +249,10 @@ export async function collectGithubReviews(
     return { ...envelope, status: "complete", scope, reasons: [], reviews };
   } catch (error) {
     controller.abort();
-    const failure =
-      error instanceof CollectionFailure
-        ? error
-        : new CollectionFailure(phase, phase === "transport_unavailable");
+    const failure = collectionFailureDetails(error) ?? {
+      reason: phase,
+      unavailable: phase === "transport_unavailable",
+    };
     return {
       ...envelope,
       status: failure.unavailable && completePages === 0 ? "unavailable" : "incomplete",

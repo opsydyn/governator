@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { CollectionFailure } from "../packages/github-review/src/domain.ts";
 import { collectGithubReviews } from "../packages/github-review/src/index.ts";
 import {
   fakeReviewTransport,
@@ -732,4 +733,178 @@ class HostileReviewChunk extends Uint8Array {
   static get [Symbol.species]() {
     throw new Error("fixture-secret species");
   }
+}
+
+// These exceptions originate outside the collector, even when they use its internal class.
+const foreignFailureCases = [
+  ["primitive rejection", () => "fixture-secret-primitive"],
+  [
+    "throwing prototype",
+    () =>
+      new Proxy(
+        {},
+        {
+          getPrototypeOf() {
+            throw new Error("fixture-secret-error-prototype");
+          },
+        },
+      ),
+  ],
+  [
+    "forged internal prototype",
+    () =>
+      Object.assign(Object.create(CollectionFailure.prototype), {
+        reason: "fixture-secret-reason",
+        unavailable: true,
+      }),
+  ],
+  ["actual internal class", () => new CollectionFailure("timeout", true)],
+  [
+    "throwing reason",
+    () =>
+      Object.defineProperty(new CollectionFailure("timeout", true), "reason", {
+        get() {
+          throw new Error("fixture-secret-reason-getter");
+        },
+      }),
+  ],
+  [
+    "throwing availability",
+    () =>
+      Object.defineProperty(new CollectionFailure("timeout", true), "unavailable", {
+        get() {
+          throw new Error("fixture-secret-unavailable-getter");
+        },
+      }),
+  ],
+] as const;
+
+describe("foreign failures never select internal reasons or escape redaction", () => {
+  test.each(foreignFailureCases)("transport rejection: %s", async (_name, createFailure) => {
+    const result = await collectGithubReviews(githubReviewScope, () =>
+      Promise.reject(createFailure()),
+    );
+    expect(result).toMatchObject({ status: "unavailable", reasons: ["transport_unavailable"] });
+    expect(JSON.stringify(result)).not.toContain("fixture-secret");
+  });
+  test.each(foreignFailureCases)("response header callback: %s", async (_name, createFailure) => {
+    const response = await fakeReviewTransport()(githubReviewPageUrl(), {
+      method: "GET",
+      redirect: "manual",
+      signal: new AbortController().signal,
+    });
+    const headers = {
+      get() {
+        throw createFailure();
+      },
+    };
+    const result = await collectGithubReviews(githubReviewScope, () =>
+      Promise.resolve({ ...response, headers }),
+    );
+    expect(result).toMatchObject({ status: "incomplete", reasons: ["invalid_pagination"] });
+    expect(JSON.stringify(result)).not.toContain("fixture-secret");
+  });
+  test.each(foreignFailureCases)(
+    "response metadata property getter: %s",
+    async (_name, createFailure) => {
+      const response = await fakeReviewTransport()(githubReviewPageUrl(), {
+        method: "GET",
+        redirect: "manual",
+        signal: new AbortController().signal,
+      });
+      Object.defineProperty(response, "url", {
+        get() {
+          throw createFailure();
+        },
+      });
+      const result = await collectGithubReviews(githubReviewScope, () => Promise.resolve(response));
+      expect(result).toMatchObject({ status: "incomplete", reasons: ["unsafe_response"] });
+      expect(JSON.stringify(result)).not.toContain("fixture-secret");
+    },
+  );
+  test.each(foreignFailureCases)(
+    "response body property getter: %s",
+    async (_name, createFailure) => {
+      const response = await fakeReviewTransport()(githubReviewPageUrl(), {
+        method: "GET",
+        redirect: "manual",
+        signal: new AbortController().signal,
+      });
+      Object.defineProperty(response, "body", {
+        get() {
+          throw createFailure();
+        },
+      });
+      const result = await collectGithubReviews(githubReviewScope, () => Promise.resolve(response));
+      expect(result).toMatchObject({ status: "incomplete", reasons: ["body_unavailable"] });
+      expect(JSON.stringify(result)).not.toContain("fixture-secret");
+    },
+  );
+  test.each(foreignFailureCases)("stream read rejection: %s", async (_name, createFailure) => {
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.error(createFailure());
+      },
+    });
+    const result = await collect({ body });
+    expect(result).toMatchObject({ status: "incomplete", reasons: ["body_unavailable"] });
+    expect(JSON.stringify(result)).not.toContain("fixture-secret");
+  });
+});
+
+describe("abort outcome wins cooperative foreign rejections", () => {
+  test.each(["cancelled", "timeout"] as const)(
+    "cooperative transport retains %s",
+    async (reason) => {
+      const caller = new AbortController();
+      const cancel = setTimeout(() => caller.abort(), reason === "cancelled" ? 5 : 1000);
+      const result = await collectGithubReviews(githubReviewScope, cooperativeRejectingTransport, {
+        signal: caller.signal,
+        timeoutMs: reason === "timeout" ? 5 : 1000,
+      });
+      clearTimeout(cancel);
+      expect(result.reasons).toEqual([reason]);
+    },
+  );
+  test.each(["cancelled", "timeout"] as const)(
+    "cooperative body read retains %s",
+    async (reason) => {
+      const caller = new AbortController();
+      const cancel = setTimeout(() => caller.abort(), reason === "cancelled" ? 5 : 1000);
+      const result = await collectGithubReviews(githubReviewScope, cooperativeRejectingBody, {
+        signal: caller.signal,
+        timeoutMs: reason === "timeout" ? 5 : 1000,
+      });
+      clearTimeout(cancel);
+      expect(result.reasons).toEqual([reason]);
+    },
+  );
+});
+
+function cooperativeRejectingTransport(
+  _url: string,
+  request: { signal: AbortSignal },
+): Promise<never> {
+  return new Promise((_resolve, reject) => {
+    request.signal.addEventListener(
+      "abort",
+      () => reject(new CollectionFailure("provider_unavailable", true)),
+      { once: true },
+    );
+  });
+}
+function cooperativeRejectingBody(
+  url: string,
+  request: Parameters<ReturnType<typeof fakeReviewTransport>>[1],
+) {
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      request.signal.addEventListener(
+        "abort",
+        () => controller.error(new CollectionFailure("provider_unavailable", true)),
+        { once: true },
+      );
+    },
+  });
+  return fakeReviewTransport([{ body }])(url, request);
 }
