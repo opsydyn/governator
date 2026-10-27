@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task after implementation approval. Steps use checkbox syntax.
 
-**Status:** Proposed next phase. This commit records the plan only; implementation is not authorized by the planning request.
+**Status:** Approved and implemented locally on `codex/m2-readonly-mcp`. See `docs/m2-verification.md` for qualification and remaining gates. No push, publication or client activation.
 
 **Goal:** Let an MCP client inspect component governance, contract differences, release blocks and migration guidance using the same validated reports and policy functions as the CLI and Storybook.
 
@@ -80,42 +80,42 @@ All tools are annotated readOnlyHint=true, destructiveHint=false, idempotentHint
 **Files:** Create `packages/query/src/{domain,snapshot,service,index}.ts`, package/tsdown/Moon files; modify `.moon/workspace.yml`, root build aliases and protocol generator; tests `tests/query-snapshot.test.ts` and `tests/query-service.test.ts`.
 **Interfaces:** `loadSnapshot(root, path, now): Promise<QuerySnapshot>` owns bounded reads; `createQueryService(snapshot): QueryService` is immutable and IO-free. Domain request/response schemas generate plain protocol types. Server has no caller-controlled filesystem API.
 
-- [ ] Write failing tests: valid selected snapshot loads unchanged; wrong source/inputs/version/time/hash, traversal, symlink and oversized bundle/document reject; snapshot reading creates no reusable attestations.
-- [ ] Run those tests RED; implement loader and schemas, preserving all source provenance.
-- [ ] Test query ordering/filter/pagination, unknown component, empty registry and unchanged recorded decisions. Implement the shared read service.
-- [ ] Verify `bun run check`, protocol freshness and dependency boundaries. Commit the independently testable query layer.
+- [x] Write failing tests: valid selected snapshot loads unchanged; wrong source/inputs/version/time/hash, traversal, symlink and oversized bundle/document reject; snapshot reading creates no reusable attestations.
+- [x] Run those tests RED; implement loader and schemas, preserving all source provenance.
+- [x] Test query ordering/filter/pagination, unknown component, empty registry and unchanged recorded decisions. Implement the shared read service.
+- [x] Verify `bun run check`, protocol freshness and dependency boundaries. Commit the independently testable query layer.
 
 ## Task 2 — Governance, contract and migration query parity
 
 **Files:** `packages/query/src/{governance,contracts,migrations}.ts`; `packages/cli/src/{snapshot,query}.ts` and CLI dispatch/help; tests `tests/query-parity.test.ts`, `tests/query-cli.test.ts`.
 **Interfaces:** `exportSnapshot(root, inputs, out)` explicitly writes a selected bundle; `querySnapshot(service, name, args)` returns the versioned envelope. Reuse core evaluate/diffApi; no duplicate bump or policy evaluator.
 
-- [ ] Write RED tests for all 14 tools' semantic behaviors in the table, including unavailable history/provider data and simulated review labels.
-- [ ] Implement queries and CLI `snapshot export` / `query` wrappers with contained inputs and explicit flags. Preserve existing evaluate/check/release syntax.
-- [ ] Assert byte-equivalent report bodies and equal gate/reasons/digests for CLI query, Storybook's snapshot projection and shared service. Compare pure evaluate_component to CLI evaluate at identical inputs/clock, not to a different fresh-test context.
-- [ ] Test no broad approved label under the unit-only dogfood policy; incomplete/stale data never becomes success. Run full checks and commit.
+- [x] Write RED tests for all 14 tools' semantic behaviors in the table, including unavailable history/provider data and simulated review labels.
+- [x] Implement queries and CLI `snapshot export` / `query` wrappers with contained inputs and explicit flags. Preserve existing evaluate/check/release syntax.
+- [x] Assert byte-equivalent report bodies and equal gate/reasons/digests for CLI query, Storybook's snapshot projection and shared service. Compare pure evaluate_component to CLI evaluate at identical inputs/clock, not to a different fresh-test context.
+- [x] Test no broad approved label under the unit-only dogfood policy; incomplete/stale data never becomes success. Run full checks and commit.
 
 ## Task 3 — Bun MCP SDK v2 stdio application
 
 **Files:** Create `packages/mcp/src/{server,tools,main}.ts`, private package/build/Moon files; tests `tests/mcp-{tools,stdio}.test.ts`; update root scripts/build and boundary guard.
 **Interfaces:** `createMcpServer(service)` registers only the 14 query tools; `main.ts --root PATH --snapshot PATH` loads once and serves stdio. `--help` goes to the normal CLI before transport starts. No default filesystem search or implicit report generation.
 
-- [ ] Inspect published/installed SDK v2 exports, peer requirements and schema adapter. Pin exact compatible server/client versions; verify a minimal real client/server exchange under existing Bun/TypeScript before introducing domain handlers. If compatibility fails, document the concrete blocker without a silent toolchain upgrade.
-- [ ] Write RED SDK-client tests for discovery, argument/result schema, semantic errors, query parity and readonly annotations.
-- [ ] Implement the thin transport/schema adapter. Keep transport schema glue private; core validation remains Effect Schema. SDK/client code must not enter browser/protocol packages.
-- [ ] Exercise built Bun stdio process: initialize/list/call, parallel calls, invalid input, unknown tool, cancellation and EOF. Assert stdout contains only protocol messages and the process exits without orphaned children.
-- [ ] Run full checks/build/boundaries and commit.
+- [x] Inspect published/installed SDK v2 exports, peer requirements and schema adapter. Pin exact compatible server/client versions; verify a minimal real client/server exchange under existing Bun/TypeScript before introducing domain handlers. If compatibility fails, document the concrete blocker without a silent toolchain upgrade.
+- [x] Write RED SDK-client tests for discovery, argument/result schema, semantic errors, query parity and readonly annotations.
+- [x] Implement the thin transport/schema adapter. Keep transport schema glue private; core validation remains Effect Schema. SDK/client code must not enter browser/protocol packages.
+- [x] Exercise built Bun stdio process: initialize/list/call, parallel calls, invalid input, unknown tool, cancellation and EOF. Assert stdout contains only protocol messages and the process exits without orphaned children.
+- [x] Run full checks/build/boundaries and commit.
 
 ## Task 4 — Local qualification and operator handoff
 
 **Files:** `scripts/mcp-smoke.ts`, `docs/{mcp,m2-verification}.md`; extend readonly local CI qualification; add appropriate private-package Changeset without versioning/publishing.
 **Interfaces:** smoke script is an explicitly invoked operator test, using the SDK client against built stdio server and a selected real dogfood snapshot.
 
-- [ ] Hash/inventory source, snapshot, artifacts and candidate bytes before/after all read tools. Assert no writes, build/test/pack invocation or network access. Exercise missing evidence, stale snapshot, wrong SHA/digest, simulated major, blocked patch/minor and unavailable consumers.
-- [ ] Run an actual SDK-client smoke against the real app's generated report and exact release snapshot. Confirm lifecycle, release eligibility/reasons and migration references match the CLI query and Storybook snapshot scope.
-- [ ] Repeat addon boundary/budget checks to show MCP has not leaked into its install surface. Run full Moon checks, all builds and the local qualification commands; keep hosted status unobserved.
-- [ ] Document a manual client launch command. Do not edit Codex/client global MCP settings or claim host integration without a separately requested/observed connection.
-- [ ] Obtain one independent whole-branch review; fix Important issues with observed regressions. Commit locally and stop before push/publication.
+- [x] Hash/inventory source, snapshot, artifacts and candidate bytes before/after all read tools. Assert no writes, build/test/pack invocation or network access. Exercise missing evidence, stale snapshot, wrong SHA/digest, simulated major, blocked patch/minor and unavailable consumers.
+- [x] Run an actual SDK-client smoke against the real app's generated report and exact release snapshot. Confirm lifecycle, release eligibility/reasons and migration references match the CLI query and Storybook snapshot scope.
+- [x] Repeat addon boundary/budget checks to show MCP has not leaked into its install surface. Run full Moon checks, all builds and the local qualification commands; keep hosted status unobserved.
+- [x] Document a manual client launch command. Do not edit Codex/client global MCP settings or claim host integration without a separately requested/observed connection.
+- [x] Obtain one independent whole-branch review; fix Important issues with observed regressions. Commit locally and stop before push/publication.
 
 ## Exit criteria and later work
 

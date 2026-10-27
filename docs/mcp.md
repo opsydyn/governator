@@ -12,6 +12,7 @@ From a clean committed checkout:
 bun run build
 # Explicit producer work, performed before snapshot export; executes local builds/tests.
 bun run dogfood:report
+bun run storybook:build
 bun run governanator snapshot export \
   --report artifacts/dogfood-governance.json \
   --release artifacts/dogfood-release.json \
@@ -31,6 +32,8 @@ Manual client launch: executable `/absolute/path/to/bun`, arguments:
 ```
 
 Use the absolute Bun executable path reported by `which bun`. Startup requires both flags, validates the source and inputs, and sends failures to stderr with exit 2. Once serving, stdout contains only MCP JSON-RPC. EOF closes the transport; SIGINT/SIGTERM also close it. No client/global settings are modified automatically.
+
+The qualification smoke also checks the built Storybook report. Build Storybook after report generation; its build deliberately bypasses Moon caching because generated ignored public reports do not enter Moon's input hash.
 
 The same service is available without MCP:
 

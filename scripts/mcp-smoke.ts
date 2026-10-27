@@ -25,7 +25,12 @@ async function inventory() {
     followSymlinks: false,
   }))
     files.add(file);
-  for (const file of [path, ".git/index", "apps/storybook-demo/public/governance-report.json"])
+  for (const file of [
+    path,
+    ".git/index",
+    "apps/storybook-demo/public/governance-report.json",
+    "apps/storybook-demo/storybook-static/governance-report.json",
+  ])
     files.add(file);
   const hashes: Record<string, string> = Object.create(null);
   for (const file of [...files].sort()) {
@@ -115,6 +120,13 @@ try {
   );
   const storybook = await Bun.file("apps/storybook-demo/public/governance-report.json").json();
   ensure(digest(storybook) === digest(snapshot.payload.report), "Storybook report parity mismatch");
+  const staticReport = await Bun.file(
+    "apps/storybook-demo/storybook-static/governance-report.json",
+  ).json();
+  ensure(
+    digest(staticReport) === digest(storybook),
+    "Static Storybook report parity mismatch; rebuild after generating dogfood reports",
+  );
 } finally {
   await client.close();
 }

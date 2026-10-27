@@ -83,6 +83,7 @@ test("all fourteen tools preserve exact release, report and consumer scope witho
   expect(results.get_design_system_report).toEqual(report);
   expect(results.explain_release_block).toEqual(release);
   expect(results.evaluate_component).toEqual(results.explain_governance_failure);
+  expect(results.evaluate_component).toEqual(report.decisions[0]);
   expect(results.evaluate_component).toMatchObject({ gate: "insufficient_evidence" });
   expect(results.list_approved_components).toMatchObject({ approvalVerified: false });
   expect(results.get_component_contract).toMatchObject({

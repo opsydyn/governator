@@ -54,6 +54,6 @@ See [architecture](docs/architecture.md), [dogfood and API runbook](docs/storybo
 
 Local release enforcement: `bun run release:plan` blocks the deliberately insufficient patch; `bun run release:demo` exercises blocked patch/minor and an explicitly simulated reviewed major. Storybook includes release details and lifecycle/readiness sidebar markers. See the [release runbook](docs/release-candidates.md).
 
-Hosted CI/required-check configuration, authenticated published baselines and real browser/accessibility/human acceptance remain unverified. M2 provides local read-only MCP; see the [launch and snapshot runbook](docs/mcp.md). External approvals, publication and deployment need trusted adapters.
+Hosted CI/required-check configuration, authenticated published baselines and real browser/accessibility/human acceptance remain unverified. M2 provides local read-only MCP; see the [launch and snapshot runbook](docs/mcp.md) and [M2 verification](docs/m2-verification.md). External approvals, publication and deployment need trusted adapters.
 
 Recommended next phase: M3 trusted reviewer evidence, scoped to exact source, policy, inputs and artifact. Hosted activation and publication remain separately authorized work.

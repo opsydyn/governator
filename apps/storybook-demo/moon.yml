@@ -11,3 +11,7 @@ tasks:
     deps: ["^:build"]
     inputs: ["src/**/*", ".storybook/**/*", "public/**/*", "package.json", "/bun.lock"]
     outputs: ["storybook-static"]
+    # Generated ignored public reports do not participate in Moon's input hashing.
+    # Rebuild to avoid presenting a previous source commit's governance report.
+    options:
+      cache: false
