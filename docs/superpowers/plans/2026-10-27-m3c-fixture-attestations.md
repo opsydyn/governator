@@ -52,5 +52,5 @@
 ## Task 3 — Final review and main integration
 
 - [x] Run complete local checks/builds and release demo; independently review the whole branch, including dependency and trust boundaries. Address Important findings.
-- [ ] Fast-forward local main, run checks/builds, refresh source-bound dogfood and Storybook, export snapshot and run built MCP SDK smoke. Record exact results.
+- [x] Fast-forward local main, run checks/builds, refresh source-bound dogfood and Storybook, export snapshot and run built MCP SDK smoke. Record exact results.
 - [x] Recommend the next bounded operational design for independently protected repository-owner policy and authenticated GitHub identity. Do not activate it.
