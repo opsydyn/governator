@@ -10,6 +10,8 @@ A static AST boundary check targets imports and ambient capabilities in the fixt
 
 Local qualification passed 541 tests across 39 files, all nine workspace checks and all eleven package builds. Independent reviews identified and verified fixes for restoring older synthetic state, cross-epoch challenge replay and recovery time floors. The local release simulation kept the normal major release insufficient and rejected a tampered archive. These checks do not establish production authority.
 
+The reviewed branch was fast-forwarded to local main at `609d543`. Main checks and builds passed with matching Moon caches. Fresh dogfood and Storybook builds and a 14-tool MCP SDK smoke confirmed CLI/Storybook/MCP parity and 649 unchanged files. Storybook emitted Vite's warning about chunks over 500 kB. Regenerate source-bound reports and snapshots after later commits.
+
 Reproduce the focused checks from the workspace root:
 
 ```sh

@@ -53,5 +53,5 @@
 
 ## Task 3 — Qualification and local integration
 
-- [ ] Run full workspace checks/builds and release demo, independent whole-branch review, fix findings, then fast-forward local main. Refresh dogfood/Storybook and built 14-tool MCP smoke on final clean source. No push or publication.
+- [x] Run full workspace checks/builds and release demo, independent whole-branch review, fix findings, then fast-forward local main. Refresh dogfood/Storybook and built 14-tool MCP smoke on final clean source. No push or publication.
 - [x] Recommend a next bounded production trust design or qualification without configuring real anchors, credentials, access or approval paths.
