@@ -17,7 +17,7 @@
     "governanator": "bun packages/cli/src/main.ts",
     "protocol:generate": "bun scripts/protocol.ts",
     "protocol:check": "bun scripts/protocol.ts --check",
-    "boundaries": "bun scripts/boundaries.ts && bun scripts/mcp-boundaries.ts && bun scripts/github-review-boundaries.ts",
+    "boundaries": "bun scripts/boundaries.ts && bun scripts/mcp-boundaries.ts && bun scripts/github-review-boundaries.ts && bun scripts/fixture-attestation-boundaries.ts",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "bun scripts/publish-disabled.ts",

@@ -1,0 +1,20 @@
+# M3c fixture attestations
+
+M3c adds a private, offline verifier for fixture-signed statements about an exact release candidate. It verifies Ed25519 signatures over DSSE pre-authentication encoding of the original in-toto payload bytes, compares the signed scope with separately supplied expected values, and checks roles against supplied fixture policy bytes and a synthetic freshness checkpoint. A match has `assurance: "fixture-only"`; it is neither an authenticated GitHub review nor authority to release.
+
+The scope binds the repository and pull request, source commit, package/version, candidate creation time, baseline, candidate archive and release-input digests, and both release and authorization policy identities and digests. The expected archive digest is a comparison input: the verifier does not read or hash the archive. The existing candidate checker independently hashes the captured archive and checks it again during validation. Rechecking an unchanged statement and scope is idempotent; there is no durable replay or one-use store.
+
+The caller supplies the exact policy bytes, expected policy digest, evaluation time and checkpoint separately. The verifier hashes and parses the same copied policy bytes and derives fixture actor and roles from that policy, not from an unsigned key ID or claimed roles. These inputs are fixtures, not a protected trust anchor, current revocation evidence or a trusted clock. The [package README](../packages/fixture-attestation/README.md) specifies the profile, shapes, limits and failure behavior.
+
+The verifier is disconnected from normal release decisions and MCP. The isolation regression uses a real captured candidate, a fixture statement bound to its actual commit, digests and creation time, plus separately supplied fixture repository and review identity, and a matched verifier result. It submits that result and forged authority flags as review input to the actual candidate check. Snapshot creation rejects the result and forged flags when added to the saved release report; the unmodified checked report is saved and queried through the MCP SDK. Ordinary release review remains insufficient and the saved report remains unverified. The test hashes the fixture project’s governance policy bytes as the supplied release-policy digest; this is a fixture binding, not proof of a separately protected release policy. Altering the captured archive after fixture verification is detected by the candidate check. The verifier's source is also subject to static import and ambient-capability boundary checks; these establish a source boundary, not a runtime sandbox.
+
+Reproduce the focused checks from the workspace root:
+
+```sh
+bun --bun vitest run tests/fixture-attestation.test.ts tests/mcp-fixture-attestation-isolation.test.ts tests/fixture-attestation-boundaries.test.ts
+bun run boundaries
+```
+
+All signing keys in these tests are disposable and generated in memory. The verifier does not fetch data, discover credentials, read a trust store, sign statements or publish packages. No real identity, human intent, current GitHub review or production reviewer authority is established. Saved JSON and asserted flags cannot recreate a trusted capability. Publication, deployment and adoption remain separate, unverified gates.
+
+Before any production authorization, the repository owner must independently protect and administer policy and reviewer enrollment; establish authenticated GitHub identity, roles and effective review semantics; manage key revocation and recovery; provide trusted time and rollback-resistant freshness; and protect release execution and the exact-byte handoff. Any durable replay requirement also needs an independently maintained store. Those decisions and any real-provider qualification require separate authorization. See the [design](superpowers/specs/2026-10-27-m3c-artifact-attestation-design.md) and [implementation plan](superpowers/plans/2026-10-27-m3c-fixture-attestations.md).

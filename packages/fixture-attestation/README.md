@@ -1,6 +1,6 @@
 # Fixture attestation verifier
 
-Private, offline fixture experiment. `verifyFixtureAttestations(input: unknown)` returns only `{ schemaVersion: 1, assurance: "fixture-only", status: "matched" | "insufficient_evidence", reasons: [] | ["invalid_evidence"] }`. It is not release authorization, a capability, an authenticated GitHub review, proof of human intent, current revocation, trusted time, or a durable replay store. There are no filesystem or network reads. The caller must independently hash the candidate archive; the supplied candidate digest is only a comparison input. Rechecks of the same scope are idempotent.
+Private, offline fixture experiment. `verifyFixtureAttestations(input: unknown)` returns only `{ schemaVersion: 1, assurance: "fixture-only", status: "matched" | "insufficient_evidence", reasons: [] | ["invalid_evidence"] }`. It is not release authorization, a capability, an authenticated GitHub review, proof of human intent, current revocation, trusted time, or a durable replay store. There are no filesystem or network reads. The caller must independently hash the candidate archive; the supplied candidate digest is only a comparison input. Rechecks of the same scope are idempotent. See [M3c verification](../../docs/m3c-verification.md) for the release and MCP isolation tests and remaining trust gaps.
 
 ## Input
 

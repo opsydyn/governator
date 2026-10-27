@@ -38,17 +38,18 @@ CLI exit codes: **0** satisfied the requested check, **1** blocked/insufficient 
 
 ## Packages
 
-| Package                         | Responsibility                                                      |
-| ------------------------------- | ------------------------------------------------------------------- |
-| `@governanator/protocol`        | Generated plain TypeScript and JSON Schema; no runtime dependencies |
-| `@governanator/core`            | Private Effect schemas, deterministic evaluation and digests        |
-| `@governanator/versioning`      | Private API extraction/diff, SemVer and baseline checks             |
-| `@governanator/query`           | Private immutable snapshots and shared read queries                 |
-| `@governanator/mcp`             | Private Bun stdio MCP adapter                                       |
-| `@governanator/cli`             | Bun filesystem, Git, local test runner and presentation boundary    |
-| `@governanator/storybook-addon` | Independently packed read-only manager panel; sole peer Storybook   |
-| `@example/ui`                   | Shared private React library used by the dogfood app                |
-| `@governanator/storybook-demo`  | Storybook 10.6.4 React/Vite app                                     |
+| Package                             | Responsibility                                                      |
+| ----------------------------------- | ------------------------------------------------------------------- |
+| `@governanator/protocol`            | Generated plain TypeScript and JSON Schema; no runtime dependencies |
+| `@governanator/core`                | Private Effect schemas, deterministic evaluation and digests        |
+| `@governanator/versioning`          | Private API extraction/diff, SemVer and baseline checks             |
+| `@governanator/fixture-attestation` | Private offline verifier for fixture-signed candidate statements    |
+| `@governanator/query`               | Private immutable snapshots and shared read queries                 |
+| `@governanator/mcp`                 | Private Bun stdio MCP adapter                                       |
+| `@governanator/cli`                 | Bun filesystem, Git, local test runner and presentation boundary    |
+| `@governanator/storybook-addon`     | Independently packed read-only manager panel; sole peer Storybook   |
+| `@example/ui`                       | Shared private React library used by the dogfood app                |
+| `@governanator/storybook-demo`      | Storybook 10.6.4 React/Vite app                                     |
 
 See [architecture](docs/architecture.md), [dogfood and API runbook](docs/storybook-contracts.md), [verification](docs/storybook-contracts-verification.md), [release conventions](docs/releasing.md) and the [handoff](docs/reference/CODEX_HANDOFF_DESIGN_SYSTEM_GOVERNANCE.md).
 
@@ -58,4 +59,4 @@ Hosted CI/required-check configuration, authenticated published baselines and re
 
 M3a introduces a private synthetic review-evidence evaluator for testing exact candidate, policy, reviewer-role and freshness bindings. Its results are fixtures only; normal release review stays unconfigured. See [M3a evidence and verification](docs/m3a-verification.md).
 
-M3b adds an inactive [GitHub source-review reader](docs/m3b-verification.md), tested with injected transport fixtures and returning only unverified observations. Recommended next: independently protected reviewer authority and authenticated artifact binding, followed by separately authorized real-provider qualification. Publication remains a separate gate.
+M3b adds an inactive [GitHub source-review reader](docs/m3b-verification.md), tested with injected transport fixtures and returning only unverified observations. M3c adds a private [fixture attestation verifier](docs/m3c-verification.md) for exact candidate scope. Its cryptographic match is fixture-only and does not authorize ordinary releases or establish authenticated GitHub review. Independently protected reviewer authority and real-provider qualification remain future work; publication is a separate gate.
