@@ -129,12 +129,20 @@ function check(condition: unknown): asserts condition {
   if (!condition) throw new Error("invalid");
 }
 function copied(value: unknown, limit: number): Uint8Array {
-  check(
-    value instanceof Uint8Array &&
-      value.byteLength <= limit &&
-      !(value.buffer instanceof SharedArrayBuffer),
-  );
-  return Uint8Array.from(value);
+  check(value instanceof Uint8Array);
+  // Read intrinsic typed-array slots, not overridable properties or iterators.
+  const prototype = Object.getPrototypeOf(Uint8Array.prototype);
+  const buffer = Object.getOwnPropertyDescriptor(prototype, "buffer")!.get!.call(
+    value,
+  ) as ArrayBufferLike;
+  const offset = Object.getOwnPropertyDescriptor(prototype, "byteOffset")!.get!.call(
+    value,
+  ) as number;
+  const length = Object.getOwnPropertyDescriptor(prototype, "byteLength")!.get!.call(
+    value,
+  ) as number;
+  check(length <= limit && !(buffer instanceof SharedArrayBuffer));
+  return new Uint8Array(buffer, offset, length).slice();
 }
 function base64(value: string, max: number): Buffer {
   check(
@@ -190,10 +198,12 @@ function verifyInput(raw: unknown): void {
   const at = timestamp(decode(time, input.at));
   const created = timestamp(scope.candidateCreatedAt);
   check(scope.distributedChange && created <= at && at - created <= DAY);
-  check(
-    Array.isArray(input.envelopes) && input.envelopes.length >= 1 && input.envelopes.length <= 8,
-  );
-  const envelopes = input.envelopes.map((v) => copied(v, 65_536));
+  const wireEnvelopes = input.envelopes;
+  check(Array.isArray(wireEnvelopes));
+  const count = wireEnvelopes.length;
+  check(Number.isSafeInteger(count) && count >= 1 && count <= 8);
+  const envelopes: Uint8Array[] = [];
+  for (let i = 0; i < count; i++) envelopes.push(copied(wireEnvelopes[i], 65_536));
   const policyBytes = copied(input.policyBytes, 65_536);
   check(digest(policyBytes) === scope.authorizationPolicyDigest);
   const policy = decode(policySchema, parseStrictJson(policyBytes, 65_536));

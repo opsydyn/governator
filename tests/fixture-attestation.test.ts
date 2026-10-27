@@ -254,3 +254,24 @@ describe("wire and signature boundaries", () => {
     expect(verifyFixtureAttestations(f.input).status).toBe("insufficient_evidence");
   });
 });
+
+test("copies actual byte view rather than a caller-controlled iterator", () => {
+  const f = fixtureAttestations();
+  const valid = f.input.policyBytes;
+  class ForgedBytes extends Uint8Array {
+    override [Symbol.iterator](): ReturnType<Uint8Array[typeof Symbol.iterator]> {
+      return valid.values();
+    }
+  }
+  Object.assign(f.input, { policyBytes: new ForgedBytes([123, 125]) });
+  expect(verifyFixtureAttestations(f.input).status).toBe("insufficient_evidence");
+});
+
+test("copies actual envelope elements rather than a caller-controlled map", () => {
+  const f = fixtureAttestations();
+  const valid = f.input.envelopes[0]!;
+  const forged = [Buffer.from("{}")];
+  forged.map = (() => [valid]) as typeof forged.map;
+  f.input.envelopes = forged;
+  expect(verifyFixtureAttestations(f.input).status).toBe("insufficient_evidence");
+});
