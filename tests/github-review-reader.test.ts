@@ -584,3 +584,152 @@ function fakeAfterStall(
   }
   return fake(url, request);
 }
+
+describe("native caller signal boundary", () => {
+  test.each(["addEventListener", "aborted", "removeEventListener"] as const)(
+    "sanitizes throwing signal %s getter before any transport call",
+    async (property) => {
+      const signal = new AbortController().signal;
+      Object.defineProperty(signal, property, {
+        get() {
+          throw new Error("fixture-secret");
+        },
+      });
+      const transport = vi.fn(fakeReviewTransport());
+      const result = await collectGithubReviews(githubReviewScope, transport, { signal });
+      expect(result).toMatchObject({ status: "unavailable", reasons: ["invalid_options"] });
+      expect(JSON.stringify(result)).not.toContain("fixture-secret");
+      expect(transport).not.toHaveBeenCalled();
+    },
+  );
+  test("late removeEventListener getter cannot replace a successful result", async () => {
+    const signal = new AbortController().signal;
+    const body = new ReadableStream<Uint8Array>(
+      {
+        pull(controller) {
+          Object.defineProperty(signal, "removeEventListener", {
+            get() {
+              throw new Error("fixture-secret");
+            },
+          });
+          controller.enqueue(new TextEncoder().encode("[]"));
+          controller.close();
+        },
+      },
+      { highWaterMark: 0 },
+    );
+    const result = await collectGithubReviews(githubReviewScope, fakeReviewTransport([{ body }]), {
+      signal,
+    });
+    expect(result.status).toBe("complete");
+  });
+  test("late signal overrides cannot prevent native cancellation or escape cleanup", async () => {
+    const caller = new AbortController();
+    const body = new ReadableStream<Uint8Array>(
+      {
+        pull() {
+          for (const property of ["addEventListener", "aborted", "removeEventListener"]) {
+            Object.defineProperty(caller.signal, property, {
+              get() {
+                throw new Error("fixture-secret");
+              },
+            });
+          }
+          caller.abort("fixture-secret");
+        },
+      },
+      { highWaterMark: 0 },
+    );
+    const result = await collectGithubReviews(githubReviewScope, fakeReviewTransport([{ body }]), {
+      signal: caller.signal,
+    });
+    expect(result.reasons).toEqual(["cancelled"]);
+    expect(JSON.stringify(result)).not.toContain("fixture-secret");
+  });
+  test("rejects a prototype-only AbortSignal before transport", async () => {
+    const signal = Object.create(AbortSignal.prototype) as AbortSignal;
+    const transport = vi.fn(fakeReviewTransport());
+    const result = await collectGithubReviews(githubReviewScope, transport, { signal });
+    expect(result.reasons).toEqual(["invalid_options"]);
+    expect(transport).not.toHaveBeenCalled();
+  });
+});
+
+describe("intrinsic streamed byte measurement and snapshots", () => {
+  test("snapshots Buffer bytes before later stream pulls can reuse and mutate them", async () => {
+    const chunk = Buffer.from(JSON.stringify([githubReviewFixture()]));
+    const originalIndex = chunk.indexOf('"id":301');
+    let reads = 0;
+    const body = new ReadableStream<Uint8Array>(
+      {
+        pull(controller) {
+          reads++;
+          if (reads === 1) controller.enqueue(chunk);
+          else {
+            chunk.write('"id":302', originalIndex);
+            controller.close();
+          }
+        },
+      },
+      { highWaterMark: 0 },
+    );
+    const result = await collect({ body });
+    expect(result).toMatchObject({ status: "complete", reviews: [{ id: 301 }] });
+  });
+  test("counts an oversized typed-array view intrinsically despite shadowed byteLength", async () => {
+    const chunk = new Uint8Array(1_048_577);
+    Object.defineProperty(chunk, "byteLength", { value: 1 });
+    await failure({ chunks: [chunk] }, "page_bytes_limit");
+  });
+  test("counts only a small view into a larger backing buffer", async () => {
+    const backing = new Uint8Array(2_097_152);
+    const bytes = new TextEncoder().encode(JSON.stringify([githubReviewFixture()]));
+    backing.set(bytes, 100);
+    const view = backing.subarray(100, 100 + bytes.byteLength);
+    expect(await collect({ chunks: [view] })).toMatchObject({
+      status: "complete",
+      reviews: [{ id: 301 }],
+    });
+  });
+  test("copies typed-array bytes without dispatching shadowed slice, iterator or length accessors", async () => {
+    const chunk = new TextEncoder().encode(JSON.stringify([githubReviewFixture()]));
+    for (const property of [
+      "slice",
+      "byteLength",
+      "length",
+      "buffer",
+      "byteOffset",
+      Symbol.iterator,
+    ]) {
+      Object.defineProperty(chunk, property, {
+        get() {
+          throw new Error("fixture-secret");
+        },
+      });
+    }
+    expect(await collect({ chunks: [chunk] })).toMatchObject({
+      status: "complete",
+      reviews: [{ id: 301 }],
+    });
+  });
+  test("ignores a Uint8Array subclass's slice, iterator and species overrides", async () => {
+    const ordinary = new TextEncoder().encode(JSON.stringify([githubReviewFixture()]));
+    const chunk = new HostileReviewChunk(ordinary);
+    expect(await collect({ chunks: [chunk] })).toMatchObject({
+      status: "complete",
+      reviews: [{ id: 301 }],
+    });
+  });
+});
+
+class HostileReviewChunk extends Uint8Array {
+  override slice(): Uint8Array<ArrayBuffer> {
+    throw new Error("fixture-secret slice");
+  }
+  override [Symbol.iterator](): ArrayIterator<number> {
+    throw new Error("fixture-secret iterator");
+  }
+  static get [Symbol.species]() {
+    throw new Error("fixture-secret species");
+  }
+}

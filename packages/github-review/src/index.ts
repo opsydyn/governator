@@ -28,6 +28,20 @@ export type {
   ReviewTransport,
 } from "./domain.ts";
 
+// Capture platform intrinsics once. Caller objects may shadow methods/getters or mutate them
+// after validation; byte views may be Buffers or subclasses with aliasing slice implementations.
+const nativeSignalAborted: (this: AbortSignal) => boolean = Object.getOwnPropertyDescriptor(
+  AbortSignal.prototype,
+  "aborted",
+)!.get!;
+const nativeAddEventListener = EventTarget.prototype.addEventListener;
+const nativeRemoveEventListener = EventTarget.prototype.removeEventListener;
+const nativeByteLength: (this: Uint8Array) => number = Object.getOwnPropertyDescriptor(
+  Object.getPrototypeOf(Uint8Array.prototype),
+  "byteLength",
+)!.get!;
+const nativeSetBytes = Uint8Array.prototype.set;
+
 /**
  * Collect only unverified source observations. The caller supplies the collection clock and
  * an explicit caller-supplied transport; this module performs no credential discovery or direct I/O.
@@ -53,6 +67,18 @@ export async function collectGithubReviews(
   let validatedOptions: ReturnType<typeof parseOptions>;
   try {
     validatedOptions = parseOptions(options);
+    const signal = validatedOptions.signal;
+    if (signal !== undefined) {
+      // Brand-check through the native getter, then reject customized hooks during setup.
+      // Property reads stay inside this sanitized boundary; none are reused later.
+      const aborted = nativeSignalAborted.call(signal);
+      requireCondition(
+        signal.addEventListener === nativeAddEventListener &&
+          signal.removeEventListener === nativeRemoveEventListener &&
+          signal.aborted === aborted,
+        "invalid_options",
+      );
+    }
   } catch {
     return { ...envelope, status: "unavailable", scope, reasons: ["invalid_options"] };
   }
@@ -73,8 +99,25 @@ export async function collectGithubReviews(
     stopPromise(new CollectionFailure(reason, true));
   }
   const abort = () => stop("cancelled");
-  validatedOptions.signal?.addEventListener("abort", abort, { once: true });
-  if (validatedOptions.signal?.aborted) abort();
+  const callerSignal = validatedOptions.signal;
+  function removeCallerAbort() {
+    if (callerSignal !== undefined) {
+      try {
+        nativeRemoveEventListener.call(callerSignal, "abort", abort);
+      } catch {
+        // Cleanup must never replace a sanitized result with a caller-controlled exception.
+      }
+    }
+  }
+  try {
+    if (callerSignal !== undefined) {
+      nativeAddEventListener.call(callerSignal, "abort", abort, { once: true });
+      if (nativeSignalAborted.call(callerSignal)) abort();
+    }
+  } catch {
+    removeCallerAbort();
+    return { ...envelope, status: "unavailable", scope, reasons: ["invalid_options"] };
+  }
   const timer = setTimeout(() => stop("timeout"), timeoutMs);
   function checkDeadline() {
     if (performance.now() >= deadline) stop("timeout");
@@ -126,12 +169,16 @@ export async function collectGithubReviews(
         if (chunk.done) break;
         requireCondition(chunk.value instanceof Uint8Array, "body_unavailable");
         requireCondition(chunks.length < reviewLimits.chunksPerPage, "body_chunks_limit");
-        pageBytes += chunk.value.byteLength;
-        totalBytes += chunk.value.byteLength;
+        const byteLength = nativeByteLength.call(chunk.value);
+        pageBytes += byteLength;
+        totalBytes += byteLength;
         requireCondition(pageBytes <= reviewLimits.pageBytes, "page_bytes_limit");
         requireCondition(totalBytes <= reviewLimits.totalBytes, "total_bytes_limit");
-        // Copy so a transport cannot mutate a retained chunk before parsing it.
-        chunks.push(chunk.value.slice());
+        // Intrinsic set reads TypedArray internal slots, bypassing slice/species/iterators and
+        // shadowed properties. Always allocate an ordinary, independent view AFTER budget checks.
+        const snapshot = new Uint8Array(byteLength);
+        nativeSetBytes.call(snapshot, chunk.value);
+        chunks.push(snapshot);
       }
       reader.releaseLock();
       reader = undefined;
@@ -172,7 +219,7 @@ export async function collectGithubReviews(
     };
   } finally {
     clearTimeout(timer);
-    validatedOptions.signal?.removeEventListener("abort", abort);
+    removeCallerAbort();
     // A malicious/failed transport may hang cancellation. Observe it, but never await it.
     const activeReader = reader;
     const activeResponse = response;
