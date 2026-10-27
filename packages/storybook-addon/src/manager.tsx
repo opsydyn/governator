@@ -63,6 +63,27 @@ function CopyId({ id }: { id: string }) {
     </>
   );
 }
+class FocusRecovery extends React.Component<{
+  style: React.CSSProperties;
+  children: React.ReactNode;
+}> {
+  panel = React.createRef<HTMLElement>();
+  getSnapshotBeforeUpdate() {
+    const focused = document.activeElement;
+    return focused && this.panel.current?.contains(focused) ? focused : null;
+  }
+  componentDidUpdate(_previous: unknown, _state: unknown, focused: Element | null) {
+    if (focused && !focused.isConnected && document.activeElement === document.body)
+      this.panel.current?.querySelector<HTMLButtonElement>("[data-reload]")?.focus();
+  }
+  render() {
+    return (
+      <section ref={this.panel} className="gn-panel" style={this.props.style}>
+        {this.props.children}
+      </section>
+    );
+  }
+}
 function Panel() {
   const theme = useTheme();
   const params = useParameter<{ componentId?: unknown; reportUrl?: unknown }>("governance", {});
@@ -125,10 +146,7 @@ function Panel() {
   const component = report?.decisions.find((item) => item.componentId === componentId);
   const compatibility = component?.compatibility;
   return (
-    <section
-      className="gn-panel"
-      style={{ color: theme.color.defaultText, background: theme.background.content }}
-    >
+    <FocusRecovery style={{ color: theme.color.defaultText, background: theme.background.content }}>
       <style>{css}</style>
       <div className="gn-top">
         <div>
@@ -154,7 +172,9 @@ function Panel() {
         </div>
         <div>
           {component && <CopyId key={component.componentId} id={component.componentId} />}
-          <button onClick={() => setRefresh((value) => value + 1)}>Reload report</button>
+          <button data-reload onClick={() => setRefresh((value) => value + 1)}>
+            Reload report
+          </button>
         </div>
       </div>
       <div role="status" aria-live="polite" className={report ? "gn-small" : "gn-card gn-note"}>
@@ -319,7 +339,7 @@ function Panel() {
           </p>
         </>
       ) : null}
-    </section>
+    </FocusRecovery>
   );
 }
 const sidebarReports = new Map<string, { at: number; promise: Promise<ReportState> }>();

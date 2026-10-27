@@ -165,6 +165,75 @@ describe("panel interactions", () => {
     outside.remove();
   });
 
+  test.each(["copy", "disclosure"])(
+    "expiry restores focus from removed %s to reload",
+    async (target) => {
+      vi.setSystemTime(deadline - 1);
+      const candidate = {
+        gate: "blocked",
+        status: "not_eligible",
+        assurance: "unverified",
+        baselineVersion: "8.4.1",
+        candidateVersion: "8.4.2",
+        baselineDigest: "sha256:baseline",
+        candidateDigest: "sha256:candidate",
+        sourceCommit: "a".repeat(40),
+        evaluatedAt: at,
+        inputDigest: "sha256:inputs",
+        minimumBump: "major",
+        declaredBump: "patch",
+        candidateManifest: "artifacts/candidate/candidate.json",
+        affectedComponents: ["ui.button"],
+        reasons: ["Removed public tone prop requires major"],
+        remediation: ["Declare a major migration"],
+        publishable: false,
+      };
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => new Response(JSON.stringify({ ...report(), release: candidate }))),
+      );
+      await act(async () => root.render(render()));
+      await flush();
+      const focused = target === "copy" ? button("Copy ID") : container.querySelector("summary");
+      expect(focused).not.toBeNull();
+      (focused as HTMLElement).focus();
+      expect(document.activeElement).toBe(focused);
+      await act(async () => vi.advanceTimersByTime(2));
+      expect(liveText()).toMatch(/stale|older than 24 hours/i);
+      expect(document.activeElement).toBe(button("Reload report"));
+    },
+  );
+
+  test("an asynchronous report change does not reclaim focus after the user moves outside", async () => {
+    const pending = deferred<Response>();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(response()).mockReturnValueOnce(pending.promise),
+    );
+    await act(async () => root.render(render()));
+    await flush();
+    button("Copy ID").focus();
+    const outside = document.createElement("button");
+    document.body.append(outside);
+    outside.focus();
+    storybook.params = { ...storybook.params, reportUrl: "/another.json" };
+    await act(async () => root.render(render()));
+    expect(document.activeElement).toBe(outside);
+    await act(async () => pending.resolve(new Response("failure", { status: 500 })));
+    await flush();
+    expect(document.activeElement).toBe(outside);
+    outside.remove();
+  });
+
+  test("a changed report URL restores focus when it removes the focused copy control", async () => {
+    await act(async () => root.render(render()));
+    await flush();
+    button("Copy ID").focus();
+    storybook.params = { ...storybook.params, reportUrl: "/another.json" };
+    await act(async () => root.render(render()));
+    expect(document.activeElement).toBe(button("Reload report"));
+  });
+
   test("unmapped components can reload and show a newly available decision", async () => {
     const initial = evaluate(evaluation());
     let calls = 0;
