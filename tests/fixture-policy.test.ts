@@ -719,3 +719,45 @@ it("rejects a forged consumed list even when the witnessed store version is unch
     }).status,
   ).toBe("insufficient_evidence");
 });
+
+it("requires an independently witnessed time floor for recovery with no store", () => {
+  const f = fixturePolicy();
+  const statement = {
+    schemaVersion: 1,
+    purpose: "fixture-policy-recovery",
+    repository: f.repository,
+    policyId: f.policyId,
+    priorEpoch: 0,
+    nextEpoch: 1,
+    rootDigest: hash(f.rootSigned.bytes),
+    policyDigest: hash(f.policySigned.bytes),
+    auditId: "missing-store-floor",
+    ...f.time,
+  };
+  const input = {
+    ...f.base,
+    anchor: null,
+    recoveryAuthority: { owners: f.owners.slice(3, 5), threshold: 2, minimumEpoch: 0 },
+    store: null,
+    expectedStoreVersion: 0,
+    at: "2026-10-27T11:30:00.000Z",
+    transition: {
+      kind: "recovery",
+      root: f.rootSigned,
+      policy: f.policySigned,
+      authorization: f.signed("recovery", statement, [3, 4]),
+    },
+  };
+  expect(applyFixturePolicyTransition(input).status).toBe("insufficient_evidence");
+  const timed = {
+    ...input,
+    storeWitness: { ...input.storeWitness, lastTime: "2026-10-27T11:15:00.000Z" },
+  };
+  expect(applyFixturePolicyTransition(timed).status).toBe("committed");
+  expect(
+    applyFixturePolicyTransition({
+      ...timed,
+      storeWitness: { ...timed.storeWitness, lastTime: "2026-10-27T11:45:00.000Z" },
+    }).status,
+  ).toBe("insufficient_evidence");
+});

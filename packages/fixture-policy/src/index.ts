@@ -768,7 +768,7 @@ export function applyFixturePolicyTransition(input: unknown): FixturePolicyResul
       check(
         sw.rootDigest === null &&
           sw.policyDigest === null &&
-          sw.lastTime === null &&
+          (t.kind === "recovery" ? timestamp(sw.lastTime) <= at : sw.lastTime === null) &&
           consumed.length === 0,
       );
     else {
