@@ -358,6 +358,7 @@ test.each([
   "https://example.com/result",
 ])("renders reported v2 provenance and safe source %s", async (sourceUrl) => {
   const input = evaluation();
+  input.evidence[0]!.observedAt = "2026-10-26T11:58:30.000Z";
   if (sourceUrl) Object.assign(input.evidence[0]!, { sourceUrl });
   const snapshot = evaluate(input, 2);
   vi.stubGlobal(
@@ -379,10 +380,13 @@ test.each([
     expect(document.activeElement).toBe(links[0]);
   }
   expect(container.querySelector("script")).toBeNull();
-  const age = container.querySelector("[data-evidence-age]")?.textContent;
-  expect(age).toBeTruthy();
+  expect(container.querySelector("[data-evidence-age]")?.textContent).toBe(
+    "Age at evaluation: 90 seconds",
+  );
   await act(async () => vi.advanceTimersByTime(60_000));
-  expect(container.querySelector("[data-evidence-age]")?.textContent).toBe(age);
+  expect(container.querySelector("[data-evidence-age]")?.textContent).toBe(
+    "Age at evaluation: 90 seconds",
+  );
 });
 
 test("v2 evidence disappears on report expiry and reload recovers a current snapshot", async () => {
