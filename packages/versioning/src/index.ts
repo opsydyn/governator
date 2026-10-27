@@ -28,3 +28,4 @@ export * from "./release.ts";
 export * from "./consumers.ts";
 
 export { ApiConfigSchema } from "./api-schema.ts";
+export * from "./synthetic-review.ts";
