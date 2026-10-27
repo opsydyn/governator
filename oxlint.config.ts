@@ -14,11 +14,13 @@ export default defineConfig({
     {
       // Private cryptographic wire boundary contains synchronous crypto, validation, and sanitized exceptions.
       files: [
+        "packages/fixture-policy/src/*.ts",
         "packages/fixture-attestation/src/index.ts",
         "packages/fixture-attestation/src/crypto.ts",
       ],
       rules: {
         "linteffect/no-string-sentinel-const": "off",
+        "linteffect/no-return-in-arrow": "off",
         "linteffect/no-if-statement": "off",
         "linteffect/no-adhoc-domain-error": "off",
         "linteffect/no-domain-logic-in-conditional": "off",
@@ -32,7 +34,11 @@ export default defineConfig({
     },
     {
       // Disposable fixture keys are generated in memory for offline tests only.
-      files: ["tests/fixture-attestation-fixtures.ts", "tests/fixture-attestation.test.ts"],
+      files: [
+        "tests/fixture-attestation-fixtures.ts",
+        "tests/fixture-attestation.test.ts",
+        "tests/fixture-policy*.ts",
+      ],
       rules: {
         "linteffect/no-node-platform-in-shared-code": "off",
         "linteffect/no-return-in-arrow": "off",

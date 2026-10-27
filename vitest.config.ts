@@ -3,6 +3,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     alias: {
+      "@governanator/fixture-policy": `${import.meta.dirname}/packages/fixture-policy/src/index.ts`,
       "@governanator/fixture-attestation": `${import.meta.dirname}/packages/fixture-attestation/src/index.ts`,
       "@governanator/github-review": `${import.meta.dirname}/packages/github-review/src/index.ts`,
       "@governanator/query/io": `${import.meta.dirname}/packages/query/src/io.ts`,

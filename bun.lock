@@ -81,6 +81,10 @@
         "effect": "4.0.6",
       },
     },
+    "packages/fixture-policy": {
+      "name": "@governanator/fixture-policy",
+      "version": "0.1.0",
+    },
     "packages/github-review": {
       "name": "@governanator/github-review",
       "version": "0.1.0",
@@ -276,6 +280,8 @@
     "@governanator/core": ["@governanator/core@workspace:packages/core"],
 
     "@governanator/fixture-attestation": ["@governanator/fixture-attestation@workspace:packages/fixture-attestation"],
+
+    "@governanator/fixture-policy": ["@governanator/fixture-policy@workspace:packages/fixture-policy"],
 
     "@governanator/github-review": ["@governanator/github-review@workspace:packages/github-review"],
 

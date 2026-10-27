@@ -11,3 +11,4 @@ projects:
   mcp: "packages/mcp"
   github-review: "packages/github-review"
   fixture-attestation: "packages/fixture-attestation"
+  fixture-policy: "packages/fixture-policy"

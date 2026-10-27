@@ -21,7 +21,8 @@
       "@governanator/query": ["./packages/query/src/index.ts"],
       "@governanator/query/*": ["./packages/query/src/*.ts"],
       "@governanator/fixture-attestation": ["./packages/fixture-attestation/src/index.ts"],
-      "@governanator/github-review": ["./packages/github-review/src/index.ts"]
+      "@governanator/github-review": ["./packages/github-review/src/index.ts"],
+      "@governanator/fixture-policy": ["./packages/fixture-policy/src/index.ts"]
     },
     "jsx": "react-jsx"
   },
