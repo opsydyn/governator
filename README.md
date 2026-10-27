@@ -4,6 +4,10 @@ Offline design-system governance: a component's status should show its evidence.
 
 The local workspace includes a deterministic policy engine, source-bound Vitest checks, TypeScript declaration compatibility analysis, a Bun CLI, fourteen read-only MCP queries and a real React/Storybook dogfood app. All packages remain private and unpublished.
 
+## Use in another project
+
+All packages remain private at `0.1.0`; npm registry installation is unavailable. Local tarballs are release-preparation artifacts. Start with the [addon-only setup](packages/storybook-addon/README.md) for Storybook React/Vite 10.6.4, or the [Bun CLI quick start](packages/cli/README.md) and [read-only MCP quick start](packages/mcp/README.md). The addon needs only its Storybook peer; CLI/MCP require Bun >=1.4.2 and declared runtime dependencies. Independent clean-consumer results must be recorded separately from workspace builds, with any reconstructed local package source identified.
+
 ## Run locally
 
 Use Bun **1.4.2** with pinned Moon **2.6.4**.

@@ -28,12 +28,7 @@
   "storybook": {
     "displayName": "Governanator Governance",
     "supportedFrameworks": [
-      "react",
-      "vue3",
-      "web-components",
-      "html",
-      "angular",
-      "svelte"
+      "react"
     ]
   }
 }

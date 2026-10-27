@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import manifest from "../packages/storybook-addon/package.json";
 import { inspectAddon } from "../scripts/addon-boundaries.ts";
 test("addon allows only Storybook peers and manager-provided React", () => {
   const manifest = { peerDependencies: { storybook: "^10.6.4" } };
@@ -19,4 +20,12 @@ test("addon allows only Storybook peers and manager-provided React", () => {
     'require("node:path")',
   ])
     expect(inspectAddon(manifest, [source])).not.toEqual([]);
+});
+
+test("addon advertises only the qualified renderer and preserves preview metadata", () => {
+  expect(manifest.storybook.supportedFrameworks).toEqual(["react"]);
+  expect(manifest.version).toBe("0.1.0");
+  expect(manifest.private).toBe(true);
+  expect(manifest.peerDependencies).toEqual({ storybook: "^10.6.4" });
+  expect("dependencies" in manifest).toBe(false);
 });
