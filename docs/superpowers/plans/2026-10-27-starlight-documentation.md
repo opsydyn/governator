@@ -44,5 +44,5 @@
 
 ## Task 3: Qualification and local integration
 
-- [ ] Run the complete checks/build and independent whole-branch review. Test local site at desktop and narrow widths with keyboard navigation, category links and search; preserve evidence and record real results/limits.
+- [x] Run the complete checks/build and independent whole-branch review. Test local site at desktop and narrow widths with keyboard navigation, category links and search; preserve evidence and record real results/limits.
 - [ ] Commit locally, fast-forward main and rerun source-bound dogfood/Storybook/MCP plus documentation checks on the final commit; no push or publish. Recommend the next release-readiness step.
