@@ -1,14 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { applyFixturePolicyTransition } from "../packages/fixture-policy/src/index.ts";
-import { fixturePolicy, hash } from "./fixture-policy-fixtures.ts";
+import { fixturePolicy, fixtureStoreWitness, hash } from "./fixture-policy-fixtures.ts";
+
+// Unless a test explicitly supplies a witness, model a witness of the supplied current store.
+function applyFixture(input: any) {
+  return applyFixturePolicyTransition({
+    ...input,
+    storeWitness: fixtureStoreWitness(input.expected, input.store),
+  });
+}
 
 describe("fixture policy lifecycle", () => {
   it("bootstraps with two owners and enrolls a reviewer with possession proof", () => {
     const f = fixturePolicy();
-    const boot = applyFixturePolicyTransition(f.bootstrap());
+    const boot = applyFixture(f.bootstrap());
     expect(boot.status).toBe("committed");
     const input = f.enrollment(boot.store);
-    const result = applyFixturePolicyTransition(input);
+    const result = applyFixture(input);
     expect(result.status).toBe("committed");
     expect(result.store?.version).toBe(2);
     expect(result.store?.pendingChallenges).toHaveLength(0);
@@ -22,18 +30,18 @@ describe("fixture policy lifecycle", () => {
     ]) {
       const input = f.bootstrap();
       input.transition.policy = { ...f.policySigned, signatures };
-      expect(applyFixturePolicyTransition(input).status).toBe("insufficient_evidence");
+      expect(applyFixture(input).status).toBe("insufficient_evidence");
     }
   });
   it("rejects a stale compare-and-swap without consuming the challenge", () => {
     const f = fixturePolicy();
-    const boot = applyFixturePolicyTransition(f.bootstrap());
+    const boot = applyFixture(f.bootstrap());
     const input = f.enrollment(boot.store);
-    const committed = applyFixturePolicyTransition(input);
-    const stale = applyFixturePolicyTransition({ ...input, store: committed.store });
+    const committed = applyFixture(input);
+    const stale = applyFixture({ ...input, store: committed.store });
     expect(stale.status).toBe("insufficient_evidence");
     expect(stale.store).toEqual(committed.store);
-    const interrupted = applyFixturePolicyTransition({ ...input, crashMode: "before" });
+    const interrupted = applyFixture({ ...input, crashMode: "before" });
     expect(interrupted.status).toBe("interrupted");
     expect(interrupted.store).toEqual(input.store);
   });
@@ -42,10 +50,10 @@ describe("fixture policy lifecycle", () => {
 describe("checkpoint and recovery security", () => {
   it("rejects an old store after the independent epoch witness has advanced", () => {
     const f = fixturePolicy();
-    const boot = applyFixturePolicyTransition(f.bootstrap());
+    const boot = applyFixture(f.bootstrap());
     const input = f.enrollment(boot.store);
     expect(
-      applyFixturePolicyTransition({
+      applyFixture({
         ...input,
         epochWitness: { repository: f.repository, policyId: f.policyId, epoch: 1 },
       }).status,
@@ -53,7 +61,7 @@ describe("checkpoint and recovery security", () => {
   });
   it("rejects an impossible nonempty initial policy even with a matching checkpoint", () => {
     const f = fixturePolicy();
-    const boot = applyFixturePolicyTransition(f.bootstrap());
+    const boot = applyFixture(f.bootstrap());
     const assignment = { ...f.owners[2]!, status: "active", roles: ["design-system-owner"] };
     const invalid = f.signed("policy", { ...f.policy, assignments: [assignment] });
     const store = {
@@ -68,7 +76,7 @@ describe("checkpoint and recovery security", () => {
       assignments: [{ ...assignment, status: "revoked" }],
     });
     expect(
-      applyFixturePolicyTransition({
+      applyFixture({
         ...f.base,
         store,
         expectedStoreVersion: 1,
@@ -78,7 +86,7 @@ describe("checkpoint and recovery security", () => {
   });
   it("allows separately authorized recovery without the old anchor", () => {
     const f = fixturePolicy();
-    const boot = applyFixturePolicyTransition(f.bootstrap());
+    const boot = applyFixture(f.bootstrap());
     const authorization = f.signed(
       "recovery",
       {
@@ -95,7 +103,7 @@ describe("checkpoint and recovery security", () => {
       },
       [3, 4],
     );
-    const result = applyFixturePolicyTransition({
+    const result = applyFixture({
       ...f.base,
       anchor: null,
       recoveryAuthority: { owners: f.owners.slice(3, 5), threshold: 2, minimumEpoch: 0 },
@@ -112,7 +120,7 @@ describe("checkpoint and recovery security", () => {
 describe("authenticated updates", () => {
   it("requires both old and new thresholds for root rotation and retains policy proof", () => {
     const f = fixturePolicy();
-    const boot = applyFixturePolicyTransition(f.bootstrap());
+    const boot = applyFixture(f.bootstrap());
     const next = {
       ...f.root,
       version: 2,
@@ -121,7 +129,7 @@ describe("authenticated updates", () => {
       administrators: [f.owners[1]!, f.owners[2]!],
     };
     const attempt = (indexes: number[]) =>
-      applyFixturePolicyTransition({
+      applyFixture({
         ...f.base,
         store: boot.store,
         expectedStoreVersion: 1,
@@ -136,7 +144,7 @@ describe("authenticated updates", () => {
       JSON.parse(Buffer.from(enrollment.transition.policy.bytes).toString()),
       [1, 2],
     );
-    expect(applyFixturePolicyTransition(enrollment).status).toBe("committed");
+    expect(applyFixture(enrollment).status).toBe("committed");
     const forged = {
       ...updated.store!,
       rotationPolicies: [
@@ -150,12 +158,10 @@ describe("authenticated updates", () => {
         },
       ],
     };
-    expect(applyFixturePolicyTransition({ ...enrollment, store: forged }).status).toBe(
-      "insufficient_evidence",
-    );
+    expect(applyFixture({ ...enrollment, store: forged }).status).toBe("insufficient_evidence");
     expect(attempt([0, 1, 2]).store?.checkpoint.rootVersion).toBe(2);
     expect(
-      applyFixturePolicyTransition({
+      applyFixture({
         ...f.base,
         store: boot.store,
         expectedStoreVersion: 1,
@@ -165,9 +171,9 @@ describe("authenticated updates", () => {
   });
   it("allows only the specified reviewer change", () => {
     const f = fixturePolicy();
-    const boot = applyFixturePolicyTransition(f.bootstrap());
+    const boot = applyFixture(f.bootstrap());
     const enroll = f.enrollment(boot.store);
-    const result = applyFixturePolicyTransition(enroll);
+    const result = applyFixture(enroll);
     const current = JSON.parse(Buffer.from(enroll.transition.policy.bytes).toString());
     const change = (action: string, patch: Record<string, unknown>, assignments?: unknown[]) => {
       const next = {
@@ -176,7 +182,7 @@ describe("authenticated updates", () => {
         previousDigest: hash(enroll.transition.policy.bytes),
         assignments: assignments ?? [{ ...current.assignments[0], ...patch }],
       };
-      return applyFixturePolicyTransition({
+      return applyFixture({
         ...f.base,
         store: result.store,
         expectedStoreVersion: 2,
@@ -193,7 +199,7 @@ describe("authenticated updates", () => {
   });
   it("rejects replay, invalid signatures, stale clock and crash-before; after crash commits atomically", () => {
     const f = fixturePolicy();
-    const boot = applyFixturePolicyTransition(f.bootstrap());
+    const boot = applyFixture(f.bootstrap());
     const input = f.enrollment(boot.store);
     const wrong = {
       ...input,
@@ -202,20 +208,18 @@ describe("authenticated updates", () => {
         proof: f.signed("enrollment", input.transition.proof.bytes, [3]),
       },
     };
-    expect(applyFixturePolicyTransition(wrong).status).toBe("insufficient_evidence");
-    expect(applyFixturePolicyTransition({ ...input, at: "2026-10-27T10:00:00.000Z" }).status).toBe(
+    expect(applyFixture(wrong).status).toBe("insufficient_evidence");
+    expect(applyFixture({ ...input, at: "2026-10-27T10:00:00.000Z" }).status).toBe(
       "insufficient_evidence",
     );
-    const before = applyFixturePolicyTransition({ ...input, crashMode: "before" });
+    const before = applyFixture({ ...input, crashMode: "before" });
     expect(before.status).toBe("interrupted");
     expect(before.store?.pendingChallenges).toHaveLength(1);
-    const after = applyFixturePolicyTransition({ ...input, crashMode: "after" });
+    const after = applyFixture({ ...input, crashMode: "after" });
     expect(after.status).toBe("committed");
     expect(after.store?.pendingChallenges).toHaveLength(0);
     expect(after.store?.consumedChallenges).toHaveLength(1);
-    expect(applyFixturePolicyTransition({ ...input, store: after.store }).status).toBe(
-      "insufficient_evidence",
-    );
+    expect(applyFixture({ ...input, store: after.store }).status).toBe("insufficient_evidence");
     input.store.pendingChallenges[0]![0] = 0;
     expect(before.store?.pendingChallenges[0]?.[0]).not.toBe(0);
   });
@@ -224,9 +228,9 @@ describe("authenticated updates", () => {
 describe("enrollment and recovery adversaries", () => {
   it("requires a matching pending challenge and fresh proof for a key rotation", () => {
     const f = fixturePolicy();
-    const boot = applyFixturePolicyTransition(f.bootstrap());
+    const boot = applyFixture(f.bootstrap());
     const enroll = f.enrollment(boot.store);
-    const committed = applyFixturePolicyTransition(enroll);
+    const committed = applyFixture(enroll);
     const previous = JSON.parse(Buffer.from(enroll.transition.policy.bytes).toString());
     const replacement = {
       ...f.owners[3]!,
@@ -243,6 +247,7 @@ describe("enrollment and recovery adversaries", () => {
     const challenge = {
       schemaVersion: 1,
       purpose: "fixture-reviewer-enrollment",
+      epoch: 0,
       repository: f.repository,
       policyId: f.policyId,
       revision: 3,
@@ -261,18 +266,18 @@ describe("enrollment and recovery adversaries", () => {
       expectedStoreVersion: 2,
       transition: { kind: "policy", action: "rotate", policy: next, proof },
     };
-    expect(applyFixturePolicyTransition(input).status).toBe("committed");
+    expect(applyFixture(input).status).toBe("committed");
+    expect(applyFixture({ ...input, store: { ...store, pendingChallenges: [] } }).status).toBe(
+      "insufficient_evidence",
+    );
     expect(
-      applyFixturePolicyTransition({ ...input, store: { ...store, pendingChallenges: [] } }).status,
-    ).toBe("insufficient_evidence");
-    expect(
-      applyFixturePolicyTransition({
+      applyFixture({
         ...input,
         transition: { ...input.transition, proof: f.signed("enrollment", challenge, [2]) },
       }).status,
     ).toBe("insufficient_evidence");
     expect(
-      applyFixturePolicyTransition({
+      applyFixture({
         ...input,
         store: { ...store, consumedChallenges: [hash(proof.bytes)] },
       }).status,
@@ -280,7 +285,7 @@ describe("enrollment and recovery adversaries", () => {
   });
   it("requires independent two-owner recovery and a matching epoch witness", () => {
     const f = fixturePolicy();
-    const boot = applyFixturePolicyTransition(f.bootstrap());
+    const boot = applyFixture(f.bootstrap());
     const statement = {
       schemaVersion: 1,
       purpose: "fixture-policy-recovery",
@@ -307,20 +312,18 @@ describe("enrollment and recovery adversaries", () => {
         authorization: f.signed("recovery", statement, [3, 4]),
       },
     };
-    expect(applyFixturePolicyTransition({ ...input, recoveryAuthority: null }).status).toBe(
+    expect(applyFixture({ ...input, recoveryAuthority: null }).status).toBe(
       "insufficient_evidence",
     );
-    expect(applyFixturePolicyTransition({ ...input, epochWitness: null }).status).toBe(
-      "insufficient_evidence",
-    );
+    expect(applyFixture({ ...input, epochWitness: null }).status).toBe("insufficient_evidence");
     expect(
-      applyFixturePolicyTransition({
+      applyFixture({
         ...input,
         transition: { ...input.transition, authorization: f.signed("recovery", statement, [3]) },
       }).status,
     ).toBe("insufficient_evidence");
     expect(
-      applyFixturePolicyTransition({
+      applyFixture({
         ...input,
         transition: {
           ...input.transition,
@@ -328,11 +331,11 @@ describe("enrollment and recovery adversaries", () => {
         },
       }).status,
     ).toBe("insufficient_evidence");
-    const recovered = applyFixturePolicyTransition(input);
+    const recovered = applyFixture(input);
     expect(recovered.status).toBe("committed");
     const enrollment = f.enrollment(recovered.store);
     expect(
-      applyFixturePolicyTransition({
+      applyFixture({
         ...enrollment,
         anchor: null,
         recoveryAuthority: input.recoveryAuthority,
@@ -342,11 +345,11 @@ describe("enrollment and recovery adversaries", () => {
   });
   it("rejects malformed signed policy, unrelated signatures, and counter overflow", () => {
     const f = fixturePolicy();
-    const boot = applyFixturePolicyTransition(f.bootstrap());
+    const boot = applyFixture(f.bootstrap());
     const input = f.enrollment(boot.store);
     const malformed = f.signed("policy", Buffer.from('{"schemaVersion":1,"schemaVersion":1}'));
     expect(
-      applyFixturePolicyTransition({
+      applyFixture({
         ...input,
         transition: { ...input.transition, policy: malformed },
       }).status,
@@ -359,11 +362,10 @@ describe("enrollment and recovery adversaries", () => {
       ],
     };
     expect(
-      applyFixturePolicyTransition({ ...input, transition: { ...input.transition, policy: extra } })
-        .status,
+      applyFixture({ ...input, transition: { ...input.transition, policy: extra } }).status,
     ).toBe("insufficient_evidence");
     expect(
-      applyFixturePolicyTransition({
+      applyFixture({
         ...input,
         expectedStoreVersion: Number.MAX_SAFE_INTEGER,
         store: { ...input.store, version: Number.MAX_SAFE_INTEGER },
@@ -374,7 +376,7 @@ describe("enrollment and recovery adversaries", () => {
 
 it("rejects a history policy signed by retired owners after a root change", () => {
   const f = fixturePolicy();
-  const boot = applyFixturePolicyTransition(f.bootstrap());
+  const boot = applyFixture(f.bootstrap());
   const nextRoot = {
     ...f.root,
     version: 2,
@@ -382,7 +384,7 @@ it("rejects a history policy signed by retired owners after a root change", () =
     currentPolicyDigest: hash(f.policySigned.bytes),
     administrators: [f.owners[2]!, f.owners[3]!],
   };
-  const rotated = applyFixturePolicyTransition({
+  const rotated = applyFixture({
     ...f.base,
     store: boot.store,
     expectedStoreVersion: 1,
@@ -424,7 +426,7 @@ it("rejects a history policy signed by retired owners after a root change", () =
     [2, 3],
   );
   expect(
-    applyFixturePolicyTransition({
+    applyFixture({
       ...f.base,
       store,
       expectedStoreVersion: 3,
@@ -435,7 +437,7 @@ it("rejects a history policy signed by retired owners after a root change", () =
 
 it("accepts consecutive root rotations with an unchanged policy", () => {
   const f = fixturePolicy();
-  const boot = applyFixturePolicyTransition(f.bootstrap());
+  const boot = applyFixture(f.bootstrap());
   const root2 = {
     ...f.root,
     version: 2,
@@ -444,7 +446,7 @@ it("accepts consecutive root rotations with an unchanged policy", () => {
     administrators: [f.owners[2]!, f.owners[3]!],
   };
   const e2 = f.signed("root", root2, [0, 1, 2, 3]);
-  const first = applyFixturePolicyTransition({
+  const first = applyFixture({
     ...f.base,
     store: boot.store,
     expectedStoreVersion: 1,
@@ -461,7 +463,7 @@ it("accepts consecutive root rotations with an unchanged policy", () => {
     },
     [2, 3, 4],
   );
-  const second = applyFixturePolicyTransition({
+  const second = applyFixture({
     ...f.base,
     store: first.store,
     expectedStoreVersion: 2,
@@ -470,7 +472,7 @@ it("accepts consecutive root rotations with an unchanged policy", () => {
   expect(second.status).toBe("committed");
   const enroll = f.enrollment(second.store);
   enroll.transition.policy = f.signed("policy", enroll.transition.policy.bytes, [3, 4]);
-  expect(applyFixturePolicyTransition(enroll).status).toBe("committed");
+  expect(applyFixture(enroll).status).toBe("committed");
 });
 
 it("rejects duplicate owners, mismatched scope and invalid checkpoint", () => {
@@ -478,22 +480,22 @@ it("rejects duplicate owners, mismatched scope and invalid checkpoint", () => {
   const invalidRoot = { ...f.root, administrators: [f.owners[0]!, f.owners[0]!] };
   const bad = f.signed("root", invalidRoot, [0, 1]);
   expect(
-    applyFixturePolicyTransition({
+    applyFixture({
       ...f.bootstrap(),
       anchor: bad,
       transition: { ...f.bootstrap().transition, root: bad },
     }).status,
   ).toBe("insufficient_evidence");
-  const boot = applyFixturePolicyTransition(f.bootstrap());
+  const boot = applyFixture(f.bootstrap());
   const input = f.enrollment(boot.store);
   expect(
-    applyFixturePolicyTransition({
+    applyFixture({
       ...input,
       expected: { ...f.base.expected, repository: { ...f.repository, id: 102 } },
     }).status,
   ).toBe("insufficient_evidence");
   expect(
-    applyFixturePolicyTransition({
+    applyFixture({
       ...input,
       store: {
         ...input.store,
@@ -505,7 +507,7 @@ it("rejects duplicate owners, mismatched scope and invalid checkpoint", () => {
 
 it("rejects history that advances from an expired previous policy", () => {
   const f = fixturePolicy();
-  const boot = applyFixturePolicyTransition(f.bootstrap());
+  const boot = applyFixture(f.bootstrap());
   const t2 = "2026-10-28T09:30:00.000Z";
   const t3 = "2026-10-28T11:00:00.000Z";
   const root2 = {
@@ -516,7 +518,7 @@ it("rejects history that advances from an expired previous policy", () => {
     issuedAt: "2026-10-28T09:00:00.000Z",
     expiresAt: "2026-10-29T08:00:00.000Z",
   };
-  const rotated = applyFixturePolicyTransition({
+  const rotated = applyFixture({
     ...f.base,
     at: t2,
     store: boot.store,
@@ -538,6 +540,7 @@ it("rejects history that advances from an expired previous policy", () => {
     {
       schemaVersion: 1,
       purpose: "fixture-reviewer-enrollment",
+      epoch: 0,
       repository: f.repository,
       policyId: f.policyId,
       revision: 2,
@@ -575,12 +578,144 @@ it("rejects history that advances from an expired previous policy", () => {
     assignments: [{ ...assignment, status: "revoked" }],
   });
   expect(
-    applyFixturePolicyTransition({
+    applyFixture({
       ...f.base,
       at: t3,
       store,
       expectedStoreVersion: 3,
       transition: { kind: "policy", action: "revoke", policy: revoke, proof: null },
+    }).status,
+  ).toBe("insufficient_evidence");
+});
+
+it("rejects restoring an old pending challenge after the separate store witness advances", () => {
+  const f = fixturePolicy();
+  const boot = applyFixture(f.bootstrap());
+  const input = f.enrollment(boot.store);
+  const committed = applyFixture(input);
+  expect(committed.status).toBe("committed");
+  const witness = {
+    repository: f.repository,
+    policyId: f.policyId,
+    epoch: committed.store!.epoch,
+    version: committed.store!.version,
+    rootDigest: committed.store!.checkpoint.rootDigest,
+    policyDigest: committed.store!.checkpoint.policyDigest,
+    lastTime: committed.store!.checkpoint.lastTime,
+    consumedChallenges: committed.store!.consumedChallenges,
+  };
+  const restored = applyFixturePolicyTransition({ ...input, storeWitness: witness });
+  expect(restored.status).toBe("insufficient_evidence");
+  const missing = applyFixturePolicyTransition({ ...input, storeWitness: null });
+  expect(missing.status).toBe("insufficient_evidence");
+});
+
+it("rejects replay of an enrollment proof from a previous recovery epoch", () => {
+  const f = fixturePolicy();
+  const boot = applyFixture(f.bootstrap());
+  const firstInput = f.enrollment(boot.store);
+  const committed = applyFixture(firstInput);
+  const statement = {
+    schemaVersion: 1,
+    purpose: "fixture-policy-recovery",
+    repository: f.repository,
+    policyId: f.policyId,
+    priorEpoch: 0,
+    nextEpoch: 1,
+    rootDigest: hash(f.rootSigned.bytes),
+    policyDigest: hash(f.policySigned.bytes),
+    auditId: "recovery-replay",
+    ...f.time,
+  };
+  const authority = { owners: f.owners.slice(3, 5), threshold: 2, minimumEpoch: 0 };
+  const recovered = applyFixture({
+    ...f.base,
+    anchor: null,
+    recoveryAuthority: authority,
+    store: committed.store,
+    expectedStoreVersion: 2,
+    transition: {
+      kind: "recovery",
+      root: f.rootSigned,
+      policy: f.policySigned,
+      authorization: f.signed("recovery", statement, [3, 4]),
+    },
+  });
+  expect(recovered.status).toBe("committed");
+  const replay = {
+    ...firstInput,
+    anchor: null,
+    recoveryAuthority: authority,
+    epochWitness: { repository: f.repository, policyId: f.policyId, epoch: 1 },
+    store: {
+      ...recovered.store!,
+      pendingChallenges: [new Uint8Array(firstInput.transition.proof.bytes)],
+    },
+    expectedStoreVersion: 3,
+  };
+  expect(applyFixture(replay).status).toBe("insufficient_evidence");
+});
+
+it("rejects recovery before the independently witnessed time floor even if the checkpoint is missing", () => {
+  const f = fixturePolicy();
+  const boot = applyFixture(f.bootstrap());
+  const statement = {
+    schemaVersion: 1,
+    purpose: "fixture-policy-recovery",
+    repository: f.repository,
+    policyId: f.policyId,
+    priorEpoch: 0,
+    nextEpoch: 1,
+    rootDigest: hash(f.rootSigned.bytes),
+    policyDigest: hash(f.policySigned.bytes),
+    auditId: "recovery-clock",
+    ...f.time,
+  };
+  const input = {
+    ...f.base,
+    anchor: null,
+    recoveryAuthority: { owners: f.owners.slice(3, 5), threshold: 2, minimumEpoch: 0 },
+    store: boot.store,
+    expectedStoreVersion: 1,
+    at: "2026-10-27T11:30:00.000Z",
+    transition: {
+      kind: "recovery",
+      root: f.rootSigned,
+      policy: f.policySigned,
+      authorization: f.signed("recovery", statement, [3, 4]),
+    },
+  };
+  expect(applyFixture(input).status).toBe("insufficient_evidence");
+  const witness = fixtureStoreWitness(input.expected, boot.store);
+  expect(
+    applyFixturePolicyTransition({
+      ...input,
+      store: { ...boot.store, checkpoint: null },
+      storeWitness: witness,
+    }).status,
+  ).toBe("insufficient_evidence");
+  expect(applyFixturePolicyTransition({ ...input, storeWitness: null }).status).toBe(
+    "insufficient_evidence",
+  );
+  const missingStore = { ...input, at: f.at, store: null, storeWitness: witness };
+  const recovered = applyFixturePolicyTransition(missingStore);
+  expect(recovered.status).toBe("committed");
+  expect(recovered.store?.version).toBe(2);
+});
+
+it("rejects a forged consumed list even when the witnessed store version is unchanged", () => {
+  const f = fixturePolicy();
+  const boot = applyFixture(f.bootstrap());
+  const input = f.enrollment(boot.store);
+  const committed = applyFixture(input);
+  const witness = fixtureStoreWitness(input.expected, committed.store);
+  const forged = { ...committed.store!, consumedChallenges: [] };
+  expect(
+    applyFixturePolicyTransition({
+      ...input,
+      store: forged,
+      expectedStoreVersion: 2,
+      storeWitness: witness,
     }).status,
   ).toBe("insufficient_evidence");
 });

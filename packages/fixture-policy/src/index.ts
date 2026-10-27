@@ -496,7 +496,7 @@ function validateStore(
   let previousPolicy: SignedFixture | undefined;
   let previousSigner = 0;
   let previousPayload: Obj | undefined;
-  const replay: Obj = { pendingChallenges: [], consumedChallenges: [] };
+  const replay: Obj = { epoch: store.epoch, pendingChallenges: [], consumedChallenges: [] };
   const rotationRevisions = rotations.map(
     (rotation: Obj) =>
       policy(payload(envelope(rotation.policy)), expected, at, false).revision as number,
@@ -672,6 +672,7 @@ function validateDiff(
       "purpose",
       "repository",
       "policyId",
+      "epoch",
       "revision",
       "previousPolicyDigest",
       "nextPolicyDigest",
@@ -686,6 +687,7 @@ function validateDiff(
         c.purpose === "fixture-reviewer-enrollment" &&
         sameRepo(c.repository, expected.repository) &&
         c.policyId === expected.policyId &&
+        c.epoch === store.epoch &&
         c.revision === next.revision &&
         c.previousPolicyDigest === prevDigest &&
         c.nextPolicyDigest === nextDigest &&
@@ -719,6 +721,7 @@ export function applyFixturePolicyTransition(input: unknown): FixturePolicyResul
       "anchor",
       "recoveryAuthority",
       "epochWitness",
+      "storeWitness",
       "store",
       "expectedStoreVersion",
       "at",
@@ -737,14 +740,68 @@ export function applyFixturePolicyTransition(input: unknown): FixturePolicyResul
     check(t && typeof t.kind === "string");
     const store = raw.store === null ? null : clone(raw.store);
     check(
-      (store?.version ?? 0) === raw.expectedStoreVersion &&
+      (store === null
+        ? t.kind === "recovery" || raw.expectedStoreVersion === 0
+        : store.version === raw.expectedStoreVersion) &&
         raw.expectedStoreVersion < Number.MAX_SAFE_INTEGER,
     );
+    const sw = obj(raw.storeWitness, [
+      "repository",
+      "policyId",
+      "epoch",
+      "version",
+      "rootDigest",
+      "policyDigest",
+      "lastTime",
+      "consumedChallenges",
+    ]);
+    check(
+      sameRepo(sw.repository, expected.repository) &&
+        sw.policyId === expected.policyId &&
+        sw.version === raw.expectedStoreVersion,
+    );
+    nonnegative(sw.epoch);
+    const consumed = array(sw.consumedChallenges, 0, 100);
+    for (const id of consumed) digest(id);
+    check(new Set(consumed).size === consumed.length);
+    if (sw.version === 0)
+      check(
+        sw.rootDigest === null &&
+          sw.policyDigest === null &&
+          sw.lastTime === null &&
+          consumed.length === 0,
+      );
+    else {
+      digest(sw.rootDigest);
+      digest(sw.policyDigest);
+      check(timestamp(sw.lastTime) <= at);
+    }
+    if (store !== null) {
+      check(sw.epoch === store.epoch);
+      if (t.kind !== "recovery") {
+        const checkpoint = obj(store.checkpoint, [
+          "rootVersion",
+          "rootDigest",
+          "policyRevision",
+          "policyDigest",
+          "lastTime",
+          "repository",
+          "policyId",
+          "epoch",
+        ]);
+        check(
+          sw.rootDigest === checkpoint.rootDigest &&
+            sw.policyDigest === checkpoint.policyDigest &&
+            sw.lastTime === checkpoint.lastTime &&
+            eq(consumed, store.consumedChallenges),
+        );
+      }
+    }
     let next: Obj;
     if (t.kind === "bootstrap" || t.kind === "recovery") {
       if (t.kind === "bootstrap") {
         obj(t, ["kind", "root", "policy"]);
-        check(store === null && raw.expectedStoreVersion === 0);
+        check(store === null && raw.expectedStoreVersion === 0 && sw.epoch === 0);
       } else obj(t, ["kind", "root", "policy", "authorization"]);
       const re = envelope(t.root),
         pe = envelope(t.policy);
@@ -755,7 +812,11 @@ export function applyFixturePolicyTransition(input: unknown): FixturePolicyResul
       else {
         recovery = envelope(t.authorization);
         rp = recoveryProof(recovery, raw.recoveryAuthority, raw.epochWitness, expected, at);
-        check(rp.rootDigest === hash(re.bytes) && rp.policyDigest === hash(pe.bytes));
+        check(
+          rp.rootDigest === hash(re.bytes) &&
+            rp.policyDigest === hash(pe.bytes) &&
+            rp.priorEpoch === sw.epoch,
+        );
       }
       const r = root(payload(re), expected, at);
       verifySigned(re, "root", r.administrators, r.threshold);

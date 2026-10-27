@@ -14,6 +14,20 @@ export const pae = (type: string, bytes: Uint8Array) =>
     Buffer.from(`DSSEv1 ${Buffer.byteLength(type)} ${type} ${bytes.byteLength} `),
     bytes,
   ]);
+export function fixtureStoreWitness(
+  expected: { repository: unknown; policyId: string },
+  store: any,
+) {
+  return {
+    ...expected,
+    epoch: store?.epoch ?? 0,
+    version: store?.version ?? 0,
+    rootDigest: store?.checkpoint?.rootDigest ?? null,
+    policyDigest: store?.checkpoint?.policyDigest ?? null,
+    lastTime: store?.checkpoint?.lastTime ?? null,
+    consumedChallenges: [...(store?.consumedChallenges ?? [])],
+  };
+}
 export function fixturePolicy() {
   const repository = { provider: "github", host: "github.com", id: 101 } as const;
   const policyId = "fixture-policy";
@@ -68,6 +82,7 @@ export function fixturePolicy() {
     anchor: rootSigned,
     recoveryAuthority: null,
     epochWitness: { repository, policyId, epoch: 0 },
+    storeWitness: fixtureStoreWitness({ repository, policyId }, null),
     at,
     crashMode: "none" as const,
   };
@@ -93,6 +108,7 @@ export function fixturePolicy() {
       purpose: "fixture-reviewer-enrollment",
       repository,
       policyId,
+      epoch: store.epoch,
       revision: 2,
       previousPolicyDigest: hash(policySigned.bytes),
       nextPolicyDigest: hash(policyNext.bytes),
@@ -106,6 +122,7 @@ export function fixturePolicy() {
     return {
       ...base,
       store: prepared,
+      storeWitness: fixtureStoreWitness({ repository, policyId }, store),
       expectedStoreVersion: store.version,
       transition: { kind: "policy", action: "enroll", policy: policyNext, proof },
     };
