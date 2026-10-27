@@ -11,7 +11,7 @@ The verifier is disconnected from normal release decisions and MCP. The isolatio
 Reproduce the focused checks from the workspace root:
 
 ```sh
-bun --bun vitest run tests/fixture-attestation.test.ts tests/mcp-fixture-attestation-isolation.test.ts tests/fixture-attestation-boundaries.test.ts
+bun --bun vitest run tests/fixture-attestation.test.ts tests/fixture-attestation-json.test.ts tests/fixture-attestation-crypto.test.ts tests/mcp-fixture-attestation-isolation.test.ts tests/fixture-attestation-boundaries.test.ts
 bun run boundaries
 ```
 
