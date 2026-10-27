@@ -1,6 +1,6 @@
 # M3c exact-artifact attestation design
 
-Status: **proposed**. The user selected a repository-owner-managed reviewer policy as the authority model. This document designs a local, fixture-only verification slice; it does not establish a protected production policy, enroll reviewers, connect GitHub, enable a release gate, or authorize publication.
+Status: **implemented locally as fixture-only verification**. The user selected a repository-owner-managed reviewer policy as the authority model. This slice does not establish a protected production policy, enroll reviewers, connect GitHub, enable a release gate, or authorize publication.
 
 ## Intent and current state
 

@@ -35,9 +35,9 @@
 
 **Interface:** Export `verifyFixtureAttestations(input: unknown): FixtureAttestationResult` and types from package index. Input includes raw envelope bytes, separately supplied expected scope, exact policy UTF-8 bytes, injected evaluation time and independently supplied synthetic checkpoint/freshness fixture; output is fixed, schema-versioned, `assurance: "fixture-only"`, with `matched` or `insufficient_evidence` and bounded non-sensitive reason codes. Document exact input shapes and limits in the package README; never return signing material, arbitrary exception text, or a capability. Expose constants for profile types as needed by fixtures. No filesystem or network reads.
 
-- [ ] Write failing tests for a single signer covering both roles, two signers covering separate roles, wrong exact candidate digest and the DSSE PAE published known-answer byte vector. Run and record RED before implementation.
-- [ ] Implement the verifier, strict bounded JSON and base64/DER handling, policy/checkpoint/time/role validation and fixed outcomes. Include adversarial tests for every global constraint and Review focus. Run focused tests GREEN; verify TypeScript, lint and package build. Commit.
-- [ ] Obtain independent task review for spec and security. Fix Important findings with regression tests and scoped re-review.
+- [x] Write failing tests for a single signer covering both roles, two signers covering separate roles, wrong exact candidate digest and the DSSE PAE published known-answer byte vector. Run and record RED before implementation.
+- [x] Implement the verifier, strict bounded JSON and base64/DER handling, policy/checkpoint/time/role validation and fixed outcomes. Include adversarial tests for every global constraint and Review focus. Run focused tests GREEN; verify TypeScript, lint and package build. Commit.
+- [x] Obtain independent task review for spec and security. Fix Important findings with regression tests and scoped re-review.
 
 ## Task 2 — Isolation and documentation
 
@@ -45,12 +45,12 @@
 
 **Interface:** Consume the actual task-1 fixture verifier and existing `checkCandidate`, snapshot and MCP SDK test helpers. Changeset is private/nonpublishing metadata only.
 
-- [ ] Add real-candidate integration test using actual matched verifier output and forged trusted fields; assert ordinary release remains insufficient and saved MCP report remains unverified. Recheck altered candidate tarball and assert digest failure. Test against production code, not a mock of the release decision.
-- [ ] Add static import/ambient-capability isolation assertions. Document actual proof and remaining trust gaps. Run focused tests, full workspace checks and builds; commit locally.
-- [ ] Obtain independent task review; fix Important findings with regression tests and scoped re-review.
+- [x] Add real-candidate integration test using actual matched verifier output and forged trusted fields; assert ordinary release remains insufficient and saved MCP report remains unverified. Recheck altered candidate tarball and assert digest failure. Test against production code, not a mock of the release decision.
+- [x] Add static import/ambient-capability isolation assertions. Document actual proof and remaining trust gaps. Run focused tests, full workspace checks and builds; commit locally.
+- [x] Obtain independent task review; fix Important findings with regression tests and scoped re-review.
 
 ## Task 3 — Final review and main integration
 
-- [ ] Run complete local checks/builds and release demo; independently review the whole branch, including dependency and trust boundaries. Address Important findings.
+- [x] Run complete local checks/builds and release demo; independently review the whole branch, including dependency and trust boundaries. Address Important findings.
 - [ ] Fast-forward local main, run checks/builds, refresh source-bound dogfood and Storybook, export snapshot and run built MCP SDK smoke. Record exact results.
-- [ ] Recommend the next bounded operational design for independently protected repository-owner policy and authenticated GitHub identity. Do not activate it.
+- [x] Recommend the next bounded operational design for independently protected repository-owner policy and authenticated GitHub identity. Do not activate it.
