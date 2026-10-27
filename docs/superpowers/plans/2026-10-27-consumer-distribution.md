@@ -59,4 +59,4 @@
 ## Task 4: Whole-branch verification and integration
 
 - [x] Run local full checks/build, independent whole-branch review and source-bound dogfood/Storybook/MCP verification; document observed results and remaining release gates.
-- [ ] Fast-forward local main; rerun appropriate final checks on the final commit. Never push or publish. Recommend the next bounded release step.
+- [x] Fast-forward local main; rerun appropriate final checks on the final commit. Never push or publish. Recommend the next bounded release step.
