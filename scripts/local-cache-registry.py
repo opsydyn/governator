@@ -13,7 +13,9 @@ not original publisher tarballs. Keep evidence outside the cache in an owned fol
 All symlinks and special files inside selected packages are rejected deliberately.
 Duplicate identities are checked only when requested; byte-identical manifests and
 identical reconstructed archives are required across every copy. The first sorted
-source is recorded, together with all equivalent source paths.
+source is recorded, together with all equivalent source paths. Entries bearing
+Bun _patch_hash= markers are never served; their ignored paths are recorded when
+an unpatched source exists. Unmarked divergent copies still fail closed.
 """
 import argparse
 import gzip
@@ -168,7 +170,11 @@ class Registry:
     def select(self, name, version):
         with self.lock:
             key = (name, version)
-            copies = self.index[key]
+            all_copies = self.index[key]
+            ignored_patched = [copy for copy in all_copies if '_patch_hash=' in copy[0].name]
+            copies = [copy for copy in all_copies if '_patch_hash=' not in copy[0].name]
+            if not copies:
+                raise ValueError(f'Only patched cache variants available: {name}@{version}')
             folder, raw, manifest = copies[0]
             validate_dependencies(manifest)
             data = archive(folder)
@@ -182,6 +188,7 @@ class Registry:
                     raise ValueError('Cache manifest changed during qualification')
             record = {'name': name, 'version': version, 'source': str(folder),
                       'equivalentSources': [str(copy[0]) for copy in copies],
+                      'ignoredPatchedSources': [str(copy[0]) for copy in ignored_patched],
                       'manifestSha256': digest(raw), 'tarballSha256': digest(data),
                       'archiveKind': 'reconstructed-from-extracted-bun-cache'}
             identity = name + '@' + version
@@ -225,7 +232,10 @@ def server(registry):
                     versions = {}
                     for (name, version), copies in registry.index.items():
                         if name == path:
-                            manifest = copies[0][2]
+                            unpatched = [copy for copy in copies if '_patch_hash=' not in copy[0].name]
+                            if not unpatched:
+                                continue
+                            manifest = unpatched[0][2]
                             try:
                                 data = registry.select(name, version)
                             except (KeyError, ValueError, OSError, tarfile.TarError):

@@ -210,6 +210,24 @@ class RegistryTests(unittest.TestCase):
         evidence = json.loads(self.evidence.read_text())['packages']
         self.assertEqual([item['version'] for item in evidence], ['1.2.3'])
 
+    def test_unpatched_source_selected_and_patched_variant_recorded(self):
+        patched = self.cache / 'example@1.2.3_patch_hash=abcdef'
+        patched.mkdir()
+        (patched / 'package.json').write_bytes(self.raw)
+        (patched / 'bin.js').write_text('patched')
+        registry = self.registry()
+        self.assertEqual(registry.select('example', '1.2.3'), module.archive(self.folder))
+        record = json.loads(self.evidence.read_text())['packages'][0]
+        self.assertEqual(record['source'], str(self.folder))
+        self.assertEqual(record['ignoredPatchedSources'], [str(patched)])
+        self.assertEqual(record['equivalentSources'], [str(self.folder)])
+
+    def test_patched_only_source_is_never_served(self):
+        self.folder.rename(self.cache / 'example@1.2.3_patch_hash=abcdef')
+        with self.assertRaisesRegex(ValueError, 'Only patched'):
+            self.registry().select('example', '1.2.3')
+        self.assertFalse(self.evidence.exists())
+
     def test_enforces_package_byte_bound(self):
         registry = self.registry()
         original = module.MAX_BYTES
