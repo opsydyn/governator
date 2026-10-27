@@ -248,7 +248,7 @@ def server(registry):
                     if not versions:
                         raise KeyError(path)
                     # No invented latest tag or publish timestamp. Consumers use versions/ranges.
-                    data = json.dumps({'name': path, 'versions': versions}).encode()
+                    data = json.dumps({'name': path, 'versions': versions, 'dist-tags': {}}).encode()
                     content_type = 'application/json'
             except (KeyError, ValueError, OSError, tarfile.TarError):
                 self.send_error(404, 'Unavailable in bounded local cache')

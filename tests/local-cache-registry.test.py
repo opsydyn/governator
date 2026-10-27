@@ -66,7 +66,8 @@ class RegistryTests(unittest.TestCase):
         handler.do_GET()
         metadata = json.loads(handler.wfile.getvalue())
         self.assertNotIn('time', metadata)
-        self.assertNotIn('dist-tags', metadata)
+        self.assertEqual(metadata['dist-tags'], {})
+        self.assertNotIn('latest', metadata['dist-tags'])
         version = metadata['versions']['1.2.3']
         self.assertEqual(version['dependencies'], {'other': '^2.0.0'})
         self.assertTrue(version['dist']['tarball'].startswith('http://127.0.0.1:12345/'))
