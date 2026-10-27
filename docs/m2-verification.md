@@ -1,6 +1,6 @@
 # M2 local verification — 27 October 2026
 
-Implemented locally on `codex/m2-readonly-mcp`, based on main `088be69`. Nothing pushed, published, versioned or installed into a client configuration. Main remains at the planning commit.
+Implemented locally on `codex/m2-readonly-mcp`, based on main `088be69`. Nothing pushed, published, versioned or installed into a client configuration. M2 was fast-forwarded onto local main at `877b5c9`.
 
 ## Verified behavior
 
