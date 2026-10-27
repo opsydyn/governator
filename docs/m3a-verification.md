@@ -20,4 +20,6 @@ bun run check
 bun run build
 ```
 
+One independent whole-branch review found no Critical, Important or Minor findings. The evaluator remains separate from normal release assessment and every result is simulated.
+
 The next external-provider phase requires an independently managed authority for reviewer identities and roles, authenticated GitHub reads, current review and membership state, complete pagination, and a qualified immutable binding between the reviewed source and exact artifact/inputs. GitHub review bodies can be edited and do not alone prove such a binding. Hosted protection, live identity, human acceptance and publication remain separate gates.
