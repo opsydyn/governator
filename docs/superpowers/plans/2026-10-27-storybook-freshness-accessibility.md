@@ -48,4 +48,4 @@
 ## Task 3 — Browser qualification and local integration
 
 - [x] Run full local check/build and review entire branch independently. Use local dogfood Storybook and CUA to repeat ready/blocked/unmapped/missing/stale scenarios, near-expiry panel + sidebar behavior, focus and copy across stories, keyboard disclosures and narrow layout. Temporary ignored report fixtures must be restored with verified checksum. Record actual observations and limitations.
-- [ ] Fast-forward local main and regenerate source-bound dogfood/Storybook/MCP smoke on clean final commit. No push or publish. Recommend evidence-provenance protocol compatibility design as next independent slice.
+- [x] Fast-forward local main and regenerate source-bound dogfood/Storybook/MCP smoke on clean final commit. No push or publish. Recommend evidence-provenance protocol compatibility design as next independent slice.

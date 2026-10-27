@@ -15,6 +15,8 @@ Date: 2026-10-27. This records local evidence for the first fix slice in the [im
 - With a temporary near-expiry report, the panel automatically changed to unverified and the sidebar label also became unverified. Focus on Copy moved to Reload when Copy was removed. A stale release snapshot gave current release snapshot guidance; a missing report showed HTTP 404 and retained Reload. Reload recovered after restoring the original report byte-for-byte (SHA-256 `3db343df85f9d72f04529563f511ab501e868844cbcfe7054790b4cd5d1d5180`).
 - At 640 × 800, the evidence table was 433 px wide inside a 302 px container. The candidate disclosure responded to Enter while focused. The original audit records keyboard scrolling of the table; this run did not repeat that scroll test.
 
+On local main at `226fc00`, the workspace check completed nine tasks (four cached), the build completed 11 cached tasks, and the dogfood report and Storybook build succeeded. The Storybook build emitted a large-chunk warning. A source-bound local snapshot passed the MCP smoke test with 14 tools and CLI/Storybook/MCP parity; its provenance was unverified and its release gate remained blocked.
+
 ## Remaining qualification
 
 These local browser observations and automated DOM tests do not establish screen-reader acceptance, WCAG conformance, hosted qualification or human acceptance. Evidence-provenance protocol changes are a separate slice.
