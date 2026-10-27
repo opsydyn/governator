@@ -50,5 +50,5 @@
 ## Task 3 — Review and integrate locally
 
 - [x] Obtain one independent whole-branch review for trust promotion, malformed inputs, lifecycle, role coverage, time and evidence binding. Fix Important findings with failing regressions, then run the full suite.
-- [ ] Commit final changes. Fast-forward local main; do not push or publish. After final commit generate fresh dogfood report, build Storybook, export a new snapshot and run built SDK MCP smoke. Record what actually passes and what remains unverified.
+- [x] Commit final changes. Fast-forward local main; do not push or publish. After final commit generate fresh dogfood report, build Storybook, export a new snapshot and run built SDK MCP smoke. Record what actually passes and what remains unverified.
 - [x] Recommend the next bounded M3 GitHub provider/independent trust-anchor design; do not assert live verification until it is actually configured and observed.
