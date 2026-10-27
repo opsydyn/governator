@@ -59,4 +59,4 @@
 ## Task 4: Qualification and local integration
 
 - [x] Run full local checks/build, independent whole-branch review and local Storybook dogfood browser checks for v2 details and v1 fallback; record results and limits.
-- [ ] Fast-forward to local main; regenerate source-bound dogfood, Storybook build and MCP snapshot/smoke on the final clean commit. No push or publish. Recommend the next bounded release-readiness step.
+- [x] Fast-forward to local main; regenerate source-bound dogfood, Storybook build and MCP snapshot/smoke on the final clean commit. No push or publish. Recommend the next bounded release-readiness step.
