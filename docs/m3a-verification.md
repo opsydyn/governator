@@ -12,4 +12,12 @@ This package does not fetch GitHub, read credentials, configure client settings,
 
 Local verification: all nine Moon checks passed with **253 tests** in 27 files; all eight package builds passed. The standalone verifier suite passed 115 tests, and the real release candidate/SDK MCP isolation regression passed with an actual matched fixture result. The addon remains 125,190 bytes raw / 15,123 bytes gzip with the existing dependency boundary. Source-bound dogfood reports and the built MCP smoke are regenerated on final clean main. See the [design](superpowers/specs/2026-10-27-m3a-review-evidence-design.md) and [implementation plan](superpowers/plans/2026-10-27-m3a-synthetic-review.md) for detailed scope.
 
+Reproduce the local verification from the repository root:
+
+```sh
+bun --bun vitest run tests/m3-synthetic-review.test.ts tests/mcp-review-isolation.test.ts
+bun run check
+bun run build
+```
+
 The next external-provider phase requires an independently managed authority for reviewer identities and roles, authenticated GitHub reads, current review and membership state, complete pagination, and a qualified immutable binding between the reviewed source and exact artifact/inputs. GitHub review bodies can be edited and do not alone prove such a binding. Hosted protection, live identity, human acceptance and publication remain separate gates.
