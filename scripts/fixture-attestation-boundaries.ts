@@ -42,6 +42,19 @@ export function inspectFixtureAttestation(source: string): string[] {
           errors.push(`Forbidden fixture verifier import: ${name}`);
       }
     }
+    if (ts.isIdentifier(node) && node.text === "Reflect") {
+      const member = node.parent;
+      if (
+        !ts.isPropertyAccessExpression(member) ||
+        member.expression !== node ||
+        member.name.text !== "ownKeys" ||
+        !ts.isCallExpression(member.parent) ||
+        member.parent.expression !== member
+      )
+        errors.push("Only direct Reflect.ownKeys calls are allowed");
+    }
+    if (ts.isStringLiteralLike(node) && node.text === "constructor")
+      errors.push("Fixture verifier constructor access is forbidden");
     if (ts.isMetaProperty(node) && node.keywordToken === ts.SyntaxKind.ImportKeyword)
       errors.push("Fixture verifier import.meta is forbidden");
     if (

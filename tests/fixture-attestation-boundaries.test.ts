@@ -11,7 +11,7 @@ import {
 test("fixture verifier permits its local modules, Effect, and node crypto", async () => {
   expect(
     await inspect(
-      'import { verify } from "node:crypto"; import { Schema } from "effect"; import { parse } from "./json.ts"; verify(key, data);',
+      'import { verify } from "node:crypto"; import { Schema } from "effect"; import { parse } from "./json.ts"; verify(key, data); Reflect.ownKeys(data);',
     ),
   ).toEqual([]);
 });
@@ -46,6 +46,11 @@ test("fixture verifier rejects ambient IO, network, credentials and dynamic exec
     '({}).constructor.constructor("return process")().env;',
     '({})["constructor"]["constructor"]("return process")().env;',
     '({})["con" + "structor"]("return process")().env;',
+    'Reflect.get(Object, "constructor")("return pro" + "cess")().env;',
+    'Reflect["get"](Object, "constructor")("return 1")();',
+    "const getter = Reflect.get;",
+    "const ownKeys = Reflect.ownKeys;",
+    'Object.getOwnPropertyDescriptor(Object, "constructor").value("return 1")();',
   ])
     expect(await inspect(source), source).not.toEqual([]);
 });
