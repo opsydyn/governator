@@ -8,6 +8,7 @@ import { runLocalCheck, readMappedTests } from "./evidence.ts";
 import type { GovernanceReport } from "@governanator/protocol";
 import { runRelease } from "./release.ts";
 import { runContracts } from "./contracts.ts";
+import { runQueryCommand } from "./queries.ts";
 
 export interface CliResult {
   readonly code: 0 | 1 | 2;
@@ -15,6 +16,8 @@ export interface CliResult {
   readonly stderr: string;
 }
 const help = `governanator validate [--root PATH]
+governanator snapshot export --report PATH --out artifacts/NAME.json [--root PATH] [--release PATH --config PATH]
+governanator query --snapshot PATH --tool NAME [--args JSON] [--root PATH]
 governanator evaluate [--root PATH] [--target stable] [--component ID]
   [--at YYYY-MM-DDTHH:mm:ss.sssZ] [--format json|text] [--demo]
 governanator evidence import --format vitest --file PATH --mapping PATH [--root PATH] [--commit SHA] [--report-root PATH]
@@ -73,6 +76,7 @@ function options(args: readonly string[]): {
   return { command, values, demo };
 }
 export async function executeCli(args: readonly string[]): Promise<CliResult> {
+  if (args[0] === "snapshot" || args[0] === "query") return runQueryCommand(args);
   if (args[0] === "release") return runRelease(args.slice(1));
   if (args[0] === "contracts") return runContracts(args.slice(1));
   const { command, values, demo } = options(args);

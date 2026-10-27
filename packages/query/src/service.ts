@@ -11,12 +11,22 @@ export function createQueryService(raw: QuerySnapshot) {
   const project = createProjector(snapshot);
   function query(name: string, rawArgs: unknown = {}, now = Date.now()): QueryResult {
     queryEnsure(
+      !!rawArgs && typeof rawArgs === "object" && !Array.isArray(rawArgs),
+      "Query arguments must be an object",
+      "invalid_request",
+    );
+    queryEnsure(
       Number.isFinite(now) &&
         now - Date.parse(snapshot.evaluatedAt) <= 86_400_000 &&
         now - Date.parse(snapshot.generatedAt) <= 86_400_000 &&
         now >= Date.parse(snapshot.generatedAt) - 60_000,
       "Snapshot is stale, expired or future",
       "stale_snapshot",
+    );
+    queryEnsure(
+      new TextEncoder().encode(JSON.stringify(rawArgs)).length <= 8192,
+      "Query arguments exceed 8 KiB",
+      "invalid_request",
     );
     const tool = decode(ToolNameSchema, name);
     const args: Args = decode(toolInputs[tool], rawArgs);

@@ -39,7 +39,11 @@ async function readInput(root: string, path: string, optional = false): Promise<
     if (!exists) return [];
   }
   const read = async (): Promise<unknown> => {
-    const content = await readFile(await containedFile(root, path), "utf8");
+    const target = await containedFile(root, path);
+    ensure(Bun.file(target).size <= 4 * 1024 * 1024, `Governance input exceeds 4 MiB: ${path}`);
+    const bytes = await readFile(target);
+    ensure(bytes.length <= 4 * 1024 * 1024, `Governance input exceeds 4 MiB: ${path}`);
+    const content = bytes.toString("utf8");
     return path.endsWith(".json") ? JSON.parse(content) : parse(content, { maxAliasCount: 100 });
   };
   return read().catch((cause: unknown) => {

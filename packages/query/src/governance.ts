@@ -235,11 +235,17 @@ export function createProjector(snapshot: QuerySnapshot) {
       data = {
         ...comparison,
         observedFiles: [c.source, ...c.stories],
-        documents: Object.entries(payload.documents).map(([path, content]) => ({ path, content })),
-        suggestions: [
-          "Review each detected public change against the linked migration guidance",
-          "Compile known consumers and run their interaction/accessibility checks before an actual release",
-        ],
+        documents:
+          comparison.status === "available"
+            ? Object.entries(payload.documents).map(([path, content]) => ({ path, content }))
+            : [],
+        suggestions:
+          comparison.status === "available"
+            ? [
+                "Review each detected public change against the linked migration guidance",
+                "Compile known consumers and run their interaction/accessibility checks before an actual release",
+              ]
+            : [],
         externalConsumers: "unknown",
         editsPerformed: false,
       };

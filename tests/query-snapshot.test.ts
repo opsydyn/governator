@@ -32,6 +32,9 @@ test("rejects changed source/report, wrong digest/schema and stale/future snapsh
     { schemaVersion: 2 },
     { sourceCommit: "b".repeat(40) },
     { generatedAt: "2099-01-01T00:00:00.000Z" },
+    {
+      payload: { ...f.snapshot.payload, report: { ...f.report, repository: "forged-repository" } },
+    },
   ]) {
     const { digest: _hash, ...body } = { ...f.snapshot, ...delta };
     await writeFile(

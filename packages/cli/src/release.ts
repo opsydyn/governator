@@ -173,14 +173,15 @@ export async function checkCandidate(
       bytesDigest(await Bun.file(tarball).bytes()) === actual.artifactDigest,
     "Candidate manifest or artifact changed during validation",
   );
+  const consumerDiagnostics = checkConsumers(
+    actual.manifest.name,
+    actual.api.declaration,
+    inputs.consumers,
+  );
   const report = assessRelease({
     baseline: inputs.baseline,
     candidate: actual,
-    consumerDiagnostics: checkConsumers(
-      actual.manifest.name,
-      actual.api.declaration,
-      inputs.consumers,
-    ),
+    consumerDiagnostics,
     intents: inputs.intents,
     classification: inputs.classification,
     mode: demo ? "demo" : "local",
@@ -193,6 +194,13 @@ export async function checkCandidate(
   });
   return {
     ...report,
+    consumerChecks: {
+      result: consumerDiagnostics.length ? ("failed" as const) : ("passed" as const),
+      fixtures: inputs.config.consumerFixtures,
+      diagnostics: consumerDiagnostics,
+      compilerVersion: actual.api.compilerVersion,
+      artifactDigest: actual.artifactDigest,
+    },
     candidateManifest: relative(root, path),
     testReceipt: checked.receiptPath,
     reproducedArtifactDigest: reproduced.candidate.artifact.artifactDigest,

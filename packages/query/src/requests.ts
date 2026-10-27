@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema, Match } from "effect";
 import { Lifecycle, ComponentId, SemVer } from "@governanator/core";
 const text = Schema.String.check(Schema.isMinLength(1));
 const version = text;
@@ -47,7 +47,17 @@ export const toolInputs = {
 export type ToolName = keyof typeof toolInputs;
 export const toolNames = Object.freeze(Object.keys(toolInputs) as ToolName[]);
 export function toolInputJsonSchema(name: ToolName): Record<string, unknown> {
-  return Schema.toJsonSchemaDocument(toolInputs[name]).schema;
+  return Match.value(name).pipe(
+    Match.when("get_design_system_report", () => ({
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    })),
+    Match.orElse(
+      (value) =>
+        Schema.toJsonSchemaDocument(toolInputs[value], { onExcessProperty: "error" }).schema,
+    ),
+  );
 }
 export interface Args {
   componentId?: string;

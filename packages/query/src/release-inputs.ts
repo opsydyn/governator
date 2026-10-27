@@ -16,12 +16,22 @@ export async function releaseInputs(
   );
   const commit = cleanHead(root),
     hashes: Record<string, string> = Object.create(null);
-  async function tracked(file: string): Promise<string> {
+  let total = 0,
+    count = 0;
+  async function tracked(file: string, document = false): Promise<string> {
     const target = await containedFile(root, file),
       key = relative(root, target);
     git(root, ["ls-files", "--error-unmatch", "--", key]);
-    const bytes = await Bun.file(target).bytes();
-    ensure(bytes.length <= 4 * 1024 * 1024, `Release input too large: ${key}`);
+    const input = Bun.file(target),
+      limit = document && options.safeDeclarations ? 256 * 1024 : 4 * 1024 * 1024;
+    ensure(input.size <= limit, `Release input too large: ${key}`);
+    const bytes = await input.bytes();
+    total += bytes.length;
+    count++;
+    ensure(
+      bytes.length <= limit && total <= 32 * 1024 * 1024 && count <= 128,
+      `Release input too large or input budget exceeded: ${key}`,
+    );
     hashes[key] = bytesDigest(bytes);
     return new TextDecoder().decode(bytes);
   }
@@ -107,7 +117,7 @@ export async function releaseInputs(
   const documents: Record<string, string> = Object.create(null);
   if (classification)
     for (const file of Object.values(classification.documents))
-      documents[file] = await tracked(file);
+      documents[file] = await tracked(file, true);
   return {
     commit,
     configPath,

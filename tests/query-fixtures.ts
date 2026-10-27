@@ -3,15 +3,17 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { evaluate } from "../packages/core/src/index.ts";
-import { registry, policy, evidence, at } from "./fixtures.ts";
-export async function queryProject() {
+import { registry, policy, evidence } from "./fixtures.ts";
+export async function queryProject(components: typeof registry.components = registry.components) {
+  const at = new Date().toISOString();
+  const selectedRegistry = { ...registry, components };
   const root = await realpath(await mkdtemp(join(tmpdir(), "governanator-query-")));
   for (const dir of ["governance", "fixtures", "artifacts"]) await mkdir(join(root, dir));
   const files: Record<string, string> = {
     ".gitignore": "artifacts/\nnode_modules\n",
     "fixtures/Button.ts": "export {};",
     "fixtures/Button.stories.ts": "export {};",
-    "governance/components.yaml": JSON.stringify(registry),
+    "governance/components.yaml": JSON.stringify(selectedRegistry),
     "governance/policy.yaml": JSON.stringify(policy),
     "governance/evidence.json": JSON.stringify([evidence]),
     "governance/waivers.json": "[]",
@@ -34,9 +36,17 @@ export async function queryProject() {
     encoding: "utf8",
   }).trim();
   const report = evaluate({
-    registry,
+    registry: selectedRegistry,
     policy,
-    evidence: [{ ...evidence, commit, repository: "local:fixture" }],
+    evidence: [
+      {
+        ...evidence,
+        commit,
+        repository: "local:fixture",
+        observedAt: at,
+        expiresAt: new Date(Date.parse(at) + 3600000).toISOString(),
+      },
+    ],
     waivers: [],
     target: "stable",
     at,

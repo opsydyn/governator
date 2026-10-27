@@ -54,6 +54,7 @@ export async function createSnapshot(
       limit = kind === "document" ? 256 * 1024 : 4 * 1024 * 1024;
     queryEnsure(file.size <= limit, `Snapshot input exceeds size limit: ${key}`);
     const bytes = await file.bytes();
+    queryEnsure(bytes.length <= limit, `Snapshot input exceeds size limit: ${key}`);
     total += bytes.length;
     queryEnsure(total <= 32 * 1024 * 1024 && files.length < 128, "Snapshot input budget exceeded");
     if (!seen.has(key)) {
@@ -139,6 +140,13 @@ export async function createSnapshot(
         release.baselineVersion === baseline.manifest.version,
       "Release artifact/API identity mismatch",
     );
+    if (release.consumerChecks)
+      queryEnsure(
+        release.consumerChecks.artifactDigest === candidate.artifactDigest &&
+          release.consumerChecks.compilerVersion === candidate.api.compilerVersion &&
+          digest(release.consumerChecks.fixtures) === digest(inputs.config.consumerFixtures),
+        "Consumer compile record scope mismatch",
+      );
     const summary = report.release,
       selectedRelease = release;
     queryEnsure(
