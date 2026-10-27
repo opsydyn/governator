@@ -1,5 +1,5 @@
 /** @jsxRuntime classic */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { API, HashEntry } from "storybook/manager-api";
 import { addons, types, useParameter } from "storybook/manager-api";
 import { AddonPanel } from "storybook/internal/components";
@@ -27,6 +27,42 @@ function useFreshness(
 }
 
 const css = `.gn-panel{font:13px/1.5 ui-sans-serif,system-ui,sans-serif;padding:22px 26px;min-height:250px}.gn-panel *{box-sizing:border-box}.gn-panel h2{font-size:20px;letter-spacing:-.4px;margin:0}.gn-panel h3{font-size:13px;margin:0 0 9px}.gn-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.gn-small{font-size:11px;opacity:.72}.gn-chips{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:10px 0}.gn-chip{border:1px solid currentColor;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:650}.gn-card{border:1px solid color-mix(in srgb,currentColor 20%,transparent);border-radius:8px;padding:15px 17px;margin-bottom:14px;background:color-mix(in srgb,currentColor 3%,transparent)}.gn-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.gn-table{border-collapse:collapse;width:100%;font-size:12px}.gn-table th,.gn-table td{text-align:left;padding:10px 9px;border-bottom:1px solid color-mix(in srgb,currentColor 14%,transparent);vertical-align:top}.gn-table th{font-size:10px;text-transform:uppercase;letter-spacing:.7px;opacity:.7}.gn-table td:last-child{max-width:430px}.gn-panel code{font-size:11px}.gn-panel ul{padding-left:18px;margin:6px 0}.gn-panel button{font:inherit;border:1px solid color-mix(in srgb,currentColor 30%,transparent);background:transparent;color:inherit;border-radius:5px;padding:5px 9px;cursor:pointer}.gn-panel button:focus-visible{outline:3px solid #6b9bff;outline-offset:2px}.gn-note{border-left:3px solid #d79729;padding-left:12px}.gn-table-wrap{overflow-x:auto}@media(max-width:700px){.gn-split{grid-template-columns:1fr}.gn-panel{padding:16px}}`;
+function CopyId({ id }: { id: string }) {
+  const [feedback, setFeedback] = useState("");
+  const generation = useRef(0);
+  useEffect(
+    () => () => {
+      generation.current++;
+    },
+    [],
+  );
+  const copy = () => {
+    const request = ++generation.current;
+    setFeedback("");
+    void Promise.resolve()
+      .then(() => {
+        if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+        return navigator.clipboard.writeText(id);
+      })
+      .then(
+        () => {
+          if (request === generation.current) setFeedback("Copied ID");
+        },
+        () => {
+          if (request === generation.current)
+            setFeedback("Copy failed. Check clipboard permissions.");
+        },
+      );
+  };
+  return (
+    <>
+      <button onClick={copy}>{feedback === "Copied ID" ? feedback : "Copy ID"}</button>{" "}
+      <span role="status" aria-live="polite">
+        {feedback === "Copied ID" ? "ID copied." : feedback}
+      </span>
+    </>
+  );
+}
 function Panel() {
   const theme = useTheme();
   const params = useParameter<{ componentId?: unknown; reportUrl?: unknown }>("governance", {});
@@ -43,7 +79,6 @@ function Panel() {
     stateKey.url === params.reportUrl && stateKey.refresh === refresh
       ? revalidateReport(state)
       : { status: "loading", message: "Loading governance snapshot…" };
-  const [copied, setCopied] = useState(false);
   useEffect(() => {
     let active = true;
     setStateKey({ url: params.reportUrl, refresh });
@@ -86,49 +121,9 @@ function Panel() {
         : theme.base === "dark"
           ? "#f2cf7f"
           : "#855800";
-  if (currentState.status !== "ready")
-    return (
-      <section
-        className="gn-panel"
-        style={{ color: theme.color.defaultText, background: theme.background.content }}
-      >
-        <style>{css}</style>
-        <div className="gn-top">
-          <div>
-            <h2>Governance</h2>
-            <p className="gn-small">{componentId ?? "No component identity configured"}</p>
-          </div>
-          <button onClick={() => setRefresh((value) => value + 1)}>Reload report</button>
-        </div>
-        <div
-          role={currentState.status === "error" ? "alert" : "status"}
-          className="gn-card gn-note"
-        >
-          {currentState.message}
-        </div>
-        <p className="gn-small">
-          A report is optional. This panel never grants approval or infers production deployment.
-        </p>
-      </section>
-    );
-  const report = currentState.report;
-  const component = report.decisions.find((item) => item.componentId === componentId);
-  if (!component)
-    return (
-      <section
-        className="gn-panel"
-        style={{ color: theme.color.defaultText, background: theme.background.content }}
-      >
-        <style>{css}</style>
-        <h2>Unverified component</h2>
-        <p role="status">
-          {componentId
-            ? `No registry decision for ${componentId}.`
-            : "Link this story with parameters.governance.componentId."}
-        </p>
-      </section>
-    );
-  const compatibility = component.compatibility;
+  const report = currentState.status === "ready" ? currentState.report : undefined;
+  const component = report?.decisions.find((item) => item.componentId === componentId);
+  const compatibility = component?.compatibility;
   return (
     <section
       className="gn-panel"
@@ -137,171 +132,193 @@ function Panel() {
       <style>{css}</style>
       <div className="gn-top">
         <div>
-          <h2>{component.componentId}</h2>
-          <div className="gn-chips">
-            <span className="gn-chip">{component.lifecycle}</span>
-            <span className="gn-chip" style={{ color: color(component.gate) }}>
-              Gate: {component.gate.replaceAll("_", " ")}
-            </span>
-          </div>
-          <div className="gn-small">
-            Owners: {component.owners?.join(", ") || "not provided"} · Target: {component.target}
-          </div>
+          <h2>{component?.componentId ?? (report ? "Unverified component" : "Governance")}</h2>
+          {component ? (
+            <>
+              <div className="gn-chips">
+                <span className="gn-chip">{component.lifecycle}</span>
+                <span className="gn-chip" style={{ color: color(component.gate) }}>
+                  Gate: {component.gate.replaceAll("_", " ")}
+                </span>
+              </div>
+              <div className="gn-small">
+                Owners: {component.owners?.join(", ") || "not provided"} · Target:{" "}
+                {component.target}
+              </div>
+            </>
+          ) : (
+            !report && (
+              <p className="gn-small">{componentId ?? "No component identity configured"}</p>
+            )
+          )}
         </div>
         <div>
-          <button
-            onClick={() => {
-              void navigator.clipboard.writeText(component.componentId).then(() => setCopied(true));
-            }}
-          >
-            {copied ? "Copied ID" : "Copy ID"}
-          </button>{" "}
+          {component && <CopyId key={component.componentId} id={component.componentId} />}
           <button onClick={() => setRefresh((value) => value + 1)}>Reload report</button>
         </div>
       </div>
-      <div className="gn-split">
-        <div className="gn-card">
-          <h3>Versioned contracts</h3>
-          <div>
-            Component contract <strong>{component.contractVersion}</strong>
-          </div>
-          <div>
-            Package{" "}
-            <code>
-              {component.package}@{component.packageVersion ?? "unknown"}
-            </code>
-          </div>
-          <p className="gn-small">
-            Component versions describe compatibility. The shared package is the installable unit.
-          </p>
-        </div>
-        <div className="gn-card">
-          <h3>Snapshot provenance</h3>
-          <div>
-            Policy <code>{report.policyVersion}</code> · {report.assurance}
-          </div>
-          <div className="gn-small">
-            Source {report.commit.slice(0, 12)} · {new Date(report.evaluatedAt).toLocaleString()}
-          </div>
-          <p className="gn-small">
-            Publication {report.publication} · Deployment {report.deployment} · Adoption{" "}
-            {report.adoption}
-          </p>
-        </div>
+      <div role="status" aria-live="polite" className={report ? "gn-small" : "gn-card gn-note"}>
+        {currentState.status !== "ready"
+          ? currentState.message
+          : component
+            ? "Governance report loaded."
+            : componentId
+              ? `No registry decision for ${componentId}.`
+              : "Link this story with parameters.governance.componentId."}
       </div>
-      {report.release && (
-        <div className="gn-card gn-note">
-          <h3 style={{ color: color(report.release.gate) }}>
-            Exact release candidate: {report.release.gate.replaceAll("_", " ")}
-          </h3>
-          <p>
-            Changeset <strong>{report.release.declaredBump}</strong> · required{" "}
-            <strong>{report.release.minimumBump}</strong> · {report.release.baselineVersion} →{" "}
-            {report.release.candidateVersion}
-          </p>
-          <p className="gn-small">
-            {report.release.status.replaceAll("_", " ")} · {report.release.assurance} · publication
-            authorization unavailable
-          </p>
-          <ul>
-            {report.release.reasons.map((reason) => (
-              <li key={reason}>{reason}</li>
-            ))}
-          </ul>
-          <details>
-            <summary>Candidate integrity and remediation</summary>
-            <p className="gn-small">
-              Artifact {report.release.candidateDigest}
-              <br />
-              Source {report.release.sourceCommit}
-              <br />
-              Candidate manifest {report.release.candidateManifest}
-            </p>
-            <ul>
-              {report.release.remediation.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </details>
-        </div>
-      )}
-      {compatibility && (
-        <div className="gn-card">
-          <h3 style={{ color: color(compatibility.gate) }}>
-            API compatibility: {compatibility.gate.replaceAll("_", " ")}
-          </h3>
-          <div>
-            Local baseline {compatibility.baselineVersion} → candidate{" "}
-            {compatibility.candidateVersion} · minimum bump{" "}
-            <strong>{compatibility.minimumBump}</strong>
-          </div>
-          <div className="gn-small">
-            Contract {compatibility.baselineContractVersion} → {component.contractVersion}
-          </div>
-          <ul>
-            {[...compatibility.changes, ...compatibility.reasons].map((reason, index) => (
-              <li key={index}>{reason}</li>
-            ))}
-          </ul>
-          <details>
-            <summary>Scope and baseline digest</summary>
-            <p className="gn-small">{compatibility.baselineDigest}</p>
-            <ul>
-              {compatibility.limitations.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </details>
-        </div>
-      )}
-      <div className="gn-card">
-        <h3>Evidence and next actions</h3>
-        <div className="gn-table-wrap">
-          <table className="gn-table">
-            <thead>
-              <tr>
-                <th>Check</th>
-                <th>Result</th>
-                <th>Evidence</th>
-                <th>Reason / next action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {component.checks.map((check) => (
-                <tr key={check.check}>
-                  <td>{check.check}</td>
-                  <td>{check.result}</td>
-                  <td>
-                    {check.evidenceIds.length
-                      ? check.evidenceIds.map((id) => (
-                          <div key={id}>
-                            <code>{id}</code>
-                          </div>
-                        ))
-                      : "None"}
-                  </td>
-                  <td>{check.reason}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {component.reasons.length > 0 && (
-          <ul>
-            {component.reasons.map((reason) => (
-              <li key={reason}>{reason}</li>
-            ))}
-          </ul>
-        )}
+      {!report ? (
         <p className="gn-small">
-          Active waivers:{" "}
-          {component.activeWaivers.length ? component.activeWaivers.join(", ") : "none"}
+          A report is optional. This panel never grants approval or infers production deployment.
         </p>
-      </div>
-      <p className="gn-small gn-note">
-        Readiness, API compatibility, publication and deployment are independent. This snapshot does
-        not grant human approval or prove production use.
-      </p>
+      ) : component ? (
+        <>
+          <div className="gn-split">
+            <div className="gn-card">
+              <h3>Versioned contracts</h3>
+              <div>
+                Component contract <strong>{component.contractVersion}</strong>
+              </div>
+              <div>
+                Package{" "}
+                <code>
+                  {component.package}@{component.packageVersion ?? "unknown"}
+                </code>
+              </div>
+              <p className="gn-small">
+                Component versions describe compatibility. The shared package is the installable
+                unit.
+              </p>
+            </div>
+            <div className="gn-card">
+              <h3>Snapshot provenance</h3>
+              <div>
+                Policy <code>{report.policyVersion}</code> · {report.assurance}
+              </div>
+              <div className="gn-small">
+                Source {report.commit.slice(0, 12)} ·{" "}
+                {new Date(report.evaluatedAt).toLocaleString()}
+              </div>
+              <p className="gn-small">
+                Publication {report.publication} · Deployment {report.deployment} · Adoption{" "}
+                {report.adoption}
+              </p>
+            </div>
+          </div>
+          {report.release && (
+            <div className="gn-card gn-note">
+              <h3 style={{ color: color(report.release.gate) }}>
+                Exact release candidate: {report.release.gate.replaceAll("_", " ")}
+              </h3>
+              <p>
+                Changeset <strong>{report.release.declaredBump}</strong> · required{" "}
+                <strong>{report.release.minimumBump}</strong> · {report.release.baselineVersion} →{" "}
+                {report.release.candidateVersion}
+              </p>
+              <p className="gn-small">
+                {report.release.status.replaceAll("_", " ")} · {report.release.assurance} ·
+                publication authorization unavailable
+              </p>
+              <ul>
+                {report.release.reasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+              <details>
+                <summary>Candidate integrity and remediation</summary>
+                <p className="gn-small">
+                  Artifact {report.release.candidateDigest}
+                  <br />
+                  Source {report.release.sourceCommit}
+                  <br />
+                  Candidate manifest {report.release.candidateManifest}
+                </p>
+                <ul>
+                  {report.release.remediation.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </details>
+            </div>
+          )}
+          {compatibility && (
+            <div className="gn-card">
+              <h3 style={{ color: color(compatibility.gate) }}>
+                API compatibility: {compatibility.gate.replaceAll("_", " ")}
+              </h3>
+              <div>
+                Local baseline {compatibility.baselineVersion} → candidate{" "}
+                {compatibility.candidateVersion} · minimum bump{" "}
+                <strong>{compatibility.minimumBump}</strong>
+              </div>
+              <div className="gn-small">
+                Contract {compatibility.baselineContractVersion} → {component.contractVersion}
+              </div>
+              <ul>
+                {[...compatibility.changes, ...compatibility.reasons].map((reason, index) => (
+                  <li key={index}>{reason}</li>
+                ))}
+              </ul>
+              <details>
+                <summary>Scope and baseline digest</summary>
+                <p className="gn-small">{compatibility.baselineDigest}</p>
+                <ul>
+                  {compatibility.limitations.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </details>
+            </div>
+          )}
+          <div className="gn-card">
+            <h3>Evidence and next actions</h3>
+            <div className="gn-table-wrap">
+              <table className="gn-table">
+                <thead>
+                  <tr>
+                    <th>Check</th>
+                    <th>Result</th>
+                    <th>Evidence</th>
+                    <th>Reason / next action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {component.checks.map((check) => (
+                    <tr key={check.check}>
+                      <td>{check.check}</td>
+                      <td>{check.result}</td>
+                      <td>
+                        {check.evidenceIds.length
+                          ? check.evidenceIds.map((id) => (
+                              <div key={id}>
+                                <code>{id}</code>
+                              </div>
+                            ))
+                          : "None"}
+                      </td>
+                      <td>{check.reason}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {component.reasons.length > 0 && (
+              <ul>
+                {component.reasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+            )}
+            <p className="gn-small">
+              Active waivers:{" "}
+              {component.activeWaivers.length ? component.activeWaivers.join(", ") : "none"}
+            </p>
+          </div>
+          <p className="gn-small gn-note">
+            Readiness, API compatibility, publication and deployment are independent. This snapshot
+            does not grant human approval or prove production use.
+          </p>
+        </>
+      ) : null}
     </section>
   );
 }
