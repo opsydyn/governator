@@ -25,18 +25,18 @@
 
 **Interface:** `collectGithubReviews(rawScope: unknown, transport: ReviewTransport, options?: { signal?: AbortSignal; timeoutMs?: number }): Promise<ReviewResult>`. Scope contains explicit owner/repository/PR and canonical collection timestamp; the trusted caller/transport owns credentials, which the collector never discovers or returns. Transport receives a validated same-origin URL, GET, manual-redirect request and abort signal; its response exposes status, headers, final URL/redirect flag and a byte stream. It must not automatically follow redirects. Results are plain schema-versioned JSON with `assurance: "unverified"`, explicit complete/incomplete/unavailable status, sanitized reason codes, requested scope, observed data only on complete results, and limitations including unverified current head, roles, artifact binding and cross-page consistency. Malformed input either returns a typed sanitized error or throws an existing typed validation error.
 
-- [ ] Write failing fake-transport tests for valid multipage and empty results, API states and time normalization; run RED missing module. Add adversarial tests matching every global constraint, including streaming limits and abort during body reads.
-- [ ] Implement strict URL/path/pagination and streaming reads, bounded input/output, duplicate detection, state normalization and sanitized errors. Do not return partial review lists on failures; empty missing-Link final page is provider-reported completion, not proof of consistent history.
-- [ ] Prove transport not invoked before explicit collector call; verify no default global fetch or environment access. Test token/body/exception redaction and malicious redirects/Link origin.
-- [ ] Run focused tests, full workspace checks, eight existing plus new package builds and dependency/budget guards. Commit locally.
+- [x] Write failing fake-transport tests for valid multipage and empty results, API states and time normalization; run RED missing module. Add adversarial tests matching every global constraint, including streaming limits and abort during body reads.
+- [x] Implement strict URL/path/pagination and streaming reads, bounded input/output, duplicate detection, state normalization and sanitized errors. Do not return partial review lists on failures; empty missing-Link final page is provider-reported completion, not proof of consistent history.
+- [x] Prove transport not invoked before explicit collector call; verify no default global fetch or environment access. Test token/body/exception redaction and malicious redirects/Link origin.
+- [x] Run focused tests, full workspace checks, eight existing plus new package builds and dependency/budget guards. Commit locally.
 
 ## Task 2 — Isolation and operator docs
 
 **Files:** `tests/mcp-github-observation-isolation.test.ts`, `docs/m3b-verification.md`, root README, spec status, private package Changeset and `governance/release.json`.
 
-- [ ] Use actual mocked collector output, plus forged flags, as hostile review data in real candidate check; verify normal release remains insufficient. Verify snapshot/shared query and SDK MCP remain unverified/simulated observations.
-- [ ] Document caller transport and credential boundary, unverified semantics, limits, execution commands and conditions for later live qualification. Add Changeset and enumerate it in governance release config.
-- [ ] Run focused tests, full Moon checks and all package builds; commit locally.
+- [x] Use actual mocked collector output, plus forged flags, as hostile review data in real candidate check; verify normal release remains insufficient. Verify snapshot/shared query and SDK MCP remain unverified/simulated observations.
+- [x] Document caller transport and credential boundary, unverified semantics, limits, execution commands and conditions for later live qualification. Add Changeset and enumerate it in governance release config.
+- [x] Run focused tests, full Moon checks and all package builds; commit locally.
 
 ## Task 3 — Final review and local integration
 

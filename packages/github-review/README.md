@@ -26,6 +26,8 @@ The scope is strictly decoded with Effect Schema. All fields are required; extra
 
 `owner` and `repository` are 1–100 safe ASCII path characters (`A-Z`, `a-z`, digits, `_`, `-`, `.`), excluding `.` and `..`. `pullRequest` is a positive safe integer. `collectedAt` is an explicit caller clock value in canonical UTC with exactly three fractional digits and a real calendar date; it does not authenticate collection time. The collector never reads a wall clock to supply observation evidence. Monotonic elapsed time is used only to enforce the collection deadline.
 
+The optional cancellation signal must be a native `AbortSignal` with unmodified initial event and state hooks. Customized or malformed hooks return `invalid_options`; native cancellation remains supported.
+
 The transport has this contract:
 
 ```ts

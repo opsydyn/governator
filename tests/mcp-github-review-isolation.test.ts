@@ -91,9 +91,9 @@ test("a copied GitHub-style observation cannot authorize a candidate or promote 
 
   const evaluated = await runCli(["evaluate", "--root", root, "--format", "json"]);
   expect(evaluated.code).toBe(1);
-  const report = { ...JSON.parse(evaluated.stdout), release: releaseSummary(checked) };
+  const report = { ...JSON.parse(evaluated.stdout), release: releaseSummary(copiedReader) };
   await writeFile(join(root, "artifacts/report.json"), JSON.stringify(report));
-  await writeFile(join(root, "artifacts/release.json"), JSON.stringify(checked));
+  await writeFile(join(root, "artifacts/release.json"), JSON.stringify(copiedReader));
   const saved = await createSnapshot(root, {
     report: "artifacts/report.json",
     release: "artifacts/release.json",
@@ -108,7 +108,7 @@ test("a copied GitHub-style observation cannot authorize a candidate or promote 
     provenance: "unverified-snapshot",
     data: { gate: "insufficient_evidence", assurance: "unverified", publishable: false },
   });
-  expect(recorded.data).toEqual(checked);
+  expect(recorded.data).toEqual(copiedReader);
   expect(recorded.limitations).toContain(
     "Recorded decisions and receipts are unverified snapshot data, not fresh attestations",
   );
