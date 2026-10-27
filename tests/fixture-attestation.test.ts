@@ -275,3 +275,62 @@ test("copies actual envelope elements rather than a caller-controlled map", () =
   f.input.envelopes = forged;
   expect(verifyFixtureAttestations(f.input).status).toBe("insufficient_evidence");
 });
+
+test("rejects signers without a role required for this scope", () => {
+  const f = fixtureAttestations();
+  f.policy.assignments[1]!.roles = [];
+  f.refreshPolicy();
+  f.input.envelopes = [f.envelope(0), f.envelope(1)];
+  expect(verifyFixtureAttestations(f.input).status).toBe("insufficient_evidence");
+  const g = fixtureAttestations();
+  g.input.scope.major = false;
+  g.policy.assignments[1]!.roles = ["api-owner"];
+  g.refreshPolicy();
+  g.input.envelopes = [g.envelope(0), g.envelope(1)];
+  expect(verifyFixtureAttestations(g.input).status).toBe("insufficient_evidence");
+});
+
+test("rejects inherited fields and disguised extra own keys", () => {
+  const f = fixtureAttestations();
+  const inherited = Object.create(f.input);
+  inherited["at,checkpoint,envelopes,policyBytes,schemaVersion,scope"] = 1;
+  expect(verifyFixtureAttestations(inherited).status).toBe("insufficient_evidence");
+  const g = fixtureAttestations();
+  Object.defineProperty(g.input, "secret", { value: 1, enumerable: false });
+  expect(verifyFixtureAttestations(g.input).status).toBe("insufficient_evidence");
+  const h = fixtureAttestations();
+  Object.defineProperty(h.input.scope, "secret", { value: 1, enumerable: false });
+  expect(verifyFixtureAttestations(h.input).status).toBe("insufficient_evidence");
+  const i = fixtureAttestations();
+  Object.assign(i.input.checkpoint, { [Symbol("extra")]: 1 });
+  expect(verifyFixtureAttestations(i.input).status).toBe("insufficient_evidence");
+});
+
+test("does not execute getters in injected structural fields", () => {
+  const f = fixtureAttestations();
+  let called = false;
+  Object.defineProperty(f.input.scope.repository, "host", {
+    enumerable: true,
+    get() {
+      called = true;
+      return "github.com";
+    },
+  });
+  expect(verifyFixtureAttestations(f.input).status).toBe("insufficient_evidence");
+  expect(called).toBe(false);
+});
+
+test("rejects independently signed malformed and ambiguous payload bytes", () => {
+  const f = fixtureAttestations();
+  const wire = JSON.parse(Buffer.from(f.envelope()).toString());
+  const payload = Buffer.from(wire.payload, "base64").toString();
+  const cases = [
+    Buffer.from(payload.replace('"reviewId":301', '"reviewId":301,"reviewId":301')),
+    Buffer.from(payload.replace('"reviewId":301', '"reviewId":9007199254740993')),
+    Buffer.concat([Buffer.from(payload.slice(0, -1)), Buffer.from([0xff]), Buffer.from("}")]),
+  ];
+  for (const malformed of cases) {
+    f.input.envelopes = [f.signPayload(malformed)];
+    expect(verifyFixtureAttestations(f.input).status).toBe("insufficient_evidence");
+  }
+});

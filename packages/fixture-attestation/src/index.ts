@@ -187,27 +187,77 @@ function publicKey(encoded: string, id: string) {
   );
   return der;
 }
-function verifyInput(raw: unknown): void {
-  check(raw !== null && typeof raw === "object" && !Array.isArray(raw));
-  const input = raw as Record<string, unknown>;
+function record(value: unknown, fields: readonly string[]): Record<string, unknown> {
+  check(value !== null && typeof value === "object" && !Array.isArray(value));
+  const prototype = Object.getPrototypeOf(value);
+  check(prototype === Object.prototype || prototype === null);
+  const keys = Reflect.ownKeys(value);
   check(
-    Object.keys(input).sort().join(",") ===
-      "at,checkpoint,envelopes,policyBytes,schemaVersion,scope" && input.schemaVersion === 1,
+    keys.length === fields.length &&
+      keys.every((key) => typeof key === "string" && fields.includes(key)),
   );
-  const scope = decode(scopeSchema, input.scope);
+  const result: Record<string, unknown> = Object.create(null);
+  for (const field of fields) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, field);
+    check(descriptor && descriptor.enumerable && "value" in descriptor);
+    result[field] = descriptor.value;
+  }
+  return result;
+}
+const scopeFields = [
+  "repository",
+  "pullRequest",
+  "commit",
+  "package",
+  "packageVersion",
+  "baselineDigest",
+  "candidateDigest",
+  "inputDigest",
+  "releasePolicyId",
+  "releasePolicyDigest",
+  "authorizationPolicyId",
+  "authorizationPolicyDigest",
+  "candidateCreatedAt",
+  "distributedChange",
+  "major",
+];
+const repositoryFields = ["provider", "host", "id"];
+function verifyInput(raw: unknown): void {
+  const input = record(raw, [
+    "schemaVersion",
+    "envelopes",
+    "scope",
+    "policyBytes",
+    "at",
+    "checkpoint",
+  ]);
+  check(input.schemaVersion === 1);
+  const scopeValue = record(input.scope, scopeFields);
+  scopeValue.repository = record(scopeValue.repository, repositoryFields);
+  const scope = decode(scopeSchema, scopeValue);
   const at = timestamp(decode(time, input.at));
   const created = timestamp(scope.candidateCreatedAt);
   check(scope.distributedChange && created <= at && at - created <= DAY);
   const wireEnvelopes = input.envelopes;
   check(Array.isArray(wireEnvelopes));
-  const count = wireEnvelopes.length;
+  const lengthDescriptor = Object.getOwnPropertyDescriptor(wireEnvelopes, "length");
+  check(lengthDescriptor && "value" in lengthDescriptor);
+  const count = lengthDescriptor.value as number;
   check(Number.isSafeInteger(count) && count >= 1 && count <= 8);
+  check(Reflect.ownKeys(wireEnvelopes).length === count + 1);
   const envelopes: Uint8Array[] = [];
-  for (let i = 0; i < count; i++) envelopes.push(copied(wireEnvelopes[i], 65_536));
+  for (let i = 0; i < count; i++) {
+    const element = Object.getOwnPropertyDescriptor(wireEnvelopes, String(i));
+    check(element && element.enumerable && "value" in element);
+    envelopes.push(copied(element.value, 65_536));
+  }
   const policyBytes = copied(input.policyBytes, 65_536);
   check(digest(policyBytes) === scope.authorizationPolicyDigest);
   const policy = decode(policySchema, parseStrictJson(policyBytes, 65_536));
-  const checkpoint = decode(checkpointSchema, input.checkpoint);
+  const checkpoint = decode(
+    checkpointSchema,
+    record(input.checkpoint, ["policyId", "revision", "policyDigest", "observedAt", "expiresAt"]),
+  );
   check(policy.id === scope.authorizationPolicyId && same(policy.repository, scope.repository));
   check(
     checkpoint.policyId === policy.id &&
@@ -245,6 +295,10 @@ function verifyInput(raw: unknown): void {
     const signature = envelope.signatures[0]!;
     const selected = keys.get(signature.keyid);
     check(selected && selected.assignment.status === "active");
+    check(
+      selected.assignment.roles.includes("design-system-owner") ||
+        (scope.major && selected.assignment.roles.includes("api-owner")),
+    );
     const payload = base64(envelope.payload, 32_768),
       sig = base64(signature.sig, 64);
     check(verifyEd25519(selected.key, dssePae(PAYLOAD_TYPE, payload), sig));

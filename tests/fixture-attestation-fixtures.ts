@@ -71,7 +71,9 @@ export function fixtureAttestations(separate = false) {
     return signStatement(statement, index);
   }
   function signStatement(statement: unknown, index = 0) {
-    const payload = bytes(statement);
+    return signPayload(bytes(statement), index);
+  }
+  function signPayload(payload: Buffer, index = 0) {
     return bytes({
       payloadType: PAYLOAD_TYPE,
       payload: payload.toString("base64"),
@@ -103,5 +105,15 @@ export function fixtureAttestations(separate = false) {
     input.checkpoint.policyDigest = hash(input.policyBytes);
     input.checkpoint.revision = policy.revision;
   }
-  return { input, envelope, signStatement, refreshPolicy, keys, assignments, policy, bytes };
+  return {
+    input,
+    envelope,
+    signStatement,
+    signPayload,
+    refreshPolicy,
+    keys,
+    assignments,
+    policy,
+    bytes,
+  };
 }

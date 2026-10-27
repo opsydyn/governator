@@ -4,7 +4,7 @@ Private, offline fixture experiment. `verifyFixtureAttestations(input: unknown)`
 
 ## Input
 
-All objects have exactly the fields shown; extra or missing fields fail closed. All input is supplied by the caller. Bytes must be `Uint8Array` (not backed by `SharedArrayBuffer`) and are copied. Each envelope and the policy is limited to 65,536 bytes; at most eight envelopes; decoded payload is limited to 32,768 bytes. JSON is UTF-8, depth at most 32, with no duplicate decoded object keys and only safe integer number lexemes. IDs and policy revisions are positive safe integers. Text fields are nonempty and at most 256 characters. Timestamps use canonical UTC `YYYY-MM-DDTHH:mm:ss.sssZ`.
+All input objects have exactly the fields shown as enumerable own data properties; inherited fields, accessors, symbols, and extra or missing fields fail closed. Envelope arrays must contain only their indexed own data elements. All input is supplied by the caller. Bytes must be `Uint8Array` (not backed by `SharedArrayBuffer`) and are copied. Each envelope and the policy is limited to 65,536 bytes; at most eight envelopes; decoded payload is limited to 32,768 bytes. JSON is UTF-8, depth at most 32, with no duplicate decoded object keys and only safe integer number lexemes. IDs and policy revisions are positive safe integers. Text fields are nonempty and at most 256 characters. Timestamps use canonical UTC `YYYY-MM-DDTHH:mm:ss.sssZ`.
 
 ```ts
 {
@@ -49,6 +49,6 @@ The signed payload is an in-toto v1 statement:
 }
 ```
 
-The candidate is no more than 24 hours old at evaluation. Issuance must be at or after candidate creation and no later than evaluation; expiry is strictly later than issuance and evaluation, and the statement lifetime is at most 24 hours. All statements must match the full scope. Duplicate actors and review IDs fail closed, as do unknown or revoked keys and ambiguous policy mappings. A distributed change requires a design-system owner and a major change additionally requires an API owner; one active signer may cover both, or two signers may supply separate roles. Non-distributed scope returns insufficient evidence.
+The candidate is no more than 24 hours old at evaluation. Issuance must be at or after candidate creation and no later than evaluation; expiry is strictly later than issuance and evaluation, and the statement lifetime is at most 24 hours. All statements must match the full scope. Duplicate actors and review IDs fail closed, as do unknown or revoked keys and ambiguous policy mappings. Every signer must have at least one role required by the supplied scope. A distributed change requires a design-system owner and a major change additionally requires an API owner; one active signer may cover both, or two signers may supply separate roles. Non-distributed scope returns insufficient evidence.
 
 For tests, `tests/fixture-attestation-fixtures.ts` provides `fixtureAttestations()`: mutate `input.scope`, then set `input.envelopes = [envelope()]` to re-sign that scope using disposable in-memory test keys. `refreshPolicy()` re-encodes a changed fixture policy and updates the separately supplied expected digest and checkpoint; the caller must then re-sign. This helper is test code and is not part of the package API.
