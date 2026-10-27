@@ -41,5 +41,5 @@
 ## Task 3 — Final review and local integration
 
 - [x] Obtain independent whole-branch security/spec review. Fix Important issues with RED→GREEN regressions and rerun checks.
-- [ ] Fast-forward local main and verify checks/builds. Generate fresh dogfood reports, Storybook build, a new snapshot and built MCP SDK smoke on final clean main.
+- [x] Fast-forward local main and verify checks/builds. Generate fresh dogfood reports, Storybook build, a new snapshot and built MCP SDK smoke on final clean main.
 - [x] Recommend next bounded trust-anchor/artifact-binding and real-provider qualification, keeping all live access and publication separately authorized.
