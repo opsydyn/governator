@@ -1,3 +1,4 @@
+import { gitIndexDigest } from "./mcp-smoke-inventory.ts";
 import { Client } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import { resolve, join } from "node:path";
@@ -27,7 +28,6 @@ async function inventory() {
     files.add(file);
   for (const file of [
     path,
-    ".git/index",
     "apps/storybook-demo/public/governance-report.json",
     "apps/storybook-demo/storybook-static/governance-report.json",
   ])
@@ -37,6 +37,7 @@ async function inventory() {
     const target = join(root, file);
     if ((await lstat(target)).isFile()) hashes[file] = bytesDigest(await readFile(target));
   }
+  hashes[".git/index"] = await gitIndexDigest(root);
   return hashes;
 }
 const before = await inventory();
