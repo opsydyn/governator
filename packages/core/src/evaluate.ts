@@ -1,5 +1,6 @@
 import {
   decode,
+  ensure,
   decodeRegistry,
   decodePolicy,
   decodeEvidence,
@@ -8,7 +9,11 @@ import {
   validTimestamp,
 } from "./domain.ts";
 import type { Component, Evidence, Policy, Waiver, CheckResult, Decision } from "./domain.ts";
-import type { GovernanceReport } from "@governanator/protocol";
+import type {
+  GovernanceReport,
+  GovernanceReportV1,
+  GovernanceReportV2,
+} from "@governanator/protocol";
 import { canonicalJson, digest } from "./digest.ts";
 
 function trusted(item: Evidence | Waiver, input: Evaluation, kind: "evidence" | "waiver"): boolean {
@@ -148,8 +153,32 @@ function componentDecision(component: Component, input: Evaluation): typeof Deci
     activeWaivers: evaluated.flatMap((result) => (result.waiver ? [result.waiver] : [])).sort(),
   };
 }
+function projectEvidence(
+  byId: Map<string, Evidence>,
+  id: string,
+  componentId: string,
+  check: string,
+) {
+  const item = byId.get(id);
+  ensure(
+    item !== undefined && item.componentId === componentId && item.check === check,
+    "Selected evidence association mismatch",
+  );
+  const metadata = {
+    id,
+    producer: item.producer,
+    observedAt: item.observedAt,
+    provenance: item.provenance,
+  };
+  if (item.sourceUrl === undefined) return metadata;
+  return { ...metadata, sourceUrl: item.sourceUrl };
+}
 /** Attestation maps must be supplied by the host adapter, never decoded from project files. */
-export function evaluate(raw: unknown): GovernanceReport {
+export function evaluate(raw: unknown, reportVersion?: 1): GovernanceReportV1;
+export function evaluate(raw: unknown, reportVersion: 2): GovernanceReportV2;
+export function evaluate(raw: unknown, reportVersion: 1 | 2): GovernanceReport;
+export function evaluate(raw: unknown, reportVersion: 1 | 2 = 1): GovernanceReport {
+  ensure(reportVersion === 1 || reportVersion === 2, "Unsupported report version");
   const input = decode(Evaluation, raw);
   decodeRegistry(input.registry);
   decodePolicy(input.policy);
@@ -172,7 +201,7 @@ export function evaluate(raw: unknown): GovernanceReport {
     .map((component) => componentDecision(component, input));
   const verified =
     decisions.length > 0 && decisions.every((d) => d.gate === "ready" && d.checks.length > 0);
-  return {
+  const report: GovernanceReportV1 = {
     schemaVersion: 1,
     evaluatedAt: input.at,
     policyVersion: input.policy.policyVersion,
@@ -184,6 +213,21 @@ export function evaluate(raw: unknown): GovernanceReport {
     deployment: "unknown",
     adoption: "unknown",
     decisions,
+  };
+  if (reportVersion === 1) return report;
+  const byId = new Map(input.evidence.map((item) => [item.id, item]));
+  return {
+    ...report,
+    schemaVersion: 2,
+    decisions: report.decisions.map((decision) => ({
+      ...decision,
+      checks: decision.checks.map((check) => ({
+        ...check,
+        evidence: check.evidenceIds.map((id) =>
+          projectEvidence(byId, id, decision.componentId, check.check),
+        ),
+      })),
+    })),
   };
 }
 /** M0 deliberately treats every policy change as protected, including apparent strengthening. */

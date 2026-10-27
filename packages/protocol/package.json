@@ -6,7 +6,9 @@
   "files": [
     "dist",
     "README.md",
-    "governance-report.schema.json"
+    "governance-report.schema.json",
+    "governance-report-v2.schema.json",
+    "governance-report-versioned.schema.json"
   ],
   "type": "module",
   "sideEffects": false,
@@ -15,7 +17,10 @@
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs"
     },
-    "./schema": "./governance-report.schema.json"
+    "./schema": "./governance-report.schema.json",
+    "./schema/v1": "./governance-report.schema.json",
+    "./schema/v2": "./governance-report-v2.schema.json",
+    "./schema/versioned": "./governance-report-versioned.schema.json"
   },
   "publishConfig": {
     "access": "public",

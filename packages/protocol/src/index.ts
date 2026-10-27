@@ -6,7 +6,12 @@ type Immutable<T> = T extends readonly (infer Item)[]
     ? { readonly [Key in keyof T]: Immutable<T[Key]> }
     : T;
 
-export type GovernanceReport = Immutable<ReportShape>;
+import type { GovernanceReportV2 as ReportV2Shape } from "./generated-v2.ts";
+export type GovernanceReportV1 = Immutable<ReportShape>;
+export type GovernanceReportV2 = Immutable<ReportV2Shape>;
+export type GovernanceReport = GovernanceReportV1 | GovernanceReportV2;
 
 import type { QueryResult as QueryResultShape } from "./query-generated.ts";
 export type QueryResult = Immutable<QueryResultShape>;
+
+export { reportSemanticsValid } from "./report-semantics.ts";

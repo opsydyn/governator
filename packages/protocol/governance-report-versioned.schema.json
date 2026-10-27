@@ -1,0 +1,700 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "enum": [1]
+        },
+        "evaluatedAt": {
+          "type": "string"
+        },
+        "policyVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assurance": {
+          "type": "string",
+          "enum": ["demo", "unverified", "verified-inputs"]
+        },
+        "target": {
+          "type": "string",
+          "enum": ["draft", "candidate", "stable", "deprecated", "retired"]
+        },
+        "publication": {
+          "type": "string",
+          "enum": ["unknown"]
+        },
+        "deployment": {
+          "type": "string",
+          "enum": ["unknown"]
+        },
+        "adoption": {
+          "type": "string",
+          "enum": ["unknown"]
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "componentId": {
+                "type": "string"
+              },
+              "lifecycle": {
+                "type": "string",
+                "enum": ["draft", "candidate", "stable", "deprecated", "retired"]
+              },
+              "target": {
+                "type": "string",
+                "enum": ["draft", "candidate", "stable", "deprecated", "retired"]
+              },
+              "package": {
+                "type": "string",
+                "minLength": 1
+              },
+              "contractVersion": {
+                "type": "string"
+              },
+              "packageVersion": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "owners": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "compatibility": {
+                "type": "object",
+                "properties": {
+                  "gate": {
+                    "type": "string",
+                    "enum": ["ready", "blocked", "insufficient_evidence"]
+                  },
+                  "minimumBump": {
+                    "type": "string",
+                    "enum": ["none", "patch", "minor", "major", "unknown"]
+                  },
+                  "baselineVersion": {
+                    "type": "string"
+                  },
+                  "candidateVersion": {
+                    "type": "string"
+                  },
+                  "baselineContractVersion": {
+                    "type": "string"
+                  },
+                  "baselineDigest": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "candidateDigest": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "changes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "reasons": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "limitations": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "required": [
+                  "gate",
+                  "minimumBump",
+                  "baselineVersion",
+                  "candidateVersion",
+                  "baselineContractVersion",
+                  "baselineDigest",
+                  "candidateDigest",
+                  "changes",
+                  "reasons",
+                  "limitations"
+                ],
+                "additionalProperties": false
+              },
+              "gate": {
+                "type": "string",
+                "enum": ["ready", "blocked", "insufficient_evidence"]
+              },
+              "checks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "check": {
+                      "type": "string",
+                      "enum": [
+                        "ownership",
+                        "documentation",
+                        "unit-test",
+                        "accessibility",
+                        "design-approval",
+                        "visual-review",
+                        "compatibility-report",
+                        "changelog",
+                        "owner-approval",
+                        "migration-guide",
+                        "consumer-impact"
+                      ]
+                    },
+                    "result": {
+                      "type": "string",
+                      "enum": ["passed", "failed", "missing", "expired", "waived"]
+                    },
+                    "reason": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "evidenceIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  },
+                  "required": ["check", "result", "reason", "evidenceIds"],
+                  "additionalProperties": false
+                }
+              },
+              "reasons": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "activeWaivers": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "componentId",
+              "lifecycle",
+              "target",
+              "package",
+              "contractVersion",
+              "packageVersion",
+              "gate",
+              "checks",
+              "reasons",
+              "activeWaivers"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "release": {
+          "type": "object",
+          "properties": {
+            "gate": {
+              "type": "string",
+              "enum": ["ready", "blocked", "insufficient_evidence"]
+            },
+            "status": {
+              "type": "string",
+              "enum": ["eligible_under_demo_policy", "eligible_under_local_policy", "not_eligible"]
+            },
+            "assurance": {
+              "type": "string",
+              "enum": ["simulated", "unverified"]
+            },
+            "baselineVersion": {
+              "type": "string"
+            },
+            "candidateVersion": {
+              "type": "string"
+            },
+            "baselineDigest": {
+              "type": "string",
+              "minLength": 1
+            },
+            "candidateDigest": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sourceCommit": {
+              "type": "string"
+            },
+            "evaluatedAt": {
+              "type": "string"
+            },
+            "inputDigest": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minimumBump": {
+              "type": "string",
+              "enum": ["none", "patch", "minor", "major"]
+            },
+            "declaredBump": {
+              "type": "string",
+              "enum": ["none", "patch", "minor", "major"]
+            },
+            "candidateManifest": {
+              "type": "string",
+              "minLength": 1
+            },
+            "affectedComponents": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "reasons": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "remediation": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "publishable": {
+              "type": "boolean",
+              "enum": [false]
+            }
+          },
+          "required": [
+            "gate",
+            "status",
+            "assurance",
+            "baselineVersion",
+            "candidateVersion",
+            "baselineDigest",
+            "candidateDigest",
+            "sourceCommit",
+            "evaluatedAt",
+            "inputDigest",
+            "minimumBump",
+            "declaredBump",
+            "candidateManifest",
+            "affectedComponents",
+            "reasons",
+            "remediation",
+            "publishable"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "evaluatedAt",
+        "policyVersion",
+        "commit",
+        "repository",
+        "assurance",
+        "target",
+        "publication",
+        "deployment",
+        "adoption",
+        "decisions"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "enum": [2]
+        },
+        "evaluatedAt": {
+          "type": "string"
+        },
+        "policyVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assurance": {
+          "type": "string",
+          "enum": ["demo", "unverified", "verified-inputs"]
+        },
+        "target": {
+          "type": "string",
+          "enum": ["draft", "candidate", "stable", "deprecated", "retired"]
+        },
+        "publication": {
+          "type": "string",
+          "enum": ["unknown"]
+        },
+        "deployment": {
+          "type": "string",
+          "enum": ["unknown"]
+        },
+        "adoption": {
+          "type": "string",
+          "enum": ["unknown"]
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "componentId": {
+                "type": "string"
+              },
+              "lifecycle": {
+                "type": "string",
+                "enum": ["draft", "candidate", "stable", "deprecated", "retired"]
+              },
+              "target": {
+                "type": "string",
+                "enum": ["draft", "candidate", "stable", "deprecated", "retired"]
+              },
+              "package": {
+                "type": "string",
+                "minLength": 1
+              },
+              "contractVersion": {
+                "type": "string"
+              },
+              "packageVersion": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "owners": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "compatibility": {
+                "type": "object",
+                "properties": {
+                  "gate": {
+                    "type": "string",
+                    "enum": ["ready", "blocked", "insufficient_evidence"]
+                  },
+                  "minimumBump": {
+                    "type": "string",
+                    "enum": ["none", "patch", "minor", "major", "unknown"]
+                  },
+                  "baselineVersion": {
+                    "type": "string"
+                  },
+                  "candidateVersion": {
+                    "type": "string"
+                  },
+                  "baselineContractVersion": {
+                    "type": "string"
+                  },
+                  "baselineDigest": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "candidateDigest": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "changes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "reasons": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "limitations": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "required": [
+                  "gate",
+                  "minimumBump",
+                  "baselineVersion",
+                  "candidateVersion",
+                  "baselineContractVersion",
+                  "baselineDigest",
+                  "candidateDigest",
+                  "changes",
+                  "reasons",
+                  "limitations"
+                ],
+                "additionalProperties": false
+              },
+              "gate": {
+                "type": "string",
+                "enum": ["ready", "blocked", "insufficient_evidence"]
+              },
+              "checks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "check": {
+                      "type": "string",
+                      "enum": [
+                        "ownership",
+                        "documentation",
+                        "unit-test",
+                        "accessibility",
+                        "design-approval",
+                        "visual-review",
+                        "compatibility-report",
+                        "changelog",
+                        "owner-approval",
+                        "migration-guide",
+                        "consumer-impact"
+                      ]
+                    },
+                    "result": {
+                      "type": "string",
+                      "enum": ["passed", "failed", "missing", "expired", "waived"]
+                    },
+                    "reason": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "evidenceIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "producer": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "observedAt": {
+                            "type": "string"
+                          },
+                          "provenance": {
+                            "type": "string",
+                            "enum": ["demo", "unverified", "adapter"]
+                          },
+                          "sourceUrl": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "required": ["id", "producer", "observedAt", "provenance"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["check", "result", "reason", "evidenceIds", "evidence"],
+                  "additionalProperties": false
+                }
+              },
+              "reasons": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "activeWaivers": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "componentId",
+              "lifecycle",
+              "target",
+              "package",
+              "contractVersion",
+              "packageVersion",
+              "gate",
+              "checks",
+              "reasons",
+              "activeWaivers"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "release": {
+          "type": "object",
+          "properties": {
+            "gate": {
+              "type": "string",
+              "enum": ["ready", "blocked", "insufficient_evidence"]
+            },
+            "status": {
+              "type": "string",
+              "enum": ["eligible_under_demo_policy", "eligible_under_local_policy", "not_eligible"]
+            },
+            "assurance": {
+              "type": "string",
+              "enum": ["simulated", "unverified"]
+            },
+            "baselineVersion": {
+              "type": "string"
+            },
+            "candidateVersion": {
+              "type": "string"
+            },
+            "baselineDigest": {
+              "type": "string",
+              "minLength": 1
+            },
+            "candidateDigest": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sourceCommit": {
+              "type": "string"
+            },
+            "evaluatedAt": {
+              "type": "string"
+            },
+            "inputDigest": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minimumBump": {
+              "type": "string",
+              "enum": ["none", "patch", "minor", "major"]
+            },
+            "declaredBump": {
+              "type": "string",
+              "enum": ["none", "patch", "minor", "major"]
+            },
+            "candidateManifest": {
+              "type": "string",
+              "minLength": 1
+            },
+            "affectedComponents": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "reasons": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "remediation": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "publishable": {
+              "type": "boolean",
+              "enum": [false]
+            }
+          },
+          "required": [
+            "gate",
+            "status",
+            "assurance",
+            "baselineVersion",
+            "candidateVersion",
+            "baselineDigest",
+            "candidateDigest",
+            "sourceCommit",
+            "evaluatedAt",
+            "inputDigest",
+            "minimumBump",
+            "declaredBump",
+            "candidateManifest",
+            "affectedComponents",
+            "reasons",
+            "remediation",
+            "publishable"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "evaluatedAt",
+        "policyVersion",
+        "commit",
+        "repository",
+        "assurance",
+        "target",
+        "publication",
+        "deployment",
+        "adoption",
+        "decisions"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

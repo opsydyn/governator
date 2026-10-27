@@ -1,4 +1,5 @@
 import { Data, Schema, Result, Match } from "effect";
+import { reportSemanticsValid } from "../../protocol/src/report-semantics.ts";
 
 export class GovernanceError extends Data.TaggedError("GovernanceError")<{
   readonly message: string;
@@ -244,8 +245,45 @@ export const Report = Schema.Struct({
   decisions: Schema.Array(Decision),
   release: Schema.optionalKey(ReleaseSummary),
 });
-export function reportJsonSchema() {
-  return Schema.toJsonSchemaDocument(Report, { onExcessProperty: "error" });
+export const ReportEvidence = Schema.Struct({
+  id: text,
+  producer: text,
+  observedAt: Timestamp,
+  provenance: Provenance,
+  sourceUrl: Schema.optionalKey(text),
+});
+export const CheckResultV2 = Schema.Struct({
+  ...CheckResult.fields,
+  evidence: Schema.Array(ReportEvidence),
+});
+export const DecisionV2 = Schema.Struct({
+  ...Decision.fields,
+  checks: Schema.Array(CheckResultV2),
+});
+export const ReportV2 = Schema.Struct({
+  ...Report.fields,
+  schemaVersion: Schema.Literal(2),
+  decisions: Schema.Array(DecisionV2),
+});
+export const VersionedReport = Schema.Union([Report, ReportV2]);
+export function reportJsonSchema(version: 1 | 2 | "both" = 1) {
+  return Schema.toJsonSchemaDocument(
+    Match.value(version).pipe(
+      Match.when(1, () => Report),
+      Match.when(2, () => ReportV2),
+      Match.orElse(() => VersionedReport),
+    ),
+    { onExcessProperty: "error" },
+  );
+}
+/** Strict shape and semantic validation; metadata is reported information, not authentication. */
+export function decodeReport(input: unknown): typeof VersionedReport.Type {
+  const report = decode(VersionedReport, input);
+  ensure(
+    reportSemanticsValid(report),
+    "Report evidence metadata is inconsistent or has invalid timestamps",
+  );
+  return report;
 }
 export const Evaluation = Schema.Struct({
   registry: Registry,
