@@ -1,5 +1,7 @@
 tasks:
   typecheck:
+    # Public-boundary tests import built declarations; never consume stale dist files.
+    deps: ["cli:build", "mcp:build"]
     command: "bun --bun tsc --noEmit"
     inputs:
       [
@@ -30,6 +32,8 @@ tasks:
     options:
       cache: false
   test:
+    # Distribution tests execute and pack these artifacts. Dependency hashes include their build inputs.
+    deps: ["cli:build", "mcp:build"]
     command: "bun --bun vitest run"
     inputs:
       [
