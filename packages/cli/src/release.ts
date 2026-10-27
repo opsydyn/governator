@@ -41,7 +41,8 @@ async function outputDirectory(root: string, out: string) {
   await mkdir(path);
   return path;
 }
-export async function captureCandidate(root: string, configPath: string, out: string) {
+export async function captureCandidate(rootPath: string, configPath: string, out: string) {
+  const root = await realpath(rootPath);
   const inputs = await releaseInputs(root, configPath),
     directory = await outputDirectory(root, out);
   const tarball = join(directory, "candidate.tgz");
@@ -99,11 +100,12 @@ export async function captureCandidate(root: string, configPath: string, out: st
   return { candidate, path: relative(root, path) };
 }
 export async function checkCandidate(
-  root: string,
+  rootPath: string,
   configPath: string,
   candidatePath: string,
   demo = false,
 ) {
+  const root = await realpath(rootPath);
   const inputs = await releaseInputs(root, configPath),
     path = await containedFile(root, candidatePath),
     manifestFile = Bun.file(path);

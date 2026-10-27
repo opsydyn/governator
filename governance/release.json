@@ -8,7 +8,11 @@
   "baselineDigest": "governance/releases/ui-8.4.1.json.sha256",
   "mapping": "governance/tests.json",
   "consumerFixtures": ["governance/consumer.tsx"],
-  "changesets": [".changeset/dogfood-breaking-button.md"],
+  "changesets": [
+    ".changeset/dogfood-breaking-button.md",
+    ".changeset/m0-foundation.md",
+    ".changeset/vitest-evidence.md"
+  ],
   "classification": "governance/release-change.json",
   "simulatedReview": "artifacts/simulated-release-review.json"
 }

@@ -3,6 +3,7 @@ import { mkdtemp, mkdir, writeFile, symlink, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
+import { captureCandidate, checkCandidate } from "../packages/cli/src/release.ts";
 import { runCli } from "../packages/cli/src/index.ts";
 import { inspectArchive } from "../packages/cli/src/archive.ts";
 import { digest } from "../packages/core/src/digest.ts";
@@ -266,4 +267,15 @@ test("fails closed on dirty/changed inputs, untracked config, unsafe output and 
   expect((await capture(failed)).code).toBe(0);
   await review(failed);
   expect((await check(failed)).code).toBe(1);
+}, 30000);
+
+test("direct candidate APIs canonicalize a symlinked repository root", async () => {
+  const root = await project(),
+    alias = root + "-alias";
+  await symlink(root, alias);
+  roots.push(alias);
+  const captured = await captureCandidate(alias, "governance/release.json", "artifacts/candidate");
+  await review(root);
+  const checked = await checkCandidate(alias, "governance/release.json", captured.path, true);
+  expect(checked.gate).toBe("ready");
 }, 30000);
