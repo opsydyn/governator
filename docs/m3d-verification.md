@@ -8,6 +8,8 @@ The isolation regression creates a real local release candidate and successfully
 
 A static AST boundary check targets imports and ambient capabilities in the fixture-policy source. It is a targeted source check, not a runtime sandbox; dynamic or reflective JavaScript may evade static inspection. The verifier does not fetch, persist state, discover credentials or publish anything.
 
+Local qualification passed 541 tests across 39 files, all nine workspace checks and all eleven package builds. Independent reviews identified and verified fixes for restoring older synthetic state, cross-epoch challenge replay and recovery time floors. The local release simulation kept the normal major release insufficient and rejected a tampered archive. These checks do not establish production authority.
+
 Reproduce the focused checks from the workspace root:
 
 ```sh

@@ -1,6 +1,6 @@
 # M3d owner-policy operations design
 
-Status: **proposed**. The user selected a repository-owner-managed reviewer policy and two independent owner approvals for changes to it. The mechanisms and production infrastructure below are proposals, not configured operational settings. This document does not authorize implementation, real keys, account access, external resources, release-gate activation, push or publication.
+Status: **synthetic lifecycle implemented locally**. The user selected a repository-owner-managed reviewer policy and two independent owner approvals for changes to it. The production mechanisms and infrastructure below remain proposals, not configured operational settings. This work does not authorize real keys, account access, external resources, release-gate activation, push or publication.
 
 ## Why this phase
 

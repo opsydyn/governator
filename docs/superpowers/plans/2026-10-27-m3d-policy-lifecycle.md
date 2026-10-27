@@ -39,19 +39,19 @@
 
 **Interface:** `applyFixturePolicyTransition(input: unknown): FixturePolicyResult` implements the wire profile and action list above. Test helper must produce real test signatures, independently supplied fixture anchors/recovery inputs, mutable fixture setup and valid committed stores for Task 2. Any helper remains test-only.
 
-- [ ] Write failing tests for two-owner bootstrap and update, rejection of one or duplicate owner, action-specific enrollment with proof, and stale CAS/atomic challenge consumption. Run and capture RED before implementation.
-- [ ] Implement bounded strict parsing, signature verification, root/policy actions, separately authorized recovery, checkpoints and atomic simulated store transitions. Add adversarial cases covering every global constraint and Review focus, independent DSSE PAE and Ed25519 known-answer vectors, malformed _signed_ payload cases and non-aliasing. Run focused tests GREEN, TypeScript, lint and package build. Commit locally.
-- [ ] Obtain independent task security/spec review, fix Important findings with RED→GREEN tests and scoped re-review.
+- [x] Write failing tests for two-owner bootstrap and update, rejection of one or duplicate owner, action-specific enrollment with proof, and stale CAS/atomic challenge consumption. Run and capture RED before implementation.
+- [x] Implement bounded strict parsing, signature verification, root/policy actions, separately authorized recovery, checkpoints and atomic simulated store transitions. Add adversarial cases covering every global constraint and Review focus, independent DSSE PAE and Ed25519 known-answer vectors, malformed _signed_ payload cases and non-aliasing. Run focused tests GREEN, TypeScript, lint and package build. Commit locally.
+- [x] Obtain independent task security/spec review, fix Important findings with RED→GREEN tests and scoped re-review.
 
 ## Task 2 — Real release isolation, boundaries and docs
 
 **Files:** `tests/mcp-fixture-policy-isolation.test.ts`, `scripts/fixture-policy-boundaries.ts`, `tests/fixture-policy-boundaries.test.ts`, `docs/m3d-verification.md`, package/root READMEs, `.changeset/m3d-fixture-policy.md`, `governance/release.json`, root boundary wiring.
 
-- [ ] Exercise an actual successful two-owner synthetic transition result plus forged authority flags through real `checkCandidate` and saved snapshot/SDK MCP; normal release stays insufficient and recorded data unverified. The lifecycle result is not an artifact approval. Reuse local temp fixture project, no network.
-- [ ] Add and test static import/ambient-capability guard, explicitly document it is not a sandbox; document prototype operation, reproduction, test keys and unconfigured production prerequisites. Add private Changeset and enumerate it. Run focused integration, boundary, TypeScript/lint/format checks and commit locally.
-- [ ] Independent task review, fix Important findings and scoped re-review.
+- [x] Exercise an actual successful two-owner synthetic transition result plus forged authority flags through real `checkCandidate` and saved snapshot/SDK MCP; normal release stays insufficient and recorded data unverified. The lifecycle result is not an artifact approval. Reuse local temp fixture project, no network.
+- [x] Add and test static import/ambient-capability guard, explicitly document it is not a sandbox; document prototype operation, reproduction, test keys and unconfigured production prerequisites. Add private Changeset and enumerate it. Run focused integration, boundary, TypeScript/lint/format checks and commit locally.
+- [x] Independent task review, fix Important findings and scoped re-review.
 
 ## Task 3 — Qualification and local integration
 
 - [ ] Run full workspace checks/builds and release demo, independent whole-branch review, fix findings, then fast-forward local main. Refresh dogfood/Storybook and built 14-tool MCP smoke on final clean source. No push or publication.
-- [ ] Recommend a next bounded production trust design or qualification without configuring real anchors, credentials, access or approval paths.
+- [x] Recommend a next bounded production trust design or qualification without configuring real anchors, credentials, access or approval paths.
