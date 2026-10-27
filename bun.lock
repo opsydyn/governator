@@ -51,6 +51,7 @@
       "dependencies": {
         "@governanator/core": "workspace:*",
         "@governanator/protocol": "workspace:*",
+        "@governanator/query": "workspace:*",
         "@governanator/versioning": "workspace:*",
         "effect": "4.0.6",
         "tar": "7.5.22",
@@ -75,6 +76,19 @@
     "packages/protocol": {
       "name": "@governanator/protocol",
       "version": "0.1.0",
+    },
+    "packages/query": {
+      "name": "@governanator/query",
+      "version": "0.1.0",
+      "dependencies": {
+        "@governanator/core": "workspace:*",
+        "@governanator/protocol": "workspace:*",
+        "@governanator/versioning": "workspace:*",
+        "effect": "4.0.6",
+        "tar": "7.5.22",
+        "typescript": "5.9.3",
+        "yaml": "2.9.1",
+      },
     },
     "packages/storybook-addon": {
       "name": "@governanator/storybook-addon",
@@ -234,6 +248,8 @@
     "@governanator/core": ["@governanator/core@workspace:packages/core"],
 
     "@governanator/protocol": ["@governanator/protocol@workspace:packages/protocol"],
+
+    "@governanator/query": ["@governanator/query@workspace:packages/query"],
 
     "@governanator/storybook-addon": ["@governanator/storybook-addon@workspace:packages/storybook-addon"],
 

@@ -7,9 +7,15 @@ export default defineConfig({
   ignorePatterns: [
     "**/dist/**",
     "packages/protocol/src/generated.ts",
+    "packages/protocol/src/query-generated.ts",
     "packages/storybook-addon/src/generated-validator.mjs",
   ],
   overrides: [
+    {
+      // Fixed read-only Git adapter disables index refresh writes; ambient env is confined here.
+      files: ["packages/query/src/io.ts"],
+      rules: { "linteffect/no-process-env-direct-read": "off" },
+    },
     {
       // The public addon is a native Storybook/React adapter and must not ship Effect.
       // React effects own fetch cancellation/cleanup; UI state stays local to this read-only panel.
@@ -35,13 +41,19 @@ export default defineConfig({
         "scripts/release-demo.ts",
         "packages/core/src/digest.ts",
         "packages/cli/src/**/*.ts",
+        "packages/query/src/{io,archive,release-inputs,snapshot,service}.ts",
         "tests/**/*.ts",
       ],
       rules: { "linteffect/no-naked-object-state-update": "off" },
     },
     {
       // Private Bun adapter and deterministic hashing; neither is shipped in the public protocol.
-      files: ["packages/cli/src/files.ts", "packages/core/src/digest.ts"],
+      files: [
+        "packages/cli/src/files.ts",
+        "packages/core/src/digest.ts",
+        "packages/query/src/{io,release-inputs,snapshot}.ts",
+        "tests/query-fixtures.ts",
+      ],
       rules: { "linteffect/no-node-platform-in-shared-code": "off" },
     },
     {

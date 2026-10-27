@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "enum": [1]
+    },
+    "snapshotDigest": {
+      "type": "string"
+    },
+    "sourceCommit": {
+      "type": "string"
+    },
+    "evaluatedAt": {
+      "type": "string"
+    },
+    "provenance": {
+      "type": "string",
+      "enum": ["unverified-snapshot", "simulated-snapshot"]
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["recorded-snapshot", "pure-unverified-evaluation", "derived-guidance"]
+    },
+    "data": {},
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "snapshotDigest",
+    "sourceCommit",
+    "evaluatedAt",
+    "provenance",
+    "scope",
+    "data",
+    "limitations"
+  ],
+  "additionalProperties": false
+}

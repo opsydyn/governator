@@ -7,3 +7,6 @@ type Immutable<T> = T extends readonly (infer Item)[]
     : T;
 
 export type GovernanceReport = Immutable<ReportShape>;
+
+import type { QueryResult as QueryResultShape } from "./query-generated.ts";
+export type QueryResult = Immutable<QueryResultShape>;

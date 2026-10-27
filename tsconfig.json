@@ -17,7 +17,9 @@
       "@governanator/protocol": ["./packages/protocol/src/index.ts"],
       "@governanator/core": ["./packages/core/src/index.ts"],
       "@governanator/versioning": ["./packages/versioning/src/index.ts"],
-      "@example/ui": ["./packages/demo-ui/src/index.ts"]
+      "@example/ui": ["./packages/demo-ui/src/index.ts"],
+      "@governanator/query": ["./packages/query/src/index.ts"],
+      "@governanator/query/*": ["./packages/query/src/*.ts"]
     },
     "jsx": "react-jsx"
   },

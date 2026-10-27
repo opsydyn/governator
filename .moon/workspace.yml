@@ -7,3 +7,4 @@ projects:
   demo-ui: "packages/demo-ui"
   storybook-addon: "packages/storybook-addon"
   storybook: "apps/storybook-demo"
+  query: "packages/query"

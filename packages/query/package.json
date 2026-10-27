@@ -1,0 +1,42 @@
+{
+  "name": "@governanator/query",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "./io": {
+      "types": "./dist/io.d.mts",
+      "import": "./dist/io.mjs"
+    },
+    "./archive": {
+      "types": "./dist/archive.d.mts",
+      "import": "./dist/archive.mjs"
+    },
+    "./release-inputs": {
+      "types": "./dist/release-inputs.d.mts",
+      "import": "./dist/release-inputs.mjs"
+    }
+  },
+  "scripts": {
+    "build": "bun --bun tsdown"
+  },
+  "dependencies": {
+    "@governanator/core": "workspace:*",
+    "@governanator/protocol": "workspace:*",
+    "@governanator/versioning": "workspace:*",
+    "effect": "4.0.6",
+    "tar": "7.5.22",
+    "typescript": "5.9.3",
+    "yaml": "2.9.1"
+  }
+}

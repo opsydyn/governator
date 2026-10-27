@@ -26,3 +26,5 @@ export function verifyBaseline(
 }
 export * from "./release.ts";
 export * from "./consumers.ts";
+
+export { ApiConfigSchema } from "./api-schema.ts";

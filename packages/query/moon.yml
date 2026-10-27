@@ -1,0 +1,7 @@
+dependsOn: [protocol, core, versioning]
+tasks:
+  build:
+    command: "bun run build"
+    deps: ["^:build"]
+    inputs: ["src/**/*", "package.json", "tsdown.config.ts", "/bun.lock"]
+    outputs: ["dist"]

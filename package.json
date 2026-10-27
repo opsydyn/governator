@@ -7,7 +7,7 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "moon run protocol:build core:build versioning:build cli:build demo-ui:build storybook-addon:build",
+    "build": "moon run protocol:build core:build versioning:build query:build cli:build demo-ui:build storybook-addon:build",
     "typecheck": "moon run workspace:typecheck",
     "lint": "moon run workspace:lint",
     "format": "oxfmt .",

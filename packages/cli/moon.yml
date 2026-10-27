@@ -1,4 +1,4 @@
-dependsOn: [core, versioning]
+dependsOn: [core, versioning, query]
 tasks:
   build:
     command: "bun run build"
