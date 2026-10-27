@@ -15,7 +15,12 @@ export async function readMappedTests(root: string, project: Project, path: stri
     for (const file of entry.files) await containedFile(root, file);
   return mapping;
 }
-export async function runLocalCheck(rootPath: string, mappingPath: string, target: string) {
+export async function runLocalCheck(
+  rootPath: string,
+  mappingPath: string,
+  target: string,
+  reportVersion: 1 | 2 = 1,
+) {
   const root = await realpath(rootPath);
   const commit = cleanHead(root);
   const project = await loadProject(root);
@@ -123,17 +128,20 @@ export async function runLocalCheck(rootPath: string, mappingPath: string, targe
     sourceUrl: relative(root, reportPath),
   }));
   const attestations = Object.fromEntries(evidence.map((item) => [item.id, digest(item)]));
-  const report = evaluate({
-    ...project,
-    evidence: [...project.evidence, ...evidence],
-    target,
-    at: new Date(finishedAt).toISOString(),
-    commit,
-    repository: `local:${basename(root)}`,
-    mode: "verified",
-    verifiedEvidenceDigests: attestations,
-    verifiedWaiverDigests: {},
-  });
+  const report = evaluate(
+    {
+      ...project,
+      evidence: [...project.evidence, ...evidence],
+      target,
+      at: new Date(finishedAt).toISOString(),
+      commit,
+      repository: `local:${basename(root)}`,
+      mode: "verified",
+      verifiedEvidenceDigests: attestations,
+      verifiedWaiverDigests: {},
+    },
+    reportVersion,
+  );
   const receiptPath = relative(root, join(runDir, "receipt.json"));
   await Bun.write(
     resolve(root, receiptPath),

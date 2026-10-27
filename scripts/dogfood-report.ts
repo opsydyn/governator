@@ -7,7 +7,7 @@ import {
   decodeApiSnapshot,
   checkApiVersions,
 } from "../packages/versioning/src/api.ts";
-import { decode, Report, ensure } from "../packages/core/src/domain.ts";
+import { decodeReport, ensure } from "../packages/core/src/domain.ts";
 import { cleanHead, git } from "../packages/cli/src/source.ts";
 import { loadProject } from "../packages/cli/src/files.ts";
 import { validateDogfoodInputs } from "./dogfood-inputs.ts";
@@ -28,7 +28,7 @@ const build = Bun.spawnSync([process.execPath, "run", "build"], {
   stderr: "pipe",
 });
 ensure(build.exitCode === 0, `Dogfood declaration build failed: ${build.stderr.toString()}`);
-const checked = await runLocalCheck(process.cwd(), "governance/tests.json", "stable");
+const checked = await runLocalCheck(process.cwd(), "governance/tests.json", "stable", 2);
 const config = await Bun.file("governance/api-config.json").json();
 validateDogfoodInputs(
   config,
@@ -51,7 +51,7 @@ const captured = await captureCandidate(
 );
 const release = await checkCandidate(process.cwd(), "governance/release.json", captured.path);
 await Bun.write("artifacts/dogfood-release.json", JSON.stringify(release, null, 2) + "\n");
-const report = decode(Report, {
+const report = decodeReport({
   ...checked.report,
   release: releaseSummary(release),
   decisions: checked.report.decisions.map((component) => ({

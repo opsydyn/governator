@@ -172,19 +172,22 @@ export function createProjector(snapshot: QuerySnapshot) {
       };
     } else if (tool === "evaluate_component" || tool === "explain_governance_failure") {
       const c = byId(args.componentId);
-      const report = evaluate({
-        registry: payload.registry,
-        policy: payload.policy,
-        evidence: payload.evidence,
-        waivers: payload.waivers,
-        target: args.targetLifecycle,
-        at: snapshot.evaluatedAt,
-        commit: snapshot.sourceCommit,
-        repository: snapshot.repository,
-        mode: "verified",
-        verifiedEvidenceDigests: {},
-        verifiedWaiverDigests: {},
-      });
+      const report = evaluate(
+        {
+          registry: payload.registry,
+          policy: payload.policy,
+          evidence: payload.evidence,
+          waivers: payload.waivers,
+          target: args.targetLifecycle,
+          at: snapshot.evaluatedAt,
+          commit: snapshot.sourceCommit,
+          repository: snapshot.repository,
+          mode: "verified",
+          verifiedEvidenceDigests: {},
+          verifiedWaiverDigests: {},
+        },
+        payload.report.schemaVersion,
+      );
       data = report.decisions.find((item) => item.componentId === c.id);
       scope = "pure-unverified-evaluation";
     } else if (tool === "get_design_system_report") data = payload.report;

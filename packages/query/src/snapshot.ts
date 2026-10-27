@@ -4,7 +4,7 @@ import {
   decode,
   decodeRegistry,
   decodePolicy,
-  Report,
+  decodeReport,
   Evidence,
   digest,
   validTimestamp,
@@ -72,7 +72,7 @@ export async function createSnapshot(
     if (await Bun.file(resolve(root, path)).exists()) await read(path, "evaluation-input", true);
   for (const component of project.registry.components)
     for (const path of [component.source, ...component.stories]) await read(path, "source", true);
-  const report = decode(Report, await json(selection.report, "report"));
+  const report = decodeReport(await json(selection.report, "report"));
   currentTime(report.evaluatedAt, now, "Report");
   const freshnessTimes = [now, Date.parse(report.evaluatedAt)];
   queryEnsure(
@@ -250,6 +250,7 @@ export async function loadSnapshot(
     file = Bun.file(await containedFile(root, path));
   queryEnsure(file.size <= 8 * 1024 * 1024, "Snapshot exceeds 8 MiB size limit");
   const snapshot = decode(Snapshot, await file.json());
+  decodeReport(snapshot.payload.report);
   const { digest: expected, ...body } = snapshot;
   queryEnsure(digest(body) === expected, "Snapshot digest mismatch");
   currentTime(snapshot.generatedAt, now, "Snapshot");

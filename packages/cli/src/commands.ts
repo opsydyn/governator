@@ -19,9 +19,9 @@ const help = `governanator validate [--root PATH]
 governanator snapshot export --report PATH --out artifacts/NAME.json [--root PATH] [--release PATH --config PATH]
 governanator query --snapshot PATH --tool NAME [--args JSON] [--root PATH]
 governanator evaluate [--root PATH] [--target stable] [--component ID]
-  [--at YYYY-MM-DDTHH:mm:ss.sssZ] [--format json|text] [--demo]
+  [--at YYYY-MM-DDTHH:mm:ss.sssZ] [--format json|text] [--report-schema 1|2] [--demo]
 governanator evidence import --format vitest --file PATH --mapping PATH [--root PATH] [--commit SHA] [--report-root PATH]
-governanator check --mapping PATH [--root PATH] [--target stable] [--component ID] [--format json|text]
+governanator check --mapping PATH [--root PATH] [--target stable] [--component ID] [--format json|text] [--report-schema 1|2]
 governanator release candidate --config PATH --out artifacts/NAME [--root PATH]
 governanator release plan --config PATH [--candidate PATH] [--root PATH] [--demo]
 governanator release check --config PATH --candidate PATH [--root PATH] [--demo]
@@ -51,8 +51,8 @@ function options(args: readonly string[]): {
     command === "import"
       ? ["--root", "--format", "--file", "--mapping", "--commit", "--report-root"]
       : command === "check"
-        ? ["--root", "--format", "--mapping", "--target", "--component"]
-        : ["--root", "--target", "--component", "--at", "--format"],
+        ? ["--root", "--format", "--mapping", "--target", "--component", "--report-schema"]
+        : ["--root", "--target", "--component", "--at", "--format", "--report-schema"],
   );
   for (let i = importing ? 2 : 1; i < args.length; i++) {
     const key = args[i] ?? "";
@@ -73,6 +73,10 @@ function options(args: readonly string[]): {
       (command === "import" ? ["vitest"] : ["json", "text"]).includes(values.get("--format") ?? ""),
     command === "import" ? "Import format must be vitest" : "Format must be json or text",
   );
+  ensure(
+    !values.has("--report-schema") || ["1", "2"].includes(values.get("--report-schema") ?? ""),
+    "Report schema must be 1 or 2",
+  );
   return { command, values, demo };
 }
 export async function executeCli(args: readonly string[]): Promise<CliResult> {
@@ -81,6 +85,7 @@ export async function executeCli(args: readonly string[]): Promise<CliResult> {
   if (args[0] === "contracts") return runContracts(args.slice(1));
   const { command, values, demo } = options(args);
   if (command === "help") return { code: 0, stdout: help, stderr: "" };
+  const reportVersion = values.get("--report-schema") === "2" ? 2 : 1;
   const root = resolve(values.get("--root") ?? ".");
   const project = await loadProject(root);
   if (command === "import") {
@@ -112,6 +117,7 @@ export async function executeCli(args: readonly string[]): Promise<CliResult> {
       root,
       values.get("--mapping") ?? "",
       values.get("--target") ?? "stable",
+      reportVersion,
     );
     const result = renderReport(checked.report, values);
     return { ...result, stderr: `Local run proof: ${checked.receiptPath}\n` };
@@ -139,16 +145,19 @@ export async function executeCli(args: readonly string[]): Promise<CliResult> {
       "Uncommitted governance or source inputs: cannot attribute a dirty snapshot to Git HEAD",
     );
   }
-  const report = evaluate({
-    ...project,
-    commit,
-    repository: demo ? "demo" : `local:${basename(root)}`,
-    target: values.get("--target") ?? "stable",
-    at: values.get("--at") ?? new Date().toISOString(),
-    mode: demo ? "demo" : "verified",
-    verifiedEvidenceDigests: {},
-    verifiedWaiverDigests: {},
-  });
+  const report = evaluate(
+    {
+      ...project,
+      commit,
+      repository: demo ? "demo" : `local:${basename(root)}`,
+      target: values.get("--target") ?? "stable",
+      at: values.get("--at") ?? new Date().toISOString(),
+      mode: demo ? "demo" : "verified",
+      verifiedEvidenceDigests: {},
+      verifiedWaiverDigests: {},
+    },
+    reportVersion,
+  );
   return renderReport(report, values);
 }
 function renderReport(report: GovernanceReport, values: Map<string, string>): CliResult {

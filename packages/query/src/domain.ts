@@ -7,7 +7,7 @@ import {
   Policy,
   Evidence,
   Waiver,
-  Report,
+  VersionedReport,
   ReleaseSummary,
 } from "@governanator/core";
 import { Hash, ReleaseArtifact } from "@governanator/versioning";
@@ -75,7 +75,7 @@ export const RecordedRelease = Schema.Struct({
   ),
 });
 export const SnapshotPayload = Schema.Struct({
-  report: Report,
+  report: VersionedReport,
   registry: Registry,
   policy: Policy,
   evidence: Schema.Array(Evidence),

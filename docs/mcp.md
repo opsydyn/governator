@@ -21,6 +21,8 @@ bun run governanator snapshot export \
 bun run mcp:smoke --snapshot artifacts/m2-snapshot.json
 ```
 
+The snapshot envelope remains schema 1 and accepts an embedded report of schema 1 or 2. Export preserves the selected report and its schema version exactly. Both export and reload validate strict report shape and evidence association/time semantics; malformed v2 data is rejected without stripping metadata or downgrading to v1. Use `evaluate --report-schema 2` or `check --report-schema 2` to select v2 explicitly; defaults remain v1 and dogfood selects v2.
+
 Export writes a new direct JSON file under ignored `artifacts/`, using exclusive creation. It never runs producers. Select a new filename when exporting again. For governance-only queries, omit both `--release` and `--config`; release/contract tools then report `not_configured`.
 
 Manual client launch: executable `/absolute/path/to/bun`, arguments:
@@ -61,7 +63,7 @@ Lists accept `limit` (1–100) and `cursor` (`offset:N`), returning total, nextC
 
 ## Provenance and bounds
 
-Saved decisions/receipts/hashes never restore in-process test attestations or authenticated review. A snapshot is `unverified-snapshot` or `simulated-snapshot`. Pure evaluations use canonical evidence, empty trust maps and the snapshot evaluation clock. List eligibility never proves human approval. Existing consumer reports without an explicit compiler record return `recordedCompile=null`. Publication, deployment, external usage and adoption stay unknown.
+Saved decisions/receipts/hashes never restore in-process test attestations or authenticated review. A snapshot is `unverified-snapshot` or `simulated-snapshot`. Pure evaluations retain the recorded report schema version and use declared canonical evidence, empty trust maps and the snapshot evaluation clock. They do not recreate receipt evidence or claim parity with recorded v2 metadata. The `pure-unverified-evaluation` scope and limitations state this narrower meaning; `get_design_system_report` returns the recorded report unchanged. List eligibility never proves human approval. Existing consumer reports without an explicit compiler record return `recordedCompile=null`. Publication, deployment, external usage and adoption stay unknown.
 
 The loader requires clean matching Git HEAD, contained non-symlink files, matching input/artifact hashes, supported schemas and fresh timestamps. Snapshot, report, release and candidate age are capped at 24 hours with a 60-second future clock allowance. Export preserves their earliest deadline in `expiresAt`; reload and every query enforce that deadline against the current clock. Export/reload cannot extend an old report's life. A running process keeps its loaded bytes; restart with a newly exported snapshot to observe source changes.
 

@@ -4,7 +4,10 @@ import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { evaluate } from "../packages/core/src/index.ts";
 import { registry, policy, evidence } from "./fixtures.ts";
-export async function queryProject(components: typeof registry.components = registry.components) {
+export async function queryProject(
+  components: typeof registry.components = registry.components,
+  reportVersion: 1 | 2 = 1,
+) {
   const at = new Date().toISOString();
   const selectedRegistry = { ...registry, components };
   const root = await realpath(await mkdtemp(join(tmpdir(), "governanator-query-")));
@@ -35,27 +38,30 @@ export async function queryProject(components: typeof registry.components = regi
   const commit = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], {
     encoding: "utf8",
   }).trim();
-  const report = evaluate({
-    registry: selectedRegistry,
-    policy,
-    evidence: [
-      {
-        ...evidence,
-        commit,
-        repository: "local:fixture",
-        observedAt: at,
-        expiresAt: new Date(Date.parse(at) + 3600000).toISOString(),
-      },
-    ],
-    waivers: [],
-    target: "stable",
-    at,
-    commit,
-    repository: "local:fixture",
-    mode: "demo",
-    verifiedEvidenceDigests: {},
-    verifiedWaiverDigests: {},
-  });
+  const report = evaluate(
+    {
+      registry: selectedRegistry,
+      policy,
+      evidence: [
+        {
+          ...evidence,
+          commit,
+          repository: "local:fixture",
+          observedAt: at,
+          expiresAt: new Date(Date.parse(at) + 3600000).toISOString(),
+        },
+      ],
+      waivers: [],
+      target: "stable",
+      at,
+      commit,
+      repository: "local:fixture",
+      mode: "demo",
+      verifiedEvidenceDigests: {},
+      verifiedWaiverDigests: {},
+    },
+    reportVersion,
+  );
   await writeFile(join(root, "artifacts/report.json"), JSON.stringify(report));
   return { root, at, now: Date.parse(at), report, commit };
 }

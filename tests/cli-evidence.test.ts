@@ -111,6 +111,7 @@ describe("local Vitest producer and gate", () => {
     expect(result.code).toBe(0);
     const report = JSON.parse(result.stdout);
     expect(report).toMatchObject({
+      schemaVersion: 1,
       assurance: "verified-inputs",
       publication: "unknown",
       decisions: [{ componentId: "ui.button", gate: "ready", checks: [{ result: "passed" }] }],
@@ -139,6 +140,26 @@ describe("local Vitest producer and gate", () => {
     ]);
     expect(imported.code).toBe(0);
     expect(JSON.parse(imported.stdout).evidence[0].provenance).toBe("unverified");
+  });
+  test("explicit v2 local check projects actual runner evidence without changing readiness", async () => {
+    const root = await project();
+    const result = await runCli([...args(root), "--report-schema", "2"]);
+    expect(result.code).toBe(0);
+    const report = JSON.parse(result.stdout);
+    expect(report.schemaVersion).toBe(2);
+    expect(report.decisions[0]).toMatchObject({ gate: "ready", checks: [{ result: "passed" }] });
+    const receiptPath = result.stderr.trim().split(" ").at(-1)!;
+    const receipt = JSON.parse(await readFile(join(root, receiptPath), "utf8"));
+    const item = receipt.evidence[0];
+    expect(report.decisions[0].checks[0].evidence).toEqual([
+      {
+        id: item.id,
+        producer: item.producer,
+        observedAt: item.observedAt,
+        provenance: "adapter",
+        sourceUrl: receipt.reportPath,
+      },
+    ]);
   });
   test("real failed tests block while real skipped tests yield insufficient evidence", async () => {
     const failed = await runCli(args(await project("fail")));

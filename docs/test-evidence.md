@@ -55,3 +55,16 @@ This proves only the configured local process boundary. The user authorizes exec
 The importer follows the [Vitest 4 JSON reporter](https://v4.vitest.dev/guide/reporters) and is qualified against the pinned Vitest 4.1.12 installed here. It consumes validated semantic fields and tolerates unrelated reporter metadata. It does not infer test coverage from component names or from mere report-file presence.
 
 Known minor: assertion counters and failure flags are validated, but all top-level suite-summary counters are not yet reconciled. Raw imports with contradictory suite counts can therefore still be converted to unverified records. Full suite-summary reconciliation is a follow-up; import is never approval.
+
+## Report schema selection
+
+`evaluate` and `check` default to report schema 1. Pass `--report-schema 2` with either command to include selected evidence metadata; explicit `--report-schema 1` preserves compatibility output. Unsupported, missing or duplicate values fail with exit 2. Version selection changes the report shape, never the readiness decision or evidence trust.
+
+```sh
+bun run governanator evaluate --format json --report-schema 2
+bun run governanator check --mapping governance/tests.json --format json --report-schema 2
+```
+
+Programmatic local callers use `runLocalCheck(root, mappingPath, target, 2)`; omitting the fourth argument retains schema 1. Core callers use `evaluate(input, 2)` with the same default of 1. The dogfood report explicitly requests schema 2. Older schema-1-only consumers reject schema 2; choose schema 1 for those consumers.
+
+Schema-2 metadata reports the selected evidence producer, observation time, declared provenance and optional source. It does not authenticate a producer or recreate an attestation from JSON. Consumers validate both the strict versioned shape and cross-field semantics, including exact evidence-ID association and canonical observation times no later than report evaluation.

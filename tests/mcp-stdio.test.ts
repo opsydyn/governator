@@ -9,8 +9,8 @@ const roots: string[] = [];
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
-async function fixture() {
-  const f = await queryProject();
+async function fixture(reportVersion: 1 | 2 = 1) {
+  const f = await queryProject(undefined, reportVersion);
   roots.push(f.root);
   await writeFile(
     join(f.root, "artifacts/snapshot.json"),
@@ -19,53 +19,60 @@ async function fixture() {
   return f;
 }
 const entry = resolve("packages/mcp/src/main.ts");
-test("Bun stdio SDK handles discovery, parallel queries, cancellation and orderly close", async () => {
-  const f = await fixture();
-  const transport = new StdioClientTransport({
-    command: process.execPath,
-    args: [entry, "--root", f.root, "--snapshot", "artifacts/snapshot.json"],
-    stderr: "pipe",
-  });
-  let diagnostics = "";
-  transport.stderr?.on("data", (chunk) => {
-    diagnostics += chunk;
-  });
-  const client = new Client({ name: "governanator-stdio-test", version: "0.1.0" });
-  const errors: Error[] = [];
-  client.onerror = (error) => errors.push(error);
-  let pid: number | null = null;
-  try {
-    await client.connect(transport);
-    pid = transport.pid;
-    expect((await client.listTools()).tools).toHaveLength(14);
-    const responses = await Promise.all(
-      Array.from({ length: 8 }, () =>
-        client.callTool({ name: "get_design_system_report", arguments: {} }),
-      ),
-    );
-    for (const response of responses)
-      expect(response.structuredContent).toMatchObject({ sourceCommit: f.commit, data: f.report });
-    const controller = new AbortController();
-    controller.abort();
-    await expect(
-      client.callTool({ name: "list_components", arguments: {} }, { signal: controller.signal }),
-    ).rejects.toThrow();
-    expect((await client.callTool({ name: "list_components", arguments: {} })).isError).not.toBe(
-      true,
-    );
-    await writeFile(join(f.root, "artifacts/report.json"), "changed after startup");
-    expect(
-      (await client.callTool({ name: "get_design_system_report", arguments: {} }))
-        .structuredContent,
-    ).toMatchObject({ data: f.report });
-  } finally {
-    await client.close();
-  }
-  expect(diagnostics).toBe("");
-  expect(errors).toEqual([]);
-  expect(pid).not.toBeNull();
-  expect(() => process.kill(pid!, 0)).toThrow();
-}, 15000);
+test.each([1, 2] as const)(
+  "Bun stdio SDK handles schema %i, parallel queries, cancellation and orderly close",
+  async (version) => {
+    const f = await fixture(version);
+    const transport = new StdioClientTransport({
+      command: process.execPath,
+      args: [entry, "--root", f.root, "--snapshot", "artifacts/snapshot.json"],
+      stderr: "pipe",
+    });
+    let diagnostics = "";
+    transport.stderr?.on("data", (chunk) => {
+      diagnostics += chunk;
+    });
+    const client = new Client({ name: "governanator-stdio-test", version: "0.1.0" });
+    const errors: Error[] = [];
+    client.onerror = (error) => errors.push(error);
+    let pid: number | null = null;
+    try {
+      await client.connect(transport);
+      pid = transport.pid;
+      expect((await client.listTools()).tools).toHaveLength(14);
+      const responses = await Promise.all(
+        Array.from({ length: 8 }, () =>
+          client.callTool({ name: "get_design_system_report", arguments: {} }),
+        ),
+      );
+      for (const response of responses)
+        expect(response.structuredContent).toMatchObject({
+          sourceCommit: f.commit,
+          data: f.report,
+        });
+      const controller = new AbortController();
+      controller.abort();
+      await expect(
+        client.callTool({ name: "list_components", arguments: {} }, { signal: controller.signal }),
+      ).rejects.toThrow();
+      expect((await client.callTool({ name: "list_components", arguments: {} })).isError).not.toBe(
+        true,
+      );
+      await writeFile(join(f.root, "artifacts/report.json"), "changed after startup");
+      expect(
+        (await client.callTool({ name: "get_design_system_report", arguments: {} }))
+          .structuredContent,
+      ).toMatchObject({ data: f.report });
+    } finally {
+      await client.close();
+    }
+    expect(diagnostics).toBe("");
+    expect(errors).toEqual([]);
+    expect(pid).not.toBeNull();
+    expect(() => process.kill(pid!, 0)).toThrow();
+  },
+  15000,
+);
 async function line(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   state: { pending: string },

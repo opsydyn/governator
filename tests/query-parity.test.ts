@@ -18,140 +18,161 @@ afterEach(async () => {
   vi.restoreAllMocks();
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
-test("all fourteen tools preserve exact release, report and consumer scope without producer activity", async () => {
-  const root = await releaseProject();
-  roots.push(root);
-  const candidate = await captureCandidate(root, "governance/release.json", "artifacts/candidate");
-  await review(root);
-  const release = await checkCandidate(root, "governance/release.json", candidate.path, true);
-  const evaluated = await runCli(["evaluate", "--root", root, "--format", "json"]);
-  expect(evaluated.code).toBe(1);
-  const report = { ...JSON.parse(evaluated.stdout), release: releaseSummary(release) };
-  await writeFile(join(root, "artifacts/report.json"), JSON.stringify(report));
-  await writeFile(join(root, "artifacts/release.json"), JSON.stringify(release));
-  const snapshot = await createSnapshot(root, {
-    report: "artifacts/report.json",
-    release: "artifacts/release.json",
-    config: "governance/release.json",
-  });
-  await writeFile(join(root, "artifacts/snapshot.json"), JSON.stringify(snapshot));
-  const service = createQueryService(await loadSnapshot(root, "artifacts/snapshot.json"));
-  const cli = await runCli([
-    "query",
-    "--root",
-    root,
-    "--snapshot",
-    "artifacts/snapshot.json",
-    "--tool",
-    "get_design_system_report",
-  ]);
-  expect(cli.code, cli.stderr).toBe(0);
-  expect(JSON.parse(cli.stdout).data).toEqual(report);
-  const baselineStatus = execFileSync("git", ["-C", root, "status", "--porcelain"], {
-    encoding: "utf8",
-  });
-  const spawn = vi.spyOn(Bun, "spawn").mockImplementation(() => {
-    throw new Error("query spawned process");
-  });
-  const spawnSync = vi.spyOn(Bun, "spawnSync").mockImplementation(() => {
-    throw new Error("query spawned process");
-  });
-  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation(() => {
-    throw new Error("query used network");
-  });
-  const base = { componentId: "ui.button" },
-    pkg = { packageId: "@test/ui", candidateVersion: "1.0.1" };
-  const requests: Record<string, Record<string, unknown>> = {
-    list_components: {},
-    get_component: base,
-    get_component_evidence: base,
-    evaluate_component: { ...base, targetLifecycle: "stable" },
-    explain_governance_failure: { ...base, targetLifecycle: "stable" },
-    get_design_system_report: {},
-    list_approved_components: {},
-    get_component_contract: base,
-    diff_component_contract: { ...base, fromVersion: "1.0.0", toVersionOrCandidate: "candidate" },
-    list_breaking_changes: {},
-    explain_release_block: pkg,
-    get_release_manifest: { packageId: "@test/ui", version: "1.0.1" },
-    get_consumer_compatibility: pkg,
-    plan_component_migration: { ...base, fromVersion: "1.0.0", toVersion: "1.0.1" },
-  };
-  const results = Object.fromEntries(
-    toolNames.map((name) => [name, service.query(name, requests[name]).data]),
-  );
-  expect(results.get_design_system_report).toEqual(report);
-  expect(results.explain_release_block).toEqual(release);
-  expect(results.evaluate_component).toEqual(results.explain_governance_failure);
-  expect(results.evaluate_component).toEqual(report.decisions[0]);
-  expect(results.evaluate_component).toMatchObject({ gate: "insufficient_evidence" });
-  expect(results.list_approved_components).toMatchObject({ approvalVerified: false });
-  expect(results.get_component_contract).toMatchObject({
-    status: "available",
-    contract: { contractVersion: "1.0.1" },
-  });
-  expect(results.diff_component_contract).toMatchObject({
-    status: "available",
-    minimumBump: "none",
-  });
-  expect(results.get_release_manifest).toMatchObject({
-    artifactDigest: release.candidateDigest,
-    publication: "unknown",
-  });
-  expect(results.get_consumer_compatibility).toMatchObject({
-    recordedCompile: { result: "passed", artifactDigest: release.candidateDigest },
-    adoption: "unknown",
-  });
-  expect(results.plan_component_migration).toMatchObject({
-    status: "available",
-    documents: expect.arrayContaining([
-      { path: "governance/migration.md", content: expect.any(String) },
-    ]),
-    editsPerformed: false,
-  });
-  expect(
-    service.query("get_component_contract", { ...base, contractVersion: "99.0.0" }).data,
-  ).toMatchObject({ status: "unavailable" });
-  expect(service.query("list_breaking_changes", { sinceVersion: "99.0.0" }).data).toMatchObject({
-    status: "unavailable",
-  });
-  expect(
-    service.query("plan_component_migration", {
-      ...base,
-      fromVersion: "99.0.0",
-      toVersion: "1.0.1",
-    }).data,
-  ).toMatchObject({ status: "unavailable", suggestions: [] });
-  expect(spawn).not.toHaveBeenCalled();
-  expect(spawnSync).not.toHaveBeenCalled();
-  expect(fetch).not.toHaveBeenCalled();
-  vi.restoreAllMocks();
-  expect(execFileSync("git", ["-C", root, "status", "--porcelain"], { encoding: "utf8" })).toBe(
-    baselineStatus,
-  );
-  await writeFile(join(root, "governance/migration.md"), "x".repeat(256 * 1024 + 1));
-  execFileSync("git", ["-C", root, "add", "governance/migration.md"]);
-  execFileSync("git", [
-    "-C",
-    root,
-    "-c",
-    "user.name=Fixture",
-    "-c",
-    "user.email=fixture@example.invalid",
-    "commit",
-    "-qm",
-    "Large migration document",
-  ]);
-  const head = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
-  await writeFile(join(root, "artifacts/report.json"), JSON.stringify({ ...report, commit: head }));
-  await expect(
-    createSnapshot(root, {
+test.each([1, 2] as const)(
+  "all fourteen tools preserve schema %i release, report and consumer scope without producer activity",
+  async (version) => {
+    const root = await releaseProject();
+    roots.push(root);
+    const candidate = await captureCandidate(
+      root,
+      "governance/release.json",
+      "artifacts/candidate",
+    );
+    await review(root);
+    const release = await checkCandidate(root, "governance/release.json", candidate.path, true);
+    const evaluated = await runCli([
+      "evaluate",
+      "--root",
+      root,
+      "--format",
+      "json",
+      "--report-schema",
+      String(version),
+    ]);
+    expect(evaluated.code).toBe(1);
+    const report = { ...JSON.parse(evaluated.stdout), release: releaseSummary(release) };
+    await writeFile(join(root, "artifacts/report.json"), JSON.stringify(report));
+    await writeFile(join(root, "artifacts/release.json"), JSON.stringify(release));
+    const snapshot = await createSnapshot(root, {
       report: "artifacts/report.json",
       release: "artifacts/release.json",
       config: "governance/release.json",
-    }),
-  ).rejects.toThrow(/too large|limit/i);
-}, 30000);
+    });
+    await writeFile(join(root, "artifacts/snapshot.json"), JSON.stringify(snapshot));
+    const service = createQueryService(await loadSnapshot(root, "artifacts/snapshot.json"));
+    const cli = await runCli([
+      "query",
+      "--root",
+      root,
+      "--snapshot",
+      "artifacts/snapshot.json",
+      "--tool",
+      "get_design_system_report",
+    ]);
+    expect(cli.code, cli.stderr).toBe(0);
+    expect(JSON.parse(cli.stdout).data).toEqual(report);
+    const baselineStatus = execFileSync("git", ["-C", root, "status", "--porcelain"], {
+      encoding: "utf8",
+    });
+    const spawn = vi.spyOn(Bun, "spawn").mockImplementation(() => {
+      throw new Error("query spawned process");
+    });
+    const spawnSync = vi.spyOn(Bun, "spawnSync").mockImplementation(() => {
+      throw new Error("query spawned process");
+    });
+    const fetch = vi.spyOn(globalThis, "fetch").mockImplementation(() => {
+      throw new Error("query used network");
+    });
+    const base = { componentId: "ui.button" },
+      pkg = { packageId: "@test/ui", candidateVersion: "1.0.1" };
+    const requests: Record<string, Record<string, unknown>> = {
+      list_components: {},
+      get_component: base,
+      get_component_evidence: base,
+      evaluate_component: { ...base, targetLifecycle: "stable" },
+      explain_governance_failure: { ...base, targetLifecycle: "stable" },
+      get_design_system_report: {},
+      list_approved_components: {},
+      get_component_contract: base,
+      diff_component_contract: { ...base, fromVersion: "1.0.0", toVersionOrCandidate: "candidate" },
+      list_breaking_changes: {},
+      explain_release_block: pkg,
+      get_release_manifest: { packageId: "@test/ui", version: "1.0.1" },
+      get_consumer_compatibility: pkg,
+      plan_component_migration: { ...base, fromVersion: "1.0.0", toVersion: "1.0.1" },
+    };
+    const results = Object.fromEntries(
+      toolNames.map((name) => [name, service.query(name, requests[name]).data]),
+    );
+    expect(results.get_design_system_report).toEqual(report);
+    expect(results.explain_release_block).toEqual(release);
+    expect(results.evaluate_component).toEqual(results.explain_governance_failure);
+    expect(results.evaluate_component).toEqual(report.decisions[0]);
+    expect(results.evaluate_component).toMatchObject({ gate: "insufficient_evidence" });
+    expect(results.list_approved_components).toMatchObject({ approvalVerified: false });
+    expect(results.get_component_contract).toMatchObject({
+      status: "available",
+      contract: { contractVersion: "1.0.1" },
+    });
+    expect(results.diff_component_contract).toMatchObject({
+      status: "available",
+      minimumBump: "none",
+    });
+    expect(results.get_release_manifest).toMatchObject({
+      artifactDigest: release.candidateDigest,
+      publication: "unknown",
+    });
+    expect(results.get_consumer_compatibility).toMatchObject({
+      recordedCompile: { result: "passed", artifactDigest: release.candidateDigest },
+      adoption: "unknown",
+    });
+    expect(results.plan_component_migration).toMatchObject({
+      status: "available",
+      documents: expect.arrayContaining([
+        { path: "governance/migration.md", content: expect.any(String) },
+      ]),
+      editsPerformed: false,
+    });
+    expect(
+      service.query("get_component_contract", { ...base, contractVersion: "99.0.0" }).data,
+    ).toMatchObject({ status: "unavailable" });
+    expect(service.query("list_breaking_changes", { sinceVersion: "99.0.0" }).data).toMatchObject({
+      status: "unavailable",
+    });
+    expect(
+      service.query("plan_component_migration", {
+        ...base,
+        fromVersion: "99.0.0",
+        toVersion: "1.0.1",
+      }).data,
+    ).toMatchObject({ status: "unavailable", suggestions: [] });
+    expect(spawn).not.toHaveBeenCalled();
+    expect(spawnSync).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
+    vi.restoreAllMocks();
+    expect(execFileSync("git", ["-C", root, "status", "--porcelain"], { encoding: "utf8" })).toBe(
+      baselineStatus,
+    );
+    await writeFile(join(root, "governance/migration.md"), "x".repeat(256 * 1024 + 1));
+    execFileSync("git", ["-C", root, "add", "governance/migration.md"]);
+    execFileSync("git", [
+      "-C",
+      root,
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.invalid",
+      "commit",
+      "-qm",
+      "Large migration document",
+    ]);
+    const head = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+    await writeFile(
+      join(root, "artifacts/report.json"),
+      JSON.stringify({ ...report, commit: head }),
+    );
+    await expect(
+      createSnapshot(root, {
+        report: "artifacts/report.json",
+        release: "artifacts/release.json",
+        config: "governance/release.json",
+      }),
+    ).rejects.toThrow(/too large|limit/i);
+  },
+  30000,
+);
 test("compiler input rejects local file imports and reference directives", () => {
   for (const declaration of [
     'import type {Secret} from "../../secrets";',
