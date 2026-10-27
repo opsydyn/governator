@@ -19,7 +19,8 @@
       "@governanator/versioning": ["./packages/versioning/src/index.ts"],
       "@example/ui": ["./packages/demo-ui/src/index.ts"],
       "@governanator/query": ["./packages/query/src/index.ts"],
-      "@governanator/query/*": ["./packages/query/src/*.ts"]
+      "@governanator/query/*": ["./packages/query/src/*.ts"],
+      "@governanator/github-review": ["./packages/github-review/src/index.ts"]
     },
     "jsx": "react-jsx"
   },

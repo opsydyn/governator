@@ -1,0 +1,24 @@
+{
+  "name": "@governanator/github-review",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "bun --bun tsdown"
+  },
+  "dependencies": {
+    "effect": "4.0.6"
+  }
+}

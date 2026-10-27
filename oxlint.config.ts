@@ -12,6 +12,21 @@ export default defineConfig({
   ],
   overrides: [
     {
+      // Private injected-transport adapter contains and sanitizes Promise/stream failures.
+      files: ["packages/github-review/src/index.ts"],
+      rules: { "linteffect/no-try-catch": "off", "linteffect/no-string-sentinel-const": "off" },
+    },
+    {
+      // Lexical JSON wire validation must run before number precision is lost in decoding.
+      files: ["packages/github-review/src/json.ts"],
+      rules: { "linteffect/no-naked-object-state-update": "off" },
+    },
+    {
+      // Date receives an explicit provider timestamp for round-trip validation, never wall time.
+      files: ["packages/github-review/src/domain.ts"],
+      rules: { "linteffect/no-new-date-in-domain-logic": "off" },
+    },
+    {
       // MCP wire error boundary serializes typed failures; SDK integration tests own cleanup.
       files: ["packages/mcp/src/boundary.ts", "tests/mcp-*.test.ts", "scripts/mcp-smoke.ts"],
       rules: { "linteffect/no-try-catch": "off", "linteffect/no-naked-object-state-update": "off" },

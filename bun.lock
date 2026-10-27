@@ -74,6 +74,13 @@
         "react": "^19.3.1",
       },
     },
+    "packages/github-review": {
+      "name": "@governanator/github-review",
+      "version": "0.1.0",
+      "dependencies": {
+        "effect": "4.0.6",
+      },
+    },
     "packages/mcp": {
       "name": "@governanator/mcp",
       "version": "0.1.0",
@@ -260,6 +267,8 @@
     "@governanator/cli": ["@governanator/cli@workspace:packages/cli"],
 
     "@governanator/core": ["@governanator/core@workspace:packages/core"],
+
+    "@governanator/github-review": ["@governanator/github-review@workspace:packages/github-review"],
 
     "@governanator/mcp": ["@governanator/mcp@workspace:packages/mcp"],
 
