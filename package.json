@@ -7,7 +7,7 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "moon run protocol:build core:build versioning:build query:build cli:build demo-ui:build storybook-addon:build",
+    "build": "moon run protocol:build core:build versioning:build query:build cli:build demo-ui:build storybook-addon:build mcp:build",
     "typecheck": "moon run workspace:typecheck",
     "lint": "moon run workspace:lint",
     "format": "oxfmt .",
@@ -17,7 +17,7 @@
     "governanator": "bun packages/cli/src/main.ts",
     "protocol:generate": "bun scripts/protocol.ts",
     "protocol:check": "bun scripts/protocol.ts --check",
-    "boundaries": "bun scripts/boundaries.ts",
+    "boundaries": "bun scripts/boundaries.ts && bun scripts/mcp-boundaries.ts",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "bun scripts/publish-disabled.ts",
@@ -27,10 +27,13 @@
     "addon:validator": "bun scripts/addon-validator.ts",
     "addon:check": "bun scripts/addon-validator.ts --check && bun scripts/addon-boundaries.ts",
     "release:demo": "bun scripts/release-demo.ts",
-    "release:plan": "bun packages/cli/src/main.ts release plan --config governance/release.json"
+    "release:plan": "bun packages/cli/src/main.ts release plan --config governance/release.json",
+    "mcp": "bun packages/mcp/src/main.ts",
+    "mcp:smoke": "bun scripts/mcp-smoke.ts"
   },
   "devDependencies": {
     "@changesets/cli": "2.31.0",
+    "@modelcontextprotocol/client": "2.4.0",
     "@moonrepo/cli": "2.6.4",
     "@opsydyn/oxlint-effect": "2.0.1",
     "@types/bun": "1.4.4",

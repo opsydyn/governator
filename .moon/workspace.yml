@@ -8,3 +8,4 @@ projects:
   storybook-addon: "packages/storybook-addon"
   storybook: "apps/storybook-demo"
   query: "packages/query"
+  mcp: "packages/mcp"

@@ -1,0 +1,30 @@
+{
+  "name": "@governanator/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "bin": {
+    "governanator-mcp": "./dist/main.mjs"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/server.d.mts",
+      "import": "./dist/server.mjs"
+    }
+  },
+  "scripts": {
+    "build": "bun --bun tsdown"
+  },
+  "dependencies": {
+    "@governanator/query": "workspace:*",
+    "@modelcontextprotocol/server": "2.4.0",
+    "effect": "4.0.6",
+    "zod": "4.2.1"
+  }
+}
