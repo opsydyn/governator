@@ -1,6 +1,6 @@
 # Vitest evidence — first M1 slice
 
-M0 is committed at `b7622ba`. This slice adds genuine Vitest 4 JSON import and an optional local producer-to-gate path. This historical slice is followed by the [Storybook and contracts slice](storybook-contracts.md); M1 release enforcement remains open.
+The Vitest evidence slice added genuine Vitest 4 JSON import and a local producer-to-gate path. The current dogfood, contract and release flows build on it; see [Storybook and contracts](storybook-contracts.md) and [exact release candidates](release-candidates.md).
 
 ## Explicit mappings
 
@@ -44,13 +44,13 @@ Ignore `artifacts/` in Git first. The target policy must explicitly accept produ
 
 `check` runs the installed Vitest binary through Bun with fixed argument arrays and the mapped file paths. It accepts no arbitrary shell command, demo switch, attestation map, commit override or evaluation-time override. It creates a unique local report directory under ignored `artifacts/`, captures host-observed times, and rechecks the clean HEAD/source/config/mappings after execution. Every consumed governance file must be tracked when present. Index flags that can conceal modifications (including sparse-checkout skip-worktree entries) are rejected in this slice. An altered source tree or changed commit invalidates the run.
 
-Only this in-process runner-to-gate path supplies content-bound attestations. The check uses the same evaluator and report schema as `evaluate`; a future UI can read its report. JSON report stdout stays separate from the receipt path on stderr. Raw Vitest JSON and a `receipt.json` are retained in the run directory. The receipt is an audit artifact, not a signature: importing it or the raw report later does not reconstruct trust.
+Only this in-process runner-to-gate path supplies content-bound local test attestations. The check uses the same evaluator and report schemas as `evaluate`; the Storybook addon can read its report. JSON report stdout stays separate from the receipt path on stderr. Raw Vitest JSON and a `receipt.json` are retained in the run directory. The receipt is an audit artifact, not a signature: importing it or the raw report later does not reconstruct trust.
 
 Exit codes are 0 for satisfied policy, 1 for failed/insufficient requirements, and 2 for invalid inputs or runner/runtime errors. No tests found, skipped required tests, failed setup hooks and unsupported report shapes never turn green. Unexpected unmapped files or an exit/report contradiction invalidate the local run. The runner times out after 30 seconds in this initial slice.
 
 ## Trust limits
 
-This proves only the configured local process boundary. The user authorizes executing that repository's test/config code when invoking `check`; that code and installed dependencies are trusted by the local operator. M0's dependency-free public protocol is unchanged. No external reviewer identity, signed CI provenance, candidate package artifact, npm publication, application adoption or deployment is verified. Tests running with the same OS privileges are not sandboxed from the producer. CI identity and stronger adversarial isolation require a later trusted host adapter.
+This proves only the configured local process boundary. The user authorizes executing that repository's test/config code when invoking `check`; that code and installed dependencies are trusted by the local operator. The plain protocol remains dependency-free. Exact candidate analysis is a separate local release check; this test run does not by itself verify external reviewer identity, signed CI provenance, npm publication, application adoption or deployment. Tests running with the same OS privileges are not sandboxed from the producer. CI identity and stronger adversarial isolation require a later trusted host adapter.
 
 The importer follows the [Vitest 4 JSON reporter](https://v4.vitest.dev/guide/reporters) and is qualified against the pinned Vitest 4.1.12 installed here. It consumes validated semantic fields and tolerates unrelated reporter metadata. It does not infer test coverage from component names or from mere report-file presence.
 

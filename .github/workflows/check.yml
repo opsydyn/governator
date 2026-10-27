@@ -20,6 +20,8 @@ jobs:
         with:
           node-version: "24.15.0"
       - run: bun install --frozen-lockfile
+      # Docs is a Moon project installed from its own pinned lock.
+      - run: bun run docs:install
       - run: bun run check
       - run: bun run build
       # This verifies actual blocked patch/minor and simulated reviewed-major cases.

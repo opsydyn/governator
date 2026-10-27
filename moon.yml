@@ -1,7 +1,7 @@
 tasks:
   typecheck:
     # Public-boundary tests import built declarations; never consume stale dist files.
-    deps: ["cli:build", "mcp:build"]
+    deps: ["cli:build", "mcp:build", "docs:typecheck"]
     command: "bun --bun tsc --noEmit"
     inputs:
       [
@@ -62,7 +62,7 @@ tasks:
     options:
       cache: false
   check:
-    deps: ["typecheck", "lint", "format", "test", "boundaries", "protocol", "addon"]
+    deps: ["typecheck", "lint", "format", "test", "boundaries", "protocol", "addon", "docs:links"]
     command: "bun --version"
     options:
       cache: false

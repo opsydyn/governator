@@ -4,7 +4,7 @@ Read-only Storybook manager panel. Local preview package; private and unpublishe
 
 ## Addon-only quick start
 
-Use an existing Storybook React/Vite project. The development reference is Storybook 10.6.4; the declared peer is `^10.6.4`. Other renderers and other 10.x versions have not been qualified. Independent packed npm/pnpm consumer qualification remains a release gate until its evidence is recorded.
+Use an existing Storybook React/Vite project. The development reference is Storybook 10.6.4; the declared peer is `^10.6.4`. Other renderers and other 10.x versions have not been qualified. Independent npm and strict-peer pnpm consumers installed and built a local packed addon using reconstructed cache archives with lifecycle scripts disabled. This local evidence does not establish registry availability or original package integrity.
 
 Packages remain private at `0.1.0`; registry installation is unavailable. Given an actual locally packed addon tarball, install it in your consumer project (replace the illustrative path):
 

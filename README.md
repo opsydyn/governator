@@ -10,10 +10,11 @@ All packages remain private at `0.1.0`; npm registry installation is unavailable
 
 ## Run locally
 
-Use Bun **1.4.2** with pinned Moon **2.6.4**.
+Use Bun **1.4.2** with pinned Moon **2.6.4**. Documentation is a Moon project with a separate Bun lockfile because the root cached dependency graph cannot resolve Astro offline; install both graphs in the order below.
 
 ```sh
 bun install --frozen-lockfile
+bun run docs:install
 bun run check
 bun run build
 bun run governanator validate
@@ -60,7 +61,7 @@ See [architecture](docs/architecture.md), [dogfood and API runbook](docs/storybo
 
 Local release enforcement: `bun run release:plan` blocks the deliberately insufficient patch; `bun run release:demo` exercises blocked patch/minor and an explicitly simulated reviewed major. Storybook includes release details and lifecycle/readiness sidebar markers. See the [release runbook](docs/release-candidates.md).
 
-Hosted CI/required-check configuration, authenticated published baselines and real browser/accessibility/human acceptance remain unverified. M2 provides local read-only MCP; see the [launch and snapshot runbook](docs/mcp.md) and [M2 verification](docs/m2-verification.md). External approvals, publication and deployment need trusted adapters.
+Targeted local browser checks and reconstructed-cache consumer tests are recorded in [qualification](docs/qualification/consumer-distribution-verification.md); these do not establish screen-reader or human acceptance. Hosted CI/required-check configuration and authenticated published baselines remain unverified. M2 provides local read-only MCP; see the [launch and snapshot runbook](docs/mcp.md) and [M2 verification](docs/m2-verification.md). External approvals, publication and deployment need trusted adapters.
 
 M3a introduces a private synthetic review-evidence evaluator for testing exact candidate, policy, reviewer-role and freshness bindings. Its results are fixtures only; normal release review stays unconfigured. See [M3a evidence and verification](docs/m3a-verification.md).
 

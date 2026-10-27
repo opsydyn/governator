@@ -3,11 +3,13 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/*",
+    "!apps/docs",
+    "!apps/docs/**"
   ],
   "type": "module",
   "scripts": {
-    "build": "moon run protocol:build core:build versioning:build query:build cli:build demo-ui:build storybook-addon:build mcp:build github-review:build fixture-attestation:build fixture-policy:build",
+    "build": "moon run protocol:build core:build versioning:build query:build cli:build demo-ui:build storybook-addon:build mcp:build github-review:build fixture-attestation:build fixture-policy:build docs:build",
     "typecheck": "moon run workspace:typecheck",
     "lint": "moon run workspace:lint",
     "format": "oxfmt .",
@@ -29,7 +31,13 @@
     "release:demo": "bun scripts/release-demo.ts",
     "release:plan": "bun packages/cli/src/main.ts release plan --config governance/release.json",
     "mcp": "bun packages/mcp/src/main.ts",
-    "mcp:smoke": "bun scripts/mcp-smoke.ts"
+    "mcp:smoke": "bun scripts/mcp-smoke.ts",
+    "docs:dev": "moon run docs:dev",
+    "docs:build": "moon run docs:build",
+    "docs:check": "moon run docs:typecheck",
+    "docs:preview": "bun run --cwd apps/docs preview",
+    "docs:install": "bun install --cwd apps/docs --frozen-lockfile",
+    "docs:links": "moon run docs:links"
   },
   "devDependencies": {
     "@changesets/cli": "2.31.0",

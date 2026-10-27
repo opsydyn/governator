@@ -1,0 +1,35 @@
+/* Hallmark · v2.0.0 | Governanator docs: native Starlight, technical index, amber accent */
+:root {
+  --sl-font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --sl-font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --sl-color-accent-low: #352b13;
+  --sl-color-accent: #d4a837;
+  --sl-color-accent-high: #f5df9a;
+  --docs-focus: var(--sl-color-accent-high);
+  --sl-content-width: 49rem;
+}
+
+:root[data-theme="light"] {
+  --sl-color-accent-low: #fff1c6;
+  --sl-color-accent: #846000;
+  --sl-color-accent-high: #46340b;
+}
+
+.sl-markdown-content h2 {
+  letter-spacing: -0.025em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--docs-focus);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

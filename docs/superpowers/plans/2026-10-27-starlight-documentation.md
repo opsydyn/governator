@@ -30,17 +30,17 @@
 
 **Files:** `apps/docs/package.json`, `apps/docs/astro.config.mjs`, `apps/docs/src/content.config.ts`, `apps/docs/src/styles/`, `apps/docs/moon.yml`, `.moon/workspace.yml`, root `package.json`, `moon.yml`, `bun.lock`, `.gitignore`, build tests as appropriate.
 
-- [ ] Add a real, private Starlight app, pinned compatible offline dependencies, responsive design tokens, clear site status and four-category navigation. Disable telemetry; use no external-hosted font or invented hosting URL.
-- [ ] Add Moon dev/build/typecheck and workspace scripts; site build and Astro check must run in the normal check graph. Ensure cache inputs include content, assets and config. Install from offline cache and record exact result.
-- [ ] Run site build/check, formatter/lint and workspace typecheck as applicable; independently review scaffolding and fix Important findings.
+- [x] Add a real, private Starlight app, pinned compatible offline dependencies, responsive design tokens, clear site status and four-category navigation. Disable telemetry; use no external-hosted font or invented hosting URL.
+- [x] Add Moon dev/build/typecheck and workspace scripts; site build and Astro check must run in the normal check graph. Ensure cache inputs include content, assets and config. Install from offline cache and record exact result.
+- [x] Run site build/check, formatter/lint and workspace typecheck as applicable; independently review scaffolding and fix Important findings.
 
 ## Task 2: Current content and historical accuracy
 
 **Files:** `apps/docs/src/content/docs/` Markdown pages, existing current-facing `docs/*.md`, selected package README files.
 
-- [ ] Audit and correct stale current-facing documentation, preserving dated historical records. Link authoritative current material rather than inventing provider or release proof.
-- [ ] Author an end-to-end local tutorial, task-oriented addon/evidence/MCP/release guides, accurate CLI/schema/MCP references and conceptual explanations including Changesets. Provide substantive content for all four sections and a useful site landing page.
-- [ ] Validate internal links and representative commands against actual repo/fixtures; independently review technical claims, trust and Diátaxis structure. Fix Important findings.
+- [x] Audit and correct stale current-facing documentation, preserving dated historical records. Link authoritative current material rather than inventing provider or release proof.
+- [x] Author an end-to-end local tutorial, task-oriented addon/evidence/MCP/release guides, accurate CLI/schema/MCP references and conceptual explanations including Changesets. Provide substantive content for all four sections and a useful site landing page.
+- [x] Validate internal links and representative commands against actual repo/fixtures; independently review technical claims, trust and Diátaxis structure. Fix Important findings.
 
 ## Task 3: Qualification and local integration
 

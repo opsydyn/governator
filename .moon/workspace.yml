@@ -12,3 +12,5 @@ projects:
   github-review: "packages/github-review"
   fixture-attestation: "packages/fixture-attestation"
   fixture-policy: "packages/fixture-policy"
+  # Docs is a Moon project with its own Bun lock; root Bun workspaces explicitly exclude it.
+  docs: "apps/docs"

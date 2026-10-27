@@ -1,0 +1,20 @@
+{
+  "name": "@governanator/docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "ASTRO_TELEMETRY_DISABLED=1 bun --bun astro dev --host 127.0.0.1",
+    "build": "ASTRO_TELEMETRY_DISABLED=1 bun --bun astro build",
+    "typecheck": "ASTRO_TELEMETRY_DISABLED=1 bun --bun astro check",
+    "preview": "ASTRO_TELEMETRY_DISABLED=1 bun --bun astro preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "0.39.2",
+    "astro": "6.3.6"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "typescript": "5.9.3"
+  }
+}

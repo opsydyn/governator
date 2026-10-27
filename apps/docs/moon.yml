@@ -1,0 +1,41 @@
+# This Moon project has an independent Bun lock: the root cached lock cannot resolve Astro offline.
+# Install root dependencies first, then run bun run docs:install before checks/builds.
+tasks:
+  dev:
+    command: "bun run dev"
+    options:
+      cache: false
+      persistent: true
+  build:
+    # Astro check and build both generate .astro files; keep their writes sequential.
+    deps: ["typecheck"]
+    command: "bun run build"
+    inputs:
+      [
+        "src/**/*",
+        "public/**/*",
+        "astro.config.mjs",
+        "tsconfig.json",
+        "package.json",
+        "bun.lock",
+        "/bun.lock",
+      ]
+    outputs: ["dist"]
+  typecheck:
+    command: "bun run typecheck"
+    inputs:
+      [
+        "src/**/*",
+        "public/**/*",
+        "astro.config.mjs",
+        "tsconfig.json",
+        "package.json",
+        "bun.lock",
+        "/bun.lock",
+      ]
+  links:
+    deps: ["build"]
+    command: "bun ../../scripts/check-docs-links.ts dist"
+    inputs: ["/scripts/check-docs-links.ts", "/bun.lock", "dist/**/*"]
+    options:
+      cache: false

@@ -10,3 +10,5 @@ artifacts/
 
 storybook-static/
 apps/storybook-demo/public/governance-report.json
+
+apps/docs/.astro/
