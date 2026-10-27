@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "artifactDigest": "sha256:b84b56f2e457652c738e358d00718bc8a655e902f3459fbaeac8d7b181bb396b",
+  "manifest": {
+    "name": "@example/ui",
+    "version": "8.4.1",
+    "type": "module",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.mts",
+        "import": "./dist/index.mjs"
+      }
+    },
+    "peerDependencies": {
+      "react": "^19.3.1"
+    },
+    "dependencies": {}
+  },
+  "api": {
+    "schemaVersion": 1,
+    "compilerVersion": "5.9.3",
+    "packageId": "@example/ui",
+    "packageVersion": "8.4.1",
+    "declaration": "//#region src/Button.d.ts\ninterface ButtonProps {\n  readonly label: string;\n  readonly tone?: \"primary\" | \"quiet\";\n  readonly disabled?: boolean;\n  readonly onClick?: () => void;\n}\ndeclare function Button({\n  label,\n  tone,\n  disabled,\n  onClick\n}: ButtonProps): import(\"react\").JSX.Element;\n//#endregion\n//#region src/Select.d.ts\ninterface SelectProps {\n  readonly label: string;\n  readonly options: readonly {\n    readonly value: string;\n    readonly label: string;\n  }[];\n  readonly value?: string;\n  readonly onChange?: (value: string) => void;\n}\ndeclare function Select({\n  label,\n  options,\n  value,\n  onChange\n}: SelectProps): import(\"react\").JSX.Element;\n//#endregion\n//#region src/Alert.d.ts\ninterface AlertProps {\n  readonly message: string;\n  readonly tone?: \"info\" | \"warning\";\n}\ndeclare function Alert({\n  message,\n  tone\n}: AlertProps): import(\"react\").JSX.Element;\n/** @deprecated Use Alert; retained for existing consumers during the migration window. */\ndeclare function LegacyAlert(props: AlertProps): import(\"react\").JSX.Element;\n//#endregion\nexport { Alert, type AlertProps, Button, type ButtonProps, LegacyAlert, Select, type SelectProps };",
+    "exports": [
+      "Alert",
+      "AlertProps",
+      "Button",
+      "ButtonProps",
+      "LegacyAlert",
+      "Select",
+      "SelectProps"
+    ],
+    "components": [
+      {
+        "componentId": "ui.alert",
+        "exportName": "Alert",
+        "propsExport": "AlertProps",
+        "contractVersion": "1.0.0",
+        "present": true,
+        "signature": "({ message, tone }: AlertProps) => import(\"react\").JSX.Element",
+        "props": {
+          "message": {
+            "optional": false,
+            "type": "string"
+          },
+          "tone": {
+            "optional": true,
+            "type": "\"info\" | \"warning\""
+          }
+        }
+      },
+      {
+        "componentId": "ui.button",
+        "exportName": "Button",
+        "propsExport": "ButtonProps",
+        "contractVersion": "1.2.0",
+        "present": true,
+        "signature": "({ label, tone, disabled, onClick }: ButtonProps) => import(\"react\").JSX.Element",
+        "props": {
+          "label": {
+            "optional": false,
+            "type": "string"
+          },
+          "tone": {
+            "optional": true,
+            "type": "\"primary\" | \"quiet\""
+          },
+          "disabled": {
+            "optional": true,
+            "type": "boolean"
+          },
+          "onClick": {
+            "optional": true,
+            "type": "() => void"
+          }
+        }
+      },
+      {
+        "componentId": "ui.legacy-alert",
+        "exportName": "LegacyAlert",
+        "propsExport": "AlertProps",
+        "contractVersion": "1.0.0",
+        "present": true,
+        "signature": "(props: AlertProps) => import(\"react\").JSX.Element",
+        "props": {
+          "message": {
+            "optional": false,
+            "type": "string"
+          },
+          "tone": {
+            "optional": true,
+            "type": "\"info\" | \"warning\""
+          }
+        }
+      },
+      {
+        "componentId": "ui.select",
+        "exportName": "Select",
+        "propsExport": "SelectProps",
+        "contractVersion": "1.0.0-rc.1",
+        "present": true,
+        "signature": "({ label, options, value, onChange }: SelectProps) => import(\"react\").JSX.Element",
+        "props": {
+          "label": {
+            "optional": false,
+            "type": "string"
+          },
+          "options": {
+            "optional": false,
+            "type": "readonly { readonly value: string; readonly label: string; }[]"
+          },
+          "value": {
+            "optional": true,
+            "type": "string"
+          },
+          "onChange": {
+            "optional": true,
+            "type": "(value: string) => void"
+          }
+        }
+      }
+    ]
+  },
+  "files": {
+    "dist/index.d.mts": "sha256:1fb73736375081f5f271c027e3239f988a03a4222b82b87c81ac6b9bf30a9801",
+    "dist/index.mjs": "sha256:194ffca49e053aecb6e082e36fb93f10d88f6f63ef8d2b8f8d22425f9a0ff9c6",
+    "LICENSE": "sha256:ffcf294d62b4c9a44ca774a4ce40c0db5874170ffbaa399129d65f8d8b858b94",
+    "package.json": "sha256:b2ce0afd963d835acf1b6e03a40774fe3b4a751473bfb45ddf86dae408131ad5"
+  }
+}

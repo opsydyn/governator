@@ -24,3 +24,5 @@ export function verifyBaseline(
     );
   return { baseline, publication: "unknown" };
 }
+export * from "./release.ts";
+export * from "./consumers.ts";

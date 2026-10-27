@@ -10,6 +10,42 @@ function fetchFixture(_url: string, options: RequestInit): Promise<Response> {
   return Promise.resolve(new Response(JSON.stringify(report())));
 }
 describe("read-only addon report boundary", () => {
+  test("renders optional exact-candidate release data without changing eligibility", () => {
+    const release = {
+      gate: "blocked",
+      status: "not_eligible",
+      assurance: "unverified",
+      baselineVersion: "8.4.1",
+      candidateVersion: "8.4.2",
+      baselineDigest: "sha256:baseline",
+      candidateDigest: "sha256:candidate",
+      sourceCommit: "a".repeat(40),
+      evaluatedAt: at,
+      inputDigest: "sha256:inputs",
+      minimumBump: "major",
+      declaredBump: "patch",
+      candidateManifest: "artifacts/candidate/candidate.json",
+      affectedComponents: ["ui.button"],
+      reasons: ["Removed public tone prop requires major"],
+      remediation: ["Declare and review a major migration"],
+      publishable: false,
+    };
+    const snapshot = { ...report(), release };
+    expect(
+      decodeReport({ ...snapshot, release: { ...release, sourceCommit: "b".repeat(40) } }, now)
+        .status,
+    ).toBe("error");
+    expect(
+      decodeReport(
+        { ...snapshot, release: { ...release, evaluatedAt: "2026-10-20T12:00:00.000Z" } },
+        now,
+      ).status,
+    ).toBe("error");
+    expect(decodeReport(snapshot, now)).toMatchObject({ status: "ready", report: { release } });
+    expect(
+      decodeReport({ ...snapshot, release: { ...release, publishable: true } }, now).status,
+    ).toBe("error");
+  });
   test("accepts the engine snapshot without recomputing or editing its decisions", () => {
     const result = decodeReport(report(), now);
     expect(result.status).toBe("ready");

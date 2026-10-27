@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "packageDirectory": "packages/demo-ui",
+  "declaration": "dist/index.d.mts",
+  "apiConfig": "governance/api-config.json",
+  "baseline": "governance/releases/ui-8.4.1.json",
+  "baselineArchive": "fixtures/releases/ui-8.4.1/package.tar.gz",
+  "baselineDigest": "governance/releases/ui-8.4.1.json.sha256",
+  "mapping": "governance/tests.json",
+  "consumerFixtures": ["governance/consumer.tsx"],
+  "changesets": [".changeset/dogfood-breaking-button.md"],
+  "classification": "governance/release-change.json",
+  "simulatedReview": "artifacts/simulated-release-review.json"
+}

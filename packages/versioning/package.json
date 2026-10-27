@@ -24,6 +24,7 @@
     "prepack": "bun run build"
   },
   "dependencies": {
+    "@changesets/parse": "0.4.3",
     "@governanator/core": "workspace:*",
     "@governanator/protocol": "workspace:*",
     "effect": "4.0.6",

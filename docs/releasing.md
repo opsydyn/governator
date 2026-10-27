@@ -9,3 +9,7 @@ Governanator adopts those build/config conventions. `bun run changeset` creates 
 Internal core/versioning remain private implementation details. Before a CLI release, package its private engine correctly (bundle it or publish a deliberate backend distribution), because a consumer cannot resolve unpublished workspace packages. Before an addon release, run the handoff's independent clean npm/pnpm Storybook installations and dependency/bundle budget gates. M0 packed manifests are inspected locally, but no external consumer installation is claimed.
 
 Changesets manages package intent; the component governance engine must independently enforce compatibility and required migration/review proof in M1. A Changeset alone is never approval.
+
+## Local exact candidate gate
+
+Changesets intent and exact candidate validation are implemented in the [release runbook](release-candidates.md). Local qualification never authorizes publication. The disabled publish template above remains disabled; no push, release workflow execution or registry upload occurred.

@@ -27,6 +27,20 @@ export function decodeReport(raw: unknown, now = Date.now()): ReportState {
     time > now + 60_000
   )
     return { status: "error", message: "Invalid or future report evaluation time." };
+  if (raw.release) {
+    const evaluated = Date.parse(raw.release.evaluatedAt);
+    if (
+      raw.release.sourceCommit !== raw.commit ||
+      !Number.isFinite(evaluated) ||
+      new Date(evaluated).toISOString() !== raw.release.evaluatedAt ||
+      evaluated > now + 60_000 ||
+      now - evaluated > 24 * 3_600_000
+    )
+      return {
+        status: "error",
+        message: "Release candidate snapshot is stale, invalid or belongs to another source.",
+      };
+  }
   if (now - time > 24 * 3_600_000)
     return {
       status: "stale",

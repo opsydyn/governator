@@ -207,6 +207,29 @@ export const Decision = Schema.Struct({
   reasons: Schema.Array(text),
   activeWaivers: Schema.Array(text),
 });
+export const ReleaseSummary = Schema.Struct({
+  gate: Schema.Literals(["ready", "blocked", "insufficient_evidence"]),
+  status: Schema.Literals([
+    "eligible_under_demo_policy",
+    "eligible_under_local_policy",
+    "not_eligible",
+  ]),
+  assurance: Schema.Literals(["simulated", "unverified"]),
+  baselineVersion: SemVer,
+  candidateVersion: SemVer,
+  baselineDigest: text,
+  candidateDigest: text,
+  sourceCommit: Commit,
+  evaluatedAt: Timestamp,
+  inputDigest: text,
+  minimumBump: Schema.Literals(["none", "patch", "minor", "major"]),
+  declaredBump: Schema.Literals(["none", "patch", "minor", "major"]),
+  candidateManifest: text,
+  affectedComponents: Schema.Array(ComponentId),
+  reasons: Schema.Array(text),
+  remediation: Schema.Array(text),
+  publishable: Schema.Literal(false),
+});
 export const Report = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   evaluatedAt: Timestamp,
@@ -219,6 +242,7 @@ export const Report = Schema.Struct({
   deployment: Schema.Literal("unknown"),
   adoption: Schema.Literal("unknown"),
   decisions: Schema.Array(Decision),
+  release: Schema.optionalKey(ReleaseSummary),
 });
 export function reportJsonSchema() {
   return Schema.toJsonSchemaDocument(Report, { onExcessProperty: "error" });

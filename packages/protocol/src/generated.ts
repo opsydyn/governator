@@ -52,4 +52,23 @@ export interface GovernanceReport {
     reasons: string[];
     activeWaivers: string[];
   }[];
+  release?: {
+    gate: "ready" | "blocked" | "insufficient_evidence";
+    status: "eligible_under_demo_policy" | "eligible_under_local_policy" | "not_eligible";
+    assurance: "simulated" | "unverified";
+    baselineVersion: string;
+    candidateVersion: string;
+    baselineDigest: string;
+    candidateDigest: string;
+    sourceCommit: string;
+    evaluatedAt: string;
+    inputDigest: string;
+    minimumBump: "none" | "patch" | "minor" | "major";
+    declaredBump: "none" | "patch" | "minor" | "major";
+    candidateManifest: string;
+    affectedComponents: string[];
+    reasons: string[];
+    remediation: string[];
+    publishable: false;
+  };
 }

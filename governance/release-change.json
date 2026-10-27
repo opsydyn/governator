@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kind": "major",
+  "reason": "Remove Button tone and replace it with variant; existing tone callers require a migration.",
+  "issue": "local:button-tone-to-variant",
+  "impacts": ["types", "runtime"],
+  "components": [
+    {
+      "componentId": "ui.button",
+      "kind": "major",
+      "reason": "The tone prop is removed. Consumers must replace tone with variant and review visual intent."
+    }
+  ],
+  "documents": {
+    "migrationGuide": "governance/migrations/button-tone.md",
+    "manualMigrationPlan": "governance/migrations/button-manual.md",
+    "consumerImpact": "governance/migrations/button-consumers.md",
+    "compatibilityMatrix": "governance/migrations/button-matrix.md"
+  }
+}

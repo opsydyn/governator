@@ -32,7 +32,7 @@ bun run governanator contracts snapshot --config governance/api-config.json --de
 bun run governanator contracts diff --baseline governance/api-baselines/ui-8.4.1.json --candidate artifacts/candidate.json --baseline-digest governance/api-baselines/ui-8.4.1.json.sha256
 ```
 
-Pinned TypeScript 5.9.3 analyzes actual emitted declarations. Baselines are explicit digest-checked local release fixtures, not authenticated npm releases. The comparison checks exported props, full structural assignability and callable return types; unsupported callable shapes require review, and global/module augmentations are rejected. Static types do not prove behavior, visuals, focus or accessibility compatibility. Exact release-candidate artifact enforcement and Changesets intent validation remain open.
+Pinned TypeScript 5.9.3 analyzes actual emitted declarations. Baselines are explicit digest-checked local release fixtures, not authenticated npm releases. The comparison checks exported props, full structural assignability and callable return types; unsupported callable shapes require review, and global/module augmentations are rejected. Static types do not prove behavior, visuals, focus or accessibility compatibility. [Exact candidate and Changesets enforcement](docs/release-candidates.md) now check actual packed files, fresh consumer/test evidence and release intent.
 
 CLI exit codes: **0** satisfied the requested check, **1** blocked/insufficient evidence, **2** invalid input/runtime error. `validate` checks shape, references and contained source paths; it does not approve a component. Normal evaluation uses Git HEAD and rejects dirty inputs. Saved JSON and raw imported test reports do not independently recreate trusted attestations. See [evidence](docs/test-evidence.md).
 
@@ -50,4 +50,6 @@ CLI exit codes: **0** satisfied the requested check, **1** blocked/insufficient 
 
 See [architecture](docs/architecture.md), [dogfood and API runbook](docs/storybook-contracts.md), [verification](docs/storybook-contracts-verification.md), [release conventions](docs/releasing.md) and the [handoff](docs/reference/CODEX_HANDOFF_DESIGN_SYSTEM_GOVERNANCE.md).
 
-Remaining M1: Changesets intent and exact candidate release enforcement, authenticated published baselines, broader renderer/interaction/accessibility qualification and sidebar governance filtering. M2 adds read-only MCP. External approvals, publication and deployment need separate trusted adapters.
+Local release enforcement: `bun run release:plan` blocks the deliberately insufficient patch; `bun run release:demo` exercises blocked patch/minor and an explicitly simulated reviewed major. Storybook includes release details and lifecycle/readiness sidebar markers. See the [release runbook](docs/release-candidates.md).
+
+Hosted CI/required-check configuration, authenticated published baselines and real browser/accessibility/human acceptance remain unverified. M2 adds read-only MCP. External approvals, publication and deployment need trusted adapters.

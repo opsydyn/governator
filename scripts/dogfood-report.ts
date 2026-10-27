@@ -1,3 +1,5 @@
+import { captureCandidate, checkCandidate } from "../packages/cli/src/release.ts";
+import { releaseSummary } from "../packages/cli/src/release-summary.ts";
 import { runLocalCheck } from "../packages/cli/src/evidence.ts";
 import {
   snapshotApi,
@@ -42,8 +44,16 @@ ensure(
   cleanHead(process.cwd()) === head && checked.report.commit === head,
   "Source changed during dogfood declaration build/test analysis",
 );
+const captured = await captureCandidate(
+  process.cwd(),
+  "governance/release.json",
+  `artifacts/dogfood-release-${crypto.randomUUID()}`,
+);
+const release = await checkCandidate(process.cwd(), "governance/release.json", captured.path);
+await Bun.write("artifacts/dogfood-release.json", JSON.stringify(release, null, 2) + "\n");
 const report = decode(Report, {
   ...checked.report,
+  release: releaseSummary(release),
   decisions: checked.report.decisions.map((component) => ({
     ...component,
     compatibility: {

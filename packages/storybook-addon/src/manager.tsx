@@ -1,5 +1,6 @@
 /** @jsxRuntime classic */
 import React, { useEffect, useState } from "react";
+import type { API, HashEntry } from "storybook/manager-api";
 import { addons, types, useParameter } from "storybook/manager-api";
 import { AddonPanel } from "storybook/internal/components";
 import { useTheme } from "storybook/theming";
@@ -152,6 +153,42 @@ function Panel() {
           </p>
         </div>
       </div>
+      {report.release && (
+        <div className="gn-card gn-note">
+          <h3 style={{ color: color(report.release.gate) }}>
+            Exact release candidate: {report.release.gate.replaceAll("_", " ")}
+          </h3>
+          <p>
+            Changeset <strong>{report.release.declaredBump}</strong> · required{" "}
+            <strong>{report.release.minimumBump}</strong> · {report.release.baselineVersion} →{" "}
+            {report.release.candidateVersion}
+          </p>
+          <p className="gn-small">
+            {report.release.status.replaceAll("_", " ")} · {report.release.assurance} · publication
+            authorization unavailable
+          </p>
+          <ul>
+            {report.release.reasons.map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
+          <details>
+            <summary>Candidate integrity and remediation</summary>
+            <p className="gn-small">
+              Artifact {report.release.candidateDigest}
+              <br />
+              Source {report.release.sourceCommit}
+              <br />
+              Candidate manifest {report.release.candidateManifest}
+            </p>
+            <ul>
+              {report.release.remediation.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </details>
+        </div>
+      )}
       {compatibility && (
         <div className="gn-card">
           <h3 style={{ color: color(compatibility.gate) }}>
@@ -232,7 +269,93 @@ function Panel() {
     </section>
   );
 }
-addons.register("governanator", () =>
+const sidebarReports = new Map<string, { at: number; promise: Promise<ReportState> }>();
+function sidebarReport(url: string): Promise<ReportState> {
+  const cached = sidebarReports.get(url);
+  if (cached && Date.now() - cached.at < 30_000) return cached.promise;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+  const promise = loadReport(
+    url,
+    window.location.href,
+    Date.now(),
+    fetch,
+    controller.signal,
+  ).finally(() => clearTimeout(timeout));
+  sidebarReports.set(url, { at: Date.now(), promise });
+  return promise;
+}
+function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: React.ReactNode }) {
+  const id = item.type === "component" ? item.children[0] : item.id;
+  const params: unknown = id ? api.getParameters(id, "governance") : undefined;
+  const componentId =
+    params &&
+    typeof params === "object" &&
+    "componentId" in params &&
+    typeof params.componentId === "string"
+      ? params.componentId
+      : undefined;
+  const url =
+    params &&
+    typeof params === "object" &&
+    "reportUrl" in params &&
+    typeof params.reportUrl === "string"
+      ? params.reportUrl
+      : undefined;
+  const [state, setState] = useState<ReportState>({ status: "empty", message: "Unverified" });
+  useEffect(() => {
+    let active = true;
+    const update = () => {
+      if (url)
+        void sidebarReport(url).then((value) => {
+          if (active) setState(value);
+        });
+      else setState({ status: "empty", message: "Unverified" });
+    };
+    update();
+    const interval = setInterval(update, 60_000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [url, componentId]);
+  const component =
+    state.status === "ready"
+      ? state.report.decisions.find((c) => c.componentId === componentId)
+      : undefined;
+  const title = component
+    ? `Lifecycle: ${component.lifecycle}; readiness gate: ${component.gate}; release gate: ${state.status === "ready" ? (state.report.release?.gate ?? "unknown") : "unknown"}`
+    : "Governance unverified: identity or current report unavailable";
+  return (
+    <span style={{ display: "flex", gap: 6, alignItems: "center", minWidth: 0 }}>
+      <span>{label}</span>
+      <small
+        title={title}
+        aria-label={title}
+        style={{ fontSize: 9, opacity: 0.7, whiteSpace: "nowrap" }}
+      >
+        {component
+          ? `L ${component.lifecycle} · G ${component.gate === "insufficient_evidence" ? "missing" : component.gate}`
+          : "?"}
+      </small>
+    </span>
+  );
+}
+addons.register("governanator", () => {
+  const previous = addons.getConfig().sidebar;
+  addons.setConfig({
+    sidebar: {
+      ...previous,
+      renderLabel: (item, api) => {
+        const label = previous?.renderLabel ? previous.renderLabel(item, api) : item.name;
+        return ["story", "docs", "component"].includes(item.type) ? (
+          <SidebarLabel item={item} api={api} label={label} />
+        ) : (
+          label
+        );
+      },
+    },
+  });
   addons.add("governanator/governance", {
     title: "Governance",
     type: types.PANEL,
@@ -241,5 +364,5 @@ addons.register("governanator", () =>
         <Panel />
       </AddonPanel>
     ),
-  }),
-);
+  });
+});

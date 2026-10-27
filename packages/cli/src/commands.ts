@@ -6,6 +6,7 @@ import { containedFile } from "./files.ts";
 import { git } from "./source.ts";
 import { runLocalCheck, readMappedTests } from "./evidence.ts";
 import type { GovernanceReport } from "@governanator/protocol";
+import { runRelease } from "./release.ts";
 import { runContracts } from "./contracts.ts";
 
 export interface CliResult {
@@ -18,6 +19,9 @@ governanator evaluate [--root PATH] [--target stable] [--component ID]
   [--at YYYY-MM-DDTHH:mm:ss.sssZ] [--format json|text] [--demo]
 governanator evidence import --format vitest --file PATH --mapping PATH [--root PATH] [--commit SHA] [--report-root PATH]
 governanator check --mapping PATH [--root PATH] [--target stable] [--component ID] [--format json|text]
+governanator release candidate --config PATH --out artifacts/NAME [--root PATH]
+governanator release plan --config PATH [--candidate PATH] [--root PATH] [--demo]
+governanator release check --config PATH --candidate PATH [--root PATH] [--demo]
 governanator contracts snapshot --config PATH --declarations PATH [--root PATH]
 governanator contracts diff --baseline PATH --candidate PATH --baseline-digest PATH [--root PATH]
 
@@ -69,6 +73,7 @@ function options(args: readonly string[]): {
   return { command, values, demo };
 }
 export async function executeCli(args: readonly string[]): Promise<CliResult> {
+  if (args[0] === "release") return runRelease(args.slice(1));
   if (args[0] === "contracts") return runContracts(args.slice(1));
   const { command, values, demo } = options(args);
   if (command === "help") return { code: 0, stdout: help, stderr: "" };

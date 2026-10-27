@@ -31,6 +31,8 @@ export default defineConfig({
         "scripts/protocol.ts",
         "scripts/dogfood-report.ts",
         "scripts/snapshot-demo-baseline.ts",
+        "scripts/snapshot-release-baseline.ts",
+        "scripts/release-demo.ts",
         "packages/core/src/digest.ts",
         "packages/cli/src/**/*.ts",
         "tests/**/*.ts",
@@ -44,7 +46,11 @@ export default defineConfig({
     },
     {
       // Literal fixture values are test data, not runtime status sentinels.
-      files: ["tests/**/*.ts", "scripts/snapshot-demo-baseline.ts"],
+      files: [
+        "tests/**/*.ts",
+        "scripts/snapshot-demo-baseline.ts",
+        "scripts/snapshot-release-baseline.ts",
+      ],
       rules: { "linteffect/no-string-sentinel-const": "off" },
     },
   ],

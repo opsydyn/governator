@@ -218,6 +218,103 @@
         ],
         "additionalProperties": false
       }
+    },
+    "release": {
+      "type": "object",
+      "properties": {
+        "gate": {
+          "type": "string",
+          "enum": ["ready", "blocked", "insufficient_evidence"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["eligible_under_demo_policy", "eligible_under_local_policy", "not_eligible"]
+        },
+        "assurance": {
+          "type": "string",
+          "enum": ["simulated", "unverified"]
+        },
+        "baselineVersion": {
+          "type": "string"
+        },
+        "candidateVersion": {
+          "type": "string"
+        },
+        "baselineDigest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "candidateDigest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceCommit": {
+          "type": "string"
+        },
+        "evaluatedAt": {
+          "type": "string"
+        },
+        "inputDigest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minimumBump": {
+          "type": "string",
+          "enum": ["none", "patch", "minor", "major"]
+        },
+        "declaredBump": {
+          "type": "string",
+          "enum": ["none", "patch", "minor", "major"]
+        },
+        "candidateManifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "affectedComponents": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "remediation": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "publishable": {
+          "type": "boolean",
+          "enum": [false]
+        }
+      },
+      "required": [
+        "gate",
+        "status",
+        "assurance",
+        "baselineVersion",
+        "candidateVersion",
+        "baselineDigest",
+        "candidateDigest",
+        "sourceCommit",
+        "evaluatedAt",
+        "inputDigest",
+        "minimumBump",
+        "declaredBump",
+        "candidateManifest",
+        "affectedComponents",
+        "reasons",
+        "remediation",
+        "publishable"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [
