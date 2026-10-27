@@ -23,7 +23,7 @@ export const toolInputs = {
   get_component_evidence: Schema.Struct(component),
   evaluate_component: Schema.Struct({ ...component, targetLifecycle: Lifecycle }),
   explain_governance_failure: Schema.Struct({ ...component, targetLifecycle: Lifecycle }),
-  get_design_system_report: Schema.Struct({}),
+  get_design_system_report: Schema.Record(Schema.String, Schema.Never),
   list_approved_components: Schema.Struct(page),
   get_component_contract: Schema.Struct({
     ...component,

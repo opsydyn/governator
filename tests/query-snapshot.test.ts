@@ -1,12 +1,22 @@
 import { afterEach, expect, test } from "vitest";
 import { writeFile, rm, symlink } from "node:fs/promises";
 import { join } from "node:path";
+import { execFileSync } from "node:child_process";
 import { createSnapshot, loadSnapshot } from "../packages/query/src/snapshot.ts";
 import { digest } from "../packages/core/src/digest.ts";
 import { queryProject } from "./query-fixtures.ts";
 const roots: string[] = [];
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
+});
+test("source verification never executes repository-configured filesystem monitor hooks", async () => {
+  const f = await fixture(),
+    hook = join(f.root, "artifacts/fsmonitor.sh"),
+    marker = join(f.root, "artifacts/unexpected-hook");
+  await writeFile(hook, `#!/bin/sh\ntouch '${marker}'\nexit 1\n`, { mode: 0o755 });
+  execFileSync("git", ["-C", f.root, "config", "core.fsmonitor", hook]);
+  await loadSnapshot(f.root, "artifacts/snapshot.json", f.now);
+  expect(await Bun.file(marker).exists()).toBe(false);
 });
 async function fixture() {
   const f = await queryProject();
@@ -62,4 +72,21 @@ test("rejects root escapes, symlinks and oversized snapshot data", async () => {
   await expect(loadSnapshot(f.root, "artifacts/snapshot.json", f.now)).rejects.toThrow(
     /dirty|uncommitted/i,
   );
+});
+test("bounds canonical governance input before parsing it", async () => {
+  const f = await fixture();
+  await writeFile(join(f.root, "governance/evidence.json"), " ".repeat(4 * 1024 * 1024 + 1));
+  execFileSync("git", ["-C", f.root, "add", "governance/evidence.json"]);
+  execFileSync("git", [
+    "-C",
+    f.root,
+    "-c",
+    "user.name=Fixture",
+    "-c",
+    "user.email=fixture@example.invalid",
+    "commit",
+    "-qm",
+    "Oversized input",
+  ]);
+  await expect(loadSnapshot(f.root, "artifacts/snapshot.json", f.now)).rejects.toThrow(/4 MiB/);
 });

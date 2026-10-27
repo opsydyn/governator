@@ -26,3 +26,6 @@ jobs:
       # This verifies actual blocked patch/minor and simulated reviewed-major cases.
       # It does not turn the intentionally unsafe dogfood candidate into a releasable package.
       - run: bun run release:demo
+      - run: bun run dogfood:report
+      - run: bun run governanator snapshot export --report artifacts/dogfood-governance.json --release artifacts/dogfood-release.json --config governance/release.json --out artifacts/m2-snapshot.json
+      - run: bun run mcp:smoke --snapshot artifacts/m2-snapshot.json

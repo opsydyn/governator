@@ -2,7 +2,7 @@
 
 Offline design-system governance: a component's status should show its evidence.
 
-The local workspace includes a deterministic policy engine, source-bound Vitest checks, TypeScript declaration compatibility analysis, a Bun CLI and a real React/Storybook dogfood app. All packages remain private and unpublished.
+The local workspace includes a deterministic policy engine, source-bound Vitest checks, TypeScript declaration compatibility analysis, a Bun CLI, fourteen read-only MCP queries and a real React/Storybook dogfood app. All packages remain private and unpublished.
 
 ## Run locally
 
@@ -43,6 +43,8 @@ CLI exit codes: **0** satisfied the requested check, **1** blocked/insufficient 
 | `@governanator/protocol`        | Generated plain TypeScript and JSON Schema; no runtime dependencies |
 | `@governanator/core`            | Private Effect schemas, deterministic evaluation and digests        |
 | `@governanator/versioning`      | Private API extraction/diff, SemVer and baseline checks             |
+| `@governanator/query`           | Private immutable snapshots and shared read queries                 |
+| `@governanator/mcp`             | Private Bun stdio MCP adapter                                       |
 | `@governanator/cli`             | Bun filesystem, Git, local test runner and presentation boundary    |
 | `@governanator/storybook-addon` | Independently packed read-only manager panel; sole peer Storybook   |
 | `@example/ui`                   | Shared private React library used by the dogfood app                |
@@ -52,4 +54,6 @@ See [architecture](docs/architecture.md), [dogfood and API runbook](docs/storybo
 
 Local release enforcement: `bun run release:plan` blocks the deliberately insufficient patch; `bun run release:demo` exercises blocked patch/minor and an explicitly simulated reviewed major. Storybook includes release details and lifecycle/readiness sidebar markers. See the [release runbook](docs/release-candidates.md).
 
-Hosted CI/required-check configuration, authenticated published baselines and real browser/accessibility/human acceptance remain unverified. M2 adds read-only MCP. External approvals, publication and deployment need trusted adapters.
+Hosted CI/required-check configuration, authenticated published baselines and real browser/accessibility/human acceptance remain unverified. M2 provides local read-only MCP; see the [launch and snapshot runbook](docs/mcp.md). External approvals, publication and deployment need trusted adapters.
+
+Recommended next phase: M3 trusted reviewer evidence, scoped to exact source, policy, inputs and artifact. Hosted activation and publication remain separately authorized work.

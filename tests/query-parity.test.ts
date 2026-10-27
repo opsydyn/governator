@@ -128,6 +128,28 @@ test("all fourteen tools preserve exact release, report and consumer scope witho
   expect(execFileSync("git", ["-C", root, "status", "--porcelain"], { encoding: "utf8" })).toBe(
     baselineStatus,
   );
+  await writeFile(join(root, "governance/migration.md"), "x".repeat(256 * 1024 + 1));
+  execFileSync("git", ["-C", root, "add", "governance/migration.md"]);
+  execFileSync("git", [
+    "-C",
+    root,
+    "-c",
+    "user.name=Fixture",
+    "-c",
+    "user.email=fixture@example.invalid",
+    "commit",
+    "-qm",
+    "Large migration document",
+  ]);
+  const head = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+  await writeFile(join(root, "artifacts/report.json"), JSON.stringify({ ...report, commit: head }));
+  await expect(
+    createSnapshot(root, {
+      report: "artifacts/report.json",
+      release: "artifacts/release.json",
+      config: "governance/release.json",
+    }),
+  ).rejects.toThrow(/too large|limit/i);
 }, 30000);
 test("compiler input rejects local file imports and reference directives", () => {
   for (const declaration of [

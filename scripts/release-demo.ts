@@ -5,6 +5,9 @@ import { ensure } from "../packages/core/src/index.ts";
 import { loadProject } from "../packages/cli/src/files.ts";
 import { captureCandidate, checkCandidate } from "../packages/cli/src/release.ts";
 import { runCli } from "../packages/cli/src/index.ts";
+import { releaseSummary } from "../packages/cli/src/release-summary.ts";
+import { createSnapshot, loadSnapshot, createQueryService } from "../packages/query/src/index.ts";
+import { digest } from "../packages/core/src/index.ts";
 const source = process.cwd();
 const root = await mkdtemp(join(tmpdir(), "governanator-release-demo-"));
 function git(args: string[], cwd = root) {
@@ -108,6 +111,30 @@ for (const bump of ["patch", "minor", "major"] as const) {
     candidateManifest: resolve(root, captured.path),
     testReceipt: resolve(root, checked.testReceipt),
   };
+  const observed = JSON.parse(
+    (await runCli(["evaluate", "--root", root, "--format", "json"])).stdout,
+  );
+  await writeFile(
+    join(root, "artifacts/query-report.json"),
+    JSON.stringify({ ...observed, release: releaseSummary(checked) }),
+  );
+  await writeFile(join(root, "artifacts/query-release.json"), JSON.stringify(checked));
+  const selected = await createSnapshot(root, {
+    report: "artifacts/query-report.json",
+    release: "artifacts/query-release.json",
+    config: "governance/release.json",
+  });
+  await writeFile(join(root, "artifacts/query-snapshot.json"), JSON.stringify(selected));
+  const queried = createQueryService(
+    await loadSnapshot(root, "artifacts/query-snapshot.json"),
+  ).query("explain_release_block", {
+    packageId: checked.packageId,
+    candidateVersion: checked.candidateVersion,
+  });
+  ensure(
+    digest(queried.data) === digest(checked) && queried.provenance === "simulated-snapshot",
+    `${bump} query changed recorded release/provenance`,
+  );
   if (bump === "major") {
     const normal = await checkCandidate(root, "governance/release.json", captured.path, false);
     ensure(normal.gate !== "ready", "Normal release must reject simulated owner review");

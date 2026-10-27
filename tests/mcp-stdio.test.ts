@@ -120,6 +120,19 @@ test("stdout framing is JSON-RPC only and EOF exits without signals", async () =
       id: 2,
       result: { tools: expect.any(Array) },
     });
+    child.stdin.write(
+      JSON.stringify({
+        jsonrpc: "2.0",
+        id: 3,
+        method: "tools/call",
+        params: { name: "get_design_system_report", arguments: {} },
+      }) + "\n",
+    );
+    expect(await line(reader, state)).toMatchObject({
+      jsonrpc: "2.0",
+      id: 3,
+      result: { structuredContent: { sourceCommit: f.commit, data: f.report } },
+    });
     child.stdin.end();
     expect(await child.exited).toBe(0);
     expect(await new Response(child.stderr).text()).toBe("");

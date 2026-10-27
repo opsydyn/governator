@@ -33,6 +33,7 @@ test("filters and pages recorded decisions with explicit snapshot provenance", a
   );
   expect(() => f.service.query("list_components", { limit: 0 }, f.now)).toThrow();
   expect(() => f.service.query("list_components", { filters: { wat: true } }, f.now)).toThrow();
+  expect(() => f.service.query("get_design_system_report", { path: "outside" }, f.now)).toThrow();
 });
 test("paginates deterministically, supports an empty registry and rejects oversized results", async () => {
   const f = await fixture(

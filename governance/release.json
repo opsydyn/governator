@@ -12,6 +12,7 @@
     ".changeset/dogfood-breaking-button.md",
     ".changeset/exact-release-candidates.md",
     ".changeset/m0-foundation.md",
+    ".changeset/m2-readonly-mcp.md",
     ".changeset/vitest-evidence.md"
   ],
   "classification": "governance/release-change.json",

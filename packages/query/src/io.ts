@@ -77,11 +77,25 @@ export async function loadProject(root: string) {
 }
 
 export function git(root: string, args: string[]): string {
-  const result = Bun.spawnSync(["git", "-C", root, ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-    env: { ...process.env, GIT_OPTIONAL_LOCKS: "0" },
-  });
+  const result = Bun.spawnSync(
+    [
+      "git",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.untrackedCache=false",
+      "-c",
+      "core.hooksPath=/dev/null",
+      "-C",
+      root,
+      ...args,
+    ],
+    {
+      stdout: "pipe",
+      stderr: "pipe",
+      env: { ...process.env, GIT_OPTIONAL_LOCKS: "0" },
+    },
+  );
   ensure(
     result.exitCode === 0,
     `Git source verification failed: ${result.stderr.toString().trim()}`,
