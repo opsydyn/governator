@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { ensure } from "../packages/core/src/index.ts";
@@ -19,6 +19,9 @@ git(["clone", "--quiet", "--no-hardlinks", source, root], source);
 git(["remote", "remove", "origin"]);
 await symlink(join(source, "node_modules"), join(root, "node_modules"));
 await writeFile(join(root, ".git/info/exclude"), "node_modules\n");
+// Remove real pending intents only in the disposable clone before adding simulated intent.
+for (const name of await readdir(join(root, ".changeset")))
+  if (name.endsWith(".md") && name !== "README.md") await rm(join(root, ".changeset", name));
 // The intentionally invalid declaration belongs only to this disposable simulation.
 const releaseConfig = await Bun.file(join(root, "governance/release.json")).json();
 releaseConfig.changesets = [".changeset/dogfood-breaking-button.md"];
