@@ -53,6 +53,13 @@ const transport = new StdioClientTransport({
     path,
   ],
   stderr: "pipe",
+  // Preserve explicitly configured Git isolation; the SDK inherits only a small allowlist.
+  env: {
+    ...(process.env.GIT_CONFIG_GLOBAL ? { GIT_CONFIG_GLOBAL: process.env.GIT_CONFIG_GLOBAL } : {}),
+    ...(process.env.GIT_CONFIG_NOSYSTEM
+      ? { GIT_CONFIG_NOSYSTEM: process.env.GIT_CONFIG_NOSYSTEM }
+      : {}),
+  },
 });
 let diagnostics = "";
 transport.stderr?.on("data", (chunk) => {
