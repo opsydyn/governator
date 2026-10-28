@@ -1,3 +1,5 @@
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { expect, test } from "vitest";
 import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import cli from "../packages/cli/tsdown.config.ts";
@@ -8,7 +10,7 @@ for (const [name, config] of [
   ["mcp", mcp],
 ] as const) {
   test(`${name} guards resolved output and clean overrides before any cleanup`, async () => {
-    const root = await mkdtemp("/private/tmp/governator-resolved-output-");
+    const root = await mkdtemp(join(tmpdir(), "governator-resolved-output-"));
     await (async () => {
       await mkdir(`${root}/retained`);
       await writeFile(`${root}/retained/sentinel`, "retained");

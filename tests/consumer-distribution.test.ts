@@ -1,3 +1,5 @@
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { extract } from "tar";
 import { assertSafeBuildOutput } from "../scripts/safe-build-output.ts";
 import ts from "typescript";
@@ -49,7 +51,7 @@ for (const name of ["cli", "mcp"]) {
 }
 
 test("strict public declarations can be imported without workspace path aliases", () => {
-  const consumer = `/private/tmp/governator-distribution-types-${process.pid}.mts`;
+  const consumer = join(tmpdir(), `governator-distribution-types-${process.pid}.mts`);
   const source = `import { runCli } from ${JSON.stringify(`${process.cwd()}/packages/cli/dist/index.mjs`)};
 import { createMcpServer } from ${JSON.stringify(`${process.cwd()}/packages/mcp/dist/server.mjs`)};
 const result: Promise<{ readonly code: 0 | 1 | 2; readonly stdout: string; readonly stderr: string }> = runCli([]);
@@ -81,7 +83,7 @@ void result;`;
 });
 
 test("packed manifests, exports and Bun bins retain the distribution contract", async () => {
-  const root = await mkdtemp("/private/tmp/governator-packed-boundary-");
+  const root = await mkdtemp(join(tmpdir(), "governator-packed-boundary-"));
   await (async () => {
     for (const name of ["cli", "mcp"]) {
       const child = Bun.spawnSync(
@@ -116,7 +118,7 @@ test("packed manifests, exports and Bun bins retain the distribution contract", 
 });
 
 test("output cleaning refuses nested links before touching their targets", async () => {
-  const root = await mkdtemp("/private/tmp/governator-safe-output-");
+  const root = await mkdtemp(join(tmpdir(), "governator-safe-output-"));
   await (async () => {
     await mkdir(`${root}/output`);
     await mkdir(`${root}/retained`);

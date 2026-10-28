@@ -1,3 +1,6 @@
+vcs:
+  defaultBranch: main
+
 projects:
   workspace: "."
   protocol: "packages/protocol"

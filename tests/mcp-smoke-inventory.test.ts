@@ -1,3 +1,5 @@
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { expect, test } from "vitest";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { gitIndexDigest } from "../scripts/mcp-smoke-inventory.ts";
@@ -13,7 +15,7 @@ function fixtureGit(root: string, args: string[]): string {
 }
 
 test("smoke inventory hashes the complete independent index of ordinary and linked checkouts", async () => {
-  const root = await mkdtemp("/private/tmp/governator-index-audit-");
+  const root = await mkdtemp(join(tmpdir(), "governator-index-audit-"));
   await (async () => {
     const main = `${root}/main`,
       worktree = `${root}/linked`;

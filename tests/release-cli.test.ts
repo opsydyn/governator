@@ -1,3 +1,4 @@
+import { tmpdir } from "node:os";
 import { afterEach, expect, test } from "vitest";
 import { writeFile, symlink, rm } from "node:fs/promises";
 import { join } from "node:path";
@@ -94,7 +95,7 @@ test("fails closed on dirty/changed inputs, untracked config, unsafe output and 
       ])
     ).code,
   ).toBe(2);
-  await symlink("/private/tmp", join(root, "artifacts/linked"));
+  await symlink(tmpdir(), join(root, "artifacts/linked"));
   expect(
     (
       await runCli([
