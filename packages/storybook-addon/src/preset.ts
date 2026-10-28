@@ -78,6 +78,11 @@ export function viteFinal(config: ViteConfig, options: Options): ViteConfig {
         fileName: "governator-story-map.json",
         source: JSON.stringify(await getMap()),
       });
+      this.emitFile({
+        type: "asset",
+        fileName: "__governator/registry-source",
+        source: JSON.stringify({ snapshot: true }),
+      });
     },
   };
   return { ...config, plugins: [...(config.plugins ?? []), plugin] };

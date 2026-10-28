@@ -99,8 +99,19 @@ export async function verifyReportSource(
         (response.ok && response.headers.get("content-type")?.includes("text/html")))
     )
       return { ...state, source: "snapshot" };
-    if (response.ok && (await response.json()).matches === true)
-      return { ...state, source: "local-match" };
+    if (response.ok) {
+      const result: unknown = await response.json();
+      if (
+        result &&
+        typeof result === "object" &&
+        "snapshot" in result &&
+        result.snapshot === true &&
+        Object.keys(result).length === 1
+      )
+        return { ...state, source: "snapshot" };
+      if (result && typeof result === "object" && "matches" in result && result.matches === true)
+        return { ...state, source: "local-match" };
+    }
   } catch {
     /* Source verification failed; fail closed. */
   }

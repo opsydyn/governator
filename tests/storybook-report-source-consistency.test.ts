@@ -3,6 +3,7 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
+import { viteFinal } from "../packages/storybook-addon/src/preset.ts";
 import { tagEditor } from "../packages/storybook-addon/src/tag-editor-server.ts";
 import { afterEach, expect, test } from "vitest";
 import { evaluate } from "../packages/core/src/index.ts";
@@ -140,4 +141,38 @@ test("an active local verifier cannot be bypassed by a story disabling the edito
       ),
   );
   expect(state.status).toBe("error");
+});
+
+test("an explicitly marked static build remains a snapshot even when authoring is configured", async () => {
+  const state = decodeReport(evaluate(evaluation()), Date.parse(at));
+  expect(
+    await verifyReportSource(
+      state,
+      "http://localhost:6006/",
+      async () => new Response(JSON.stringify({ snapshot: true })),
+    ),
+  ).toMatchObject({ status: "ready", source: "snapshot" });
+});
+
+test("a static build emits an explicit snapshot marker", async () => {
+  const result = viteFinal(
+    {},
+    { presets: { apply: async () => ({ getIndex: async () => ({ entries: {} }) }) } },
+  );
+  const plugin = result.plugins![0] as {
+    generateBundle: (this: {
+      emitFile: (asset: { fileName: string; source: string }) => void;
+    }) => Promise<void>;
+  };
+  const assets: { fileName: string; source: string }[] = [];
+  await plugin.generateBundle.call({
+    emitFile: (asset) => {
+      assets.push(asset);
+    },
+  });
+  expect(assets).toContainEqual({
+    type: "asset",
+    fileName: "__governator/registry-source",
+    source: JSON.stringify({ snapshot: true }),
+  });
 });
