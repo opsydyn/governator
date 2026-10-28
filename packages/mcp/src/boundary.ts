@@ -1,6 +1,10 @@
 import { QueryError } from "@governator/query";
 import type { ToolName } from "@governator/query";
-import type { CallToolResult } from "@modelcontextprotocol/server";
+type CallToolResult = {
+  content: Array<{ type: "text"; text: string }>;
+  structuredContent?: unknown;
+  isError?: boolean;
+};
 
 import type { McpQueryService } from "./service.ts";
 

@@ -26,4 +26,6 @@ Use the same clean, committed Git project that produced the snapshot. Its refere
 
 The snapshot envelope is schema 1 and preserves embedded report schema 1 or 2. All fourteen tools are read-only: they never run tests, edit files, approve or publish. Saved decisions remain `unverified-snapshot` or `simulated-snapshot`; evidence metadata and receipts do not restore producer trust. Omitted release configuration returns `not_configured` for release/contract tools. Publication, deployment and human approval remain separate gates.
 
+The server uses Effect’s MCP implementation internally. The `createMcpServer(service)` export provides `connect(transport)` and `close()` for an MCP-compatible transport; it no longer returns the MCP SDK `McpServer` class, so SDK-specific class methods are not available.
+
 Independent packed consumer qualification must be recorded separately, including whether dependencies came from caches or reconstructed local sources. No registry availability or automatic client activation is claimed.

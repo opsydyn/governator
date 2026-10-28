@@ -177,3 +177,77 @@ test("startup rejects mismatched snapshots and missing arguments using stderr on
     expect(stderr).toContain("startup failed");
   }
 });
+
+test("EOF drains requests already received before closing stdout", async () => {
+  const f = await fixture();
+  const child = Bun.spawn(
+    [process.execPath, entry, "--root", f.root, "--snapshot", "artifacts/snapshot.json"],
+    { stdin: "pipe", stdout: "pipe", stderr: "pipe" },
+  );
+  child.stdin.write(
+    JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-11-25",
+        capabilities: {},
+        clientInfo: { name: "eof", version: "1" },
+      },
+    }) + "\n",
+  );
+  child.stdin.end();
+  const [code, stdout, stderr] = await Promise.all([
+    child.exited,
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+  ]);
+  expect(code).toBe(0);
+  expect(JSON.parse(stdout)).toMatchObject({
+    id: 1,
+    result: { serverInfo: { name: "governator" } },
+  });
+  expect(stderr).toBe("");
+}, 10000);
+
+test("stdio rejects an incomplete frame larger than 16 KiB", async () => {
+  const f = await fixture();
+  const child = Bun.spawn(
+    [process.execPath, entry, "--root", f.root, "--snapshot", "artifacts/snapshot.json"],
+    { stdin: "pipe", stdout: "pipe", stderr: "pipe" },
+  );
+  child.stdin.write("x".repeat(16385));
+  const [code, stdout, stderr] = await Promise.all([
+    child.exited,
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+  ]);
+  expect(code).toBe(2);
+  expect(stdout).toBe("");
+  expect(stderr).toContain("transport error");
+}, 10000);
+
+test("stdio supports stateless MCP 2026 discovery", async () => {
+  const f = await fixture();
+  const child = Bun.spawn(
+    [process.execPath, entry, "--root", f.root, "--snapshot", "artifacts/snapshot.json"],
+    { stdin: "pipe", stdout: "pipe", stderr: "pipe" },
+  );
+  child.stdin.write(
+    JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tools/list",
+      params: {
+        _meta: {
+          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          "io.modelcontextprotocol/clientCapabilities": {},
+        },
+      },
+    }) + "\n",
+  );
+  child.stdin.end();
+  const [code, stdout] = await Promise.all([child.exited, new Response(child.stdout).text()]);
+  expect(code).toBe(0);
+  expect(JSON.parse(stdout)).toMatchObject({ id: 1, result: { tools: expect.any(Array) } });
+}, 10000);

@@ -2,7 +2,7 @@
 
 Governator M2 exposes fourteen shared governance queries through a private Bun stdio application. It loads one explicitly exported snapshot. Tool calls use immutable memory; they do not execute tests, builds, packing, approvals, edits, publication or network requests.
 
-Use Bun 1.4.2, Moon 2.6.4 and TypeScript 5.9.3. The private adapter pins MCP server 2.4.0 and Zod 4.2.1; the SDK client 2.4.0 is a workspace development dependency. Effect stays internal. The plain protocol and Storybook addon have no MCP dependency.
+Use Bun 1.4.2, Moon 2.6.4 and TypeScript 5.9.3. The server uses the MCP implementation in Effect 4.0.6; the MCP SDK client 2.4.0 is retained as a workspace development dependency for interoperability tests. Effect is bundled internally, with no MCP SDK server or Zod runtime dependency. The plain protocol and Storybook addon have no MCP dependency.
 
 ## Export and launch
 
@@ -57,7 +57,7 @@ Query exit 0 means the query succeeded, including recorded blocked decisions or 
 | `explain_release_block`, `get_release_manifest`, `get_consumer_compatibility` | Recorded exact local candidate, reasons, digests and saved compiler observations |
 | `plan_component_migration`                                                    | Guidance from actual changes and selected documents, without edits               |
 
-Discovery supplies input/output schemas and read-only, non-destructive, idempotent, closed-world hints. The shared Effect schemas validate arguments again. Unknown components are typed tool errors; unknown tool names are SDK protocol errors. Blocked governance decisions are successful tool results. Results carry `snapshotDigest`, source, evaluation time, provenance, scope and limitations in `structuredContent`.
+Discovery supplies input/output schemas and read-only, non-destructive, idempotent, closed-world hints. The shared Effect schemas validate arguments again. Unknown components are typed tool errors; unknown tool names are MCP protocol errors. Blocked governance decisions are successful tool results. Results carry `snapshotDigest`, source, evaluation time, provenance, scope and limitations in `structuredContent`.
 
 Lists accept `limit` (1–100) and `cursor` (`offset:N`), returning total, nextCursor and truncated. `list_components.filters` supports lifecycle, recorded gate and owner. Unsupported historical versions return `unavailable`; no provider lookup or guessed release history occurs. If differing baseline/candidate contracts share one declared version, an explicit version request returns `ambiguous_contract_version` with source artifact identities. Omit the version to select current, or use the explicit `candidate` diff selector. Migration never invents steps for an ambiguous comparison.
 
