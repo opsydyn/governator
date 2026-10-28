@@ -39,6 +39,10 @@ test.each(["storybook-addon", "cli", "mcp"])(
     expect(manifest.version).toMatch(/^\d+\.\d+\.\d+/);
     expect(manifest.description).toBeTruthy();
     expect(manifest.files).toContain("LICENSE");
+    expect(manifest.files).toContain("THIRD_PARTY_NOTICES.md");
+    const notices = await Bun.file(join(root, "packages", name, "THIRD_PARTY_NOTICES.md")).text();
+    expect(notices).toContain("Copyright (c) 2023 Effectful Technologies Inc");
+    if (name === "storybook-addon") expect(notices).toContain("Copyright Eemeli Aro");
     expect(await Bun.file(join(root, "packages", name, "LICENSE")).text()).toContain("MIT License");
     for (const dep of Object.keys({ ...manifest.dependencies, ...manifest.peerDependencies }))
       expect(dep === "effect" || dep.startsWith("@governator/")).toBe(false);

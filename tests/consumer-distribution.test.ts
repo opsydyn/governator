@@ -99,6 +99,9 @@ test("packed manifests, exports and Bun bins retain the distribution contract", 
       const pkg = `${unpacked}/package`;
       const manifest = JSON.parse(await readFile(`${pkg}/package.json`, "utf8"));
       expect(manifest.private).toBe(false);
+      expect(await readFile(`${pkg}/THIRD_PARTY_NOTICES.md`, "utf8")).toContain(
+        "Copyright (c) 2023 Effectful Technologies Inc",
+      );
       expect(manifest.engines.bun).toBe(">=1.4.2");
       expect(
         Object.keys(manifest.dependencies).some(

@@ -54,7 +54,7 @@ def validate_candidate_file(specifier, root, candidate):
 
 def source_hashes(repo):
     paths = list((repo / 'packages/storybook-addon/src').rglob('*'))
-    paths += [repo / 'packages/storybook-addon' / name for name in ['package.json', 'README.md', 'LICENSE', 'tsdown.config.ts', 'tsdown.tag-editor.config.ts', 'tsconfig.json']]
+    paths += [repo / 'packages/storybook-addon' / name for name in ['package.json', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'tsdown.config.ts', 'tsdown.tag-editor.config.ts', 'tsconfig.json']]
     paths += [repo / 'tsconfig.json']
     return {str(p.relative_to(repo)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(paths) if p.is_file()}
 
@@ -71,7 +71,7 @@ def stage_candidate(package, output, destination):
     assert not destination.exists(), 'Package staging destination must be fresh'
     safe_output(output)
     destination.mkdir()
-    for name in ['package.json', 'README.md', 'LICENSE']:
+    for name in ['package.json', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md']:
         source = package / name
         assert source.is_file() and not source.is_symlink(), 'Package input must be a regular file'
         shutil.copyfile(source, destination / name)

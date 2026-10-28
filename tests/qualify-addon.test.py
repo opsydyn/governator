@@ -46,13 +46,13 @@ class QualificationSafety(unittest.TestCase):
             (package / 'dist/existing.js').write_text('retained')
             output.mkdir()
             (output / 'index.js').write_text('fresh build')
-            for name in ['package.json', 'README.md', 'LICENSE']:
+            for name in ['package.json', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md']:
                 (package / name).write_text('original ' + name)
             before = qualification.directory_hashes(package / 'dist')
             qualification.stage_candidate(package, output, stage)
             self.assertEqual(qualification.directory_hashes(package / 'dist'), before)
             self.assertEqual((stage / 'dist/index.js').read_text(), 'fresh build')
-            for name in ['package.json', 'README.md', 'LICENSE']:
+            for name in ['package.json', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md']:
                 self.assertEqual((stage / name).read_bytes(), (package / name).read_bytes())
             with self.assertRaises(AssertionError):
                 qualification.stage_candidate(package, output, stage)
