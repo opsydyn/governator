@@ -2,6 +2,24 @@
 
 Date: 2026-10-27. This records local qualification of the `0.1.0` private preview against the [distribution design](../superpowers/specs/2026-10-27-consumer-distribution-design.md). It does not authorize publication.
 
+## Requalification after the Governator rename
+
+On 2026-10-28, independent local consumers exercised packages built from source commit `20c46a088424423e9cf044e083453588f5d764fa`. This is a separate result from the earlier qualification below. The following SHA-256 hashes identify the local candidate archives, not npm registry artifacts:
+
+| Package                       | Local tarball SHA-256                                              |
+| ----------------------------- | ------------------------------------------------------------------ |
+| `@governator/cli`             | `76965de599eaf244668729ff7fe4854e96698f2e04d44ea3809a53d667e928c4` |
+| `@governator/mcp`             | `9f01315fa01aea181c1c7c0aa51b96e71bcc556351f351e9b34516cd0e78de56` |
+| `@governator/storybook-addon` | `e20d50cbd9761871193c242527f1a4866d0971797dc776fb9a809f93de262c2c` |
+
+The npm CLI/MCP consumer installed both tarballs outside the workspace, ran the installed `governator` executable, produced a schema-2 report and local test receipt, exported a snapshot, checked a breaking TypeScript API diff and compared all fourteen MCP tool results with the CLI. Invalid MCP startup failed as expected and the consumer Git tree remained clean. The installed dependency lock retained 24 unresolved optional platform entries; those platforms were not qualified.
+
+Separate npm and strict-peer pnpm consumers installed a freshly built addon tarball and built Storybook React/Vite 10.6.4 both without a report and with a copied local schema-2 dogfood report. Browser checks in each consumer observed the unverified no-report panel and, with the copied report, the unverified provenance and expected blocked release and API compatibility results. These checks do not authenticate the report, approve a release or establish production use.
+
+Both harnesses proved loopback connectivity and an `EPERM` denial for an external-address probe before installation. They disabled lifecycle scripts and used isolated consumer directories, caches and a loopback registry reconstructed from the local Bun cache. The pnpm install warned that reconstructed metadata lacks publication times, so minimum-release-age checks were skipped; Storybook reported chunks larger than 500 kB. Reconstructed archives do not establish original npm archive integrity, registry availability or scope ownership. Hosted CI, provider authentication, publication and deployment remain unqualified.
+
+Detailed local, ignored evidence is retained under `artifacts/cli-mcp-consumer-BMVLAp/`, `artifacts/addon-consumer-85by802l/` and `artifacts/governator-rename-candidates-IcuRgI/`. Harness summaries record the automated cases; the browser observations above were performed separately and do not modify those summaries. Temporary browser servers were stopped after the checks.
+
 ## Package surfaces
 
 The CLI and MCP retain their executables and programmatic exports, require Bun `>=1.4.2`, bundle the private engine and Effect, and declare their remaining runtime dependencies. TypeScript stays external so its compiler libraries resolve in consumer projects. Public declarations and runtime imports were checked for private workspace or Effect leaks. The addon has no runtime dependencies, retains Storybook as its only peer and advertises React, the qualified framework. The CLI includes its MIT license. All packages remain private; the root release command and release workflow remain disabled.
