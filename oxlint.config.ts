@@ -75,11 +75,20 @@ export default defineConfig({
       files: [
         "packages/storybook-addon/src/manager.tsx",
         "packages/storybook-addon/src/discovery.tsx",
+        "packages/storybook-addon/src/sidebar-toolbar.tsx",
       ],
       rules: {
         "linteffect/no-react-state": "off",
         "linteffect/no-return-in-arrow": "off",
         "linteffect/no-return-in-callback": "off",
+      },
+    },
+    {
+      // Sidebar index signatures and callbacks are plain Storybook boundary logic.
+      files: ["packages/storybook-addon/src/sidebar-filter.ts"],
+      rules: {
+        "linteffect/no-return-in-arrow": "off",
+        "linteffect/no-naked-object-state-update": "off",
       },
     },
     {

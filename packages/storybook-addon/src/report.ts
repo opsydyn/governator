@@ -5,6 +5,17 @@ export type ReportState =
   | { status: "ready"; report: GovernanceReport }
   | { status: "stale"; report: GovernanceReport; message: string }
   | { status: "empty" | "error" | "loading"; message: string };
+type ReportObserver = (url: string | undefined, state: ReportState) => void;
+const observers = new Set<ReportObserver>();
+export function subscribeReportObservations(observer: ReportObserver): () => void {
+  observers.add(observer);
+  return () => {
+    observers.delete(observer);
+  };
+}
+export function publishReportObservation(url: string | undefined, state: ReportState): void {
+  for (const observer of observers) observer(url, state);
+}
 export function decodeReport(raw: unknown, now = Date.now()): ReportState {
   if (
     raw &&

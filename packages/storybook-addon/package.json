@@ -24,7 +24,7 @@
     "prepack": "bun run build"
   },
   "peerDependencies": {
-    "storybook": "^10.6.4"
+    "storybook": "10.6.4"
   },
   "storybook": {
     "displayName": "Governator Governance",

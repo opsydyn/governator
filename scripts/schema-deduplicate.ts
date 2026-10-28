@@ -28,7 +28,7 @@ export function deduplicateSchemas(input: Schema): Schema {
   };
   const count = (schema: Schema): Schema => {
     const key = JSON.stringify(schema);
-    if (key.length >= 50) counts.set(key, (counts.get(key) ?? 0) + 1);
+    if (key.length >= 10) counts.set(key, (counts.get(key) ?? 0) + 1);
     children(schema, count);
     return schema;
   };

@@ -27,7 +27,7 @@ test("addon advertises only the qualified renderer and preserves preview metadat
   expect(manifest.storybook.supportedFrameworks).toEqual(["react"]);
   expect(manifest.version).toBe("0.1.0");
   expect(manifest.private).toBe(true);
-  expect(manifest.peerDependencies).toEqual({ storybook: "^10.6.4" });
+  expect(manifest.peerDependencies).toEqual({ storybook: "10.6.4" });
   expect("dependencies" in manifest).toBe(false);
 });
 

@@ -139,7 +139,7 @@
       "name": "@governator/storybook-addon",
       "version": "0.1.0",
       "peerDependencies": {
-        "storybook": "^10.6.4",
+        "storybook": "10.6.4",
       },
     },
     "packages/versioning": {

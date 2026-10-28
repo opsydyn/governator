@@ -153,7 +153,7 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
         assert extracted.returncode == 0, 'Packed manifest read failed'
         candidate = extracted.stdout
         manifest = json.loads(candidate)
-        assert manifest['peerDependencies'] == {'storybook': '^10.6.4'}
+        assert manifest['peerDependencies'] == {'storybook': '10.6.4'}
         assert not manifest.get('dependencies')
         assert manifest['storybook']['supportedFrameworks'] == ['react']
         summary['candidate'] = {'sha256': hashlib.sha256(packed.read_bytes()).hexdigest(), 'manifest': manifest}
