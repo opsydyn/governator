@@ -7,7 +7,7 @@ const outputs = new Map([
   ["packages/storybook-addon/src/generated-validator.mjs", standaloneCode(ajv, validate)],
   [
     "packages/storybook-addon/src/generated-validator.d.mts",
-    `import type { GovernanceReport } from "@governanator/protocol";\ndeclare function validate(data: unknown): data is GovernanceReport;\nexport default validate;\n`,
+    `import type { GovernanceReport } from "@governator/protocol";\ndeclare function validate(data: unknown): data is GovernanceReport;\nexport default validate;\n`,
   ],
 ]);
 for (const [path, expected] of outputs) {

@@ -1,6 +1,6 @@
 export * from "./api.ts";
 export * from "./versions.ts";
-import { Baseline, decode, digest, ensure, unique } from "@governanator/core";
+import { Baseline, decode, digest, ensure, unique } from "@governator/core";
 export function verifyBaseline(
   raw: unknown,
   expectedDigest: string,

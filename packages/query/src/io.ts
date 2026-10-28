@@ -11,7 +11,7 @@ import {
   GovernanceError,
   unique,
   validTimestamp,
-} from "@governanator/core";
+} from "@governator/core";
 
 export async function containedFile(root: string, path: string): Promise<string> {
   const canonicalRoot = await realpath(root);

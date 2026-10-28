@@ -1,4 +1,4 @@
-import { decode, ReleaseSummary } from "@governanator/core";
+import { decode, ReleaseSummary } from "@governator/core";
 import type { checkCandidate } from "./release.ts";
 export function releaseSummary(report: Awaited<ReturnType<typeof checkCandidate>>) {
   return decode(ReleaseSummary, {

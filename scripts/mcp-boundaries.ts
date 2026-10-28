@@ -12,7 +12,7 @@ export function inspectReadonlyQuery(source: string): string[] {
       if (
         ![
           "effect",
-          "@governanator/core",
+          "@governator/core",
           "./domain.ts",
           "./values.ts",
           "./governance.ts",

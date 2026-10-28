@@ -19,4 +19,4 @@ The dogfood policy version is `dogfood-local-unit-v1`. Its stable target require
 
 The example enables waivers with a maximum 14-day duration and disallows them for `ownership`. A waiver is a bounded policy exception, not a fabricated passing test or authenticated review. Requirements and policy changes remain reviewed input boundaries.
 
-Run `bun run governanator validate` for structural/reference/path validation. Run [local checks](/how-to/vitest-evidence/) for produced evidence. The authoritative field constraints live in core schemas and generated protocol schemas in the source checkout; policy edits cannot turn saved JSON into trusted attestations.
+Run `bun run governator validate` for structural/reference/path validation. Run [local checks](/how-to/vitest-evidence/) for produced evidence. The authoritative field constraints live in core schemas and generated protocol schemas in the source checkout; policy edits cannot turn saved JSON into trusted attestations.

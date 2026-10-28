@@ -1,6 +1,6 @@
 import { reportSemanticsValid } from "../../protocol/src/report-semantics.ts";
 import validate from "./generated-validator.mjs";
-import type { GovernanceReport } from "@governanator/protocol";
+import type { GovernanceReport } from "@governator/protocol";
 export type ReportState =
   | { status: "ready"; report: GovernanceReport }
   | { status: "stale"; report: GovernanceReport; message: string }

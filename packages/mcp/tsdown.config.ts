@@ -8,7 +8,7 @@ export default defineConfig({
   hooks: { "build:prepare": assertSafeBuildPrepare },
   deps: {
     neverBundle: ["typescript", "yaml", "tar", "semver", "@changesets/parse"],
-    alwaysBundle: [/^@governanator\//, /^effect(?:\/|$)/],
+    alwaysBundle: [/^@governator\//, /^effect(?:\/|$)/],
   },
   target: "es2022",
   outDir: "dist",

@@ -1,6 +1,6 @@
 import parseChangeset from "@changesets/parse";
 import semver from "semver";
-import { decode, digest, ensure, unique, validTimestamp } from "@governanator/core";
+import { decode, digest, ensure, unique, validTimestamp } from "@governator/core";
 import { diffApi } from "./api.ts";
 import { assessVersion } from "./versions.ts";
 import { ReleaseArtifact, ChangeRecord, SimulatedReview } from "./release-schema.ts";

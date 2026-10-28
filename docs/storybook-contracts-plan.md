@@ -1,6 +1,6 @@
 # Storybook dogfood and API compatibility slice
 
-User approved API extraction/compatibility diffs and requested a Storybook app to dogfood Governanator. Base: 611217c. Keep local; no push, publication or hosted resources.
+User approved API extraction/compatibility diffs and requested a Storybook app to dogfood Governator. Base: 611217c. Keep local; no push, publication or hosted resources.
 
 Architecture: one private shared React UI package (`@example/ui`), one Storybook 10 React/Vite app, one independently packed read-only Governance addon, and private TypeScript-compiler API analysis in versioning. The app tests real components and feeds the same evaluator output to the addon. CLI and addon consume identical JSON. The addon imports no engine, Effect, Node or MCP runtime.
 

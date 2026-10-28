@@ -1,5 +1,5 @@
 {
-  "name": "@governanator/storybook-addon",
+  "name": "@governator/storybook-addon",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
@@ -26,7 +26,7 @@
     "storybook": "^10.6.4"
   },
   "storybook": {
-    "displayName": "Governanator Governance",
+    "displayName": "Governator Governance",
     "supportedFrameworks": [
       "react"
     ]

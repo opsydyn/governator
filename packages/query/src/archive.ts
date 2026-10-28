@@ -1,9 +1,9 @@
 import { assertSafeApi } from "./api-safety.ts";
 import { Parser } from "tar";
 import type { ReadEntry } from "tar";
-import { ensure, decode, digest } from "@governanator/core";
-import { snapshotApi, PackageManifest } from "@governanator/versioning";
-import type { ApiConfig, ReleaseArtifact } from "@governanator/versioning";
+import { ensure, decode, digest } from "@governator/core";
+import { snapshotApi, PackageManifest } from "@governator/versioning";
+import type { ApiConfig, ReleaseArtifact } from "@governator/versioning";
 export function bytesDigest(bytes: Uint8Array): string {
   return `sha256:${new Bun.CryptoHasher("sha256").update(bytes).digest("hex")}`;
 }

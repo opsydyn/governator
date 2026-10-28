@@ -8,7 +8,7 @@ for (const [name, config] of [
   ["mcp", mcp],
 ] as const) {
   test(`${name} guards resolved output and clean overrides before any cleanup`, async () => {
-    const root = await mkdtemp("/private/tmp/governanator-resolved-output-");
+    const root = await mkdtemp("/private/tmp/governator-resolved-output-");
     await (async () => {
       await mkdir(`${root}/retained`);
       await writeFile(`${root}/retained/sentinel`, "retained");

@@ -9,9 +9,9 @@ import {
   digest,
   validTimestamp,
   unique,
-} from "@governanator/core";
-import type { ReleaseArtifact } from "@governanator/versioning";
-import { CandidateManifest, diffApi } from "@governanator/versioning";
+} from "@governator/core";
+import type { ReleaseArtifact } from "@governator/versioning";
+import { CandidateManifest, diffApi } from "@governator/versioning";
 import { Snapshot, SnapshotBody, RecordedRelease, queryEnsure, freeze } from "./domain.ts";
 import type { SnapshotSelection, QuerySnapshot } from "./domain.ts";
 import { loadProject, containedFile, cleanHead, git } from "./io.ts";

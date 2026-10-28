@@ -1,12 +1,7 @@
 import { resolve } from "node:path";
 import { readFile } from "node:fs/promises";
-import { ensure } from "@governanator/core";
-import {
-  snapshotApi,
-  diffApi,
-  decodeApiSnapshot,
-  checkApiVersions,
-} from "@governanator/versioning";
+import { ensure } from "@governator/core";
+import { snapshotApi, diffApi, decodeApiSnapshot, checkApiVersions } from "@governator/versioning";
 import { containedFile } from "./files.ts";
 import type { CliResult } from "./commands.ts";
 export async function runContracts(args: readonly string[]): Promise<CliResult> {

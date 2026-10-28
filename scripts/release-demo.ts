@@ -9,7 +9,7 @@ import { releaseSummary } from "../packages/cli/src/release-summary.ts";
 import { createSnapshot, loadSnapshot, createQueryService } from "../packages/query/src/index.ts";
 import { digest } from "../packages/core/src/index.ts";
 const source = process.cwd();
-const root = await mkdtemp(join(tmpdir(), "governanator-release-demo-"));
+const root = await mkdtemp(join(tmpdir(), "governator-release-demo-"));
 function git(args: string[], cwd = root) {
   const child = Bun.spawnSync(["git", ...args], { cwd, stdout: "pipe", stderr: "pipe" });
   ensure(child.exitCode === 0, child.stderr.toString());
@@ -54,7 +54,7 @@ for (const bump of ["patch", "minor", "major"] as const) {
   git(["add", "."]);
   git([
     "-c",
-    "user.name=Governanator local simulation",
+    "user.name=Governator local simulation",
     "-c",
     "user.email=simulation@example.invalid",
     "commit",

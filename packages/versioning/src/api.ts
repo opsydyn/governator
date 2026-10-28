@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { decode, digest, ensure, unique, SemVer } from "@governanator/core";
+import { decode, digest, ensure, unique, SemVer } from "@governator/core";
 import { ApiSnapshotSchema, ApiConfigSchema } from "./api-schema.ts";
 import type { ApiSnapshot } from "./api-schema.ts";
 import { assessVersion, requiredPackageBump } from "./versions.ts";
@@ -33,7 +33,7 @@ function inspect(declarations: readonly string[]) {
     types: [],
   };
   const names = declarations.map(
-    (_, i) => `${ts.sys.getCurrentDirectory()}/.governanator-api/input-${i}.ts`,
+    (_, i) => `${ts.sys.getCurrentDirectory()}/.governator-api/input-${i}.ts`,
   );
   for (const declaration of declarations) {
     const ast = ts.createSourceFile("api.ts", declaration, ts.ScriptTarget.Latest, true);
@@ -59,7 +59,7 @@ function inspect(declarations: readonly string[]) {
       : originalSource(name, language, onError, createNew);
   host.fileExists = (name) => files.has(name) || originalExists(name);
   const exists = host.directoryExists?.bind(host);
-  host.directoryExists = (path) => path.endsWith("/.governanator-api") || (exists?.(path) ?? false);
+  host.directoryExists = (path) => path.endsWith("/.governator-api") || (exists?.(path) ?? false);
   const program = ts.createProgram(names, options, host);
   const diagnostics = ts
     .getPreEmitDiagnostics(program)

@@ -5,12 +5,12 @@ description: Versioned JSON shapes, reader validation and evidence metadata.
 
 The portable protocol supplies readonly TypeScript and JSON Schema without runtime dependencies. In the source checkout, schemas are under `packages/protocol/`:
 
-| Contract             | File / package export                                                              |
-| -------------------- | ---------------------------------------------------------------------------------- |
-| Report schema 1      | `governance-report.schema.json`; `@governanator/protocol/schema` and `./schema/v1` |
-| Report schema 2      | `governance-report-v2.schema.json`; `./schema/v2`                                  |
-| Both report versions | `governance-report-versioned.schema.json`; `./schema/versioned`                    |
-| Query results        | `query-result.schema.json`                                                         |
+| Contract             | File / package export                                                            |
+| -------------------- | -------------------------------------------------------------------------------- |
+| Report schema 1      | `governance-report.schema.json`; `@governator/protocol/schema` and `./schema/v1` |
+| Report schema 2      | `governance-report-v2.schema.json`; `./schema/v2`                                |
+| Both report versions | `governance-report-versioned.schema.json`; `./schema/versioned`                  |
+| Query results        | `query-result.schema.json`                                                       |
 
 `GovernanceReport` is the discriminated union; `GovernanceReportV1` and `GovernanceReportV2` name individual readonly contracts. Reports include source commit, evaluation time, component decisions and an optional release summary. Unknown versions and extra properties are rejected.
 

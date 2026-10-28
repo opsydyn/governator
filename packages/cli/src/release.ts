@@ -1,8 +1,8 @@
 import { mkdir, mkdtemp, rm, symlink, realpath, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve, relative } from "node:path";
-import { decode, digest, ensure } from "@governanator/core";
-import { CandidateManifest, assessRelease, checkConsumers } from "@governanator/versioning";
+import { decode, digest, ensure } from "@governator/core";
+import { CandidateManifest, assessRelease, checkConsumers } from "@governator/versioning";
 import { inspectArchive, bytesDigest } from "./archive.ts";
 import { releaseInputs } from "./release-inputs.ts";
 import { containedFile } from "./files.ts";
@@ -47,7 +47,7 @@ export async function captureCandidate(rootPath: string, configPath: string, out
     directory = await outputDirectory(root, out);
   const tarball = join(directory, "candidate.tgz");
   // Build in a clean source snapshot: ignored dist/.env files in the working checkout cannot leak in.
-  const snapshot = await mkdtemp(join(tmpdir(), "governanator-build-"));
+  const snapshot = await mkdtemp(join(tmpdir(), "governator-build-"));
   async function buildSnapshot() {
     git(root, ["clone", "--quiet", "--no-hardlinks", "--no-checkout", root, snapshot]);
     git(snapshot, ["checkout", "--quiet", "--detach", inputs.commit]);

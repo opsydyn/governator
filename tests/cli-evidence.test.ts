@@ -8,7 +8,7 @@ import { component, policy } from "./fixtures.ts";
 
 const roots: string[] = [];
 async function project(outcome: "pass" | "fail" | "skip" | "mutate" = "pass") {
-  const root = await realpath(await mkdtemp(join(tmpdir(), "governanator-vitest-")));
+  const root = await realpath(await mkdtemp(join(tmpdir(), "governator-vitest-")));
   roots.push(root);
   await Promise.all(["governance", "src", "tests"].map((path) => mkdir(join(root, path))));
   const files: Record<string, string> = {

@@ -20,7 +20,7 @@ Commit tracked inputs, ensure clean Git HEAD and ignore `artifacts/` before gene
 
 ```sh
 mkdir -p artifacts
-bun run governanator check --mapping governance/tests.json \
+bun run governator check --mapping governance/tests.json \
   --format json --report-schema 2 > artifacts/governance.json
 ```
 
@@ -32,7 +32,7 @@ Tests/config and dependencies execute with operator trust; there is no hostile s
 
 ```sh
 bun --bun vitest run --reporter=json --outputFile=artifacts/vitest.json
-bun run governanator evidence import --format vitest \
+bun run governator evidence import --format vitest \
   --file artifacts/vitest.json --mapping governance/tests.json
 ```
 

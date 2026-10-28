@@ -1,6 +1,6 @@
 # Read-only local MCP
 
-Governanator M2 exposes fourteen shared governance queries through a private Bun stdio application. It loads one explicitly exported snapshot. Tool calls use immutable memory; they do not execute tests, builds, packing, approvals, edits, publication or network requests.
+Governator M2 exposes fourteen shared governance queries through a private Bun stdio application. It loads one explicitly exported snapshot. Tool calls use immutable memory; they do not execute tests, builds, packing, approvals, edits, publication or network requests.
 
 Use Bun 1.4.2, Moon 2.6.4 and TypeScript 5.9.3. The private adapter pins MCP server 2.4.0 and Zod 4.2.1; the SDK client 2.4.0 is a workspace development dependency. Effect stays internal. The plain protocol and Storybook addon have no MCP dependency.
 
@@ -13,7 +13,7 @@ bun run build
 # Explicit producer work, performed before snapshot export; executes local builds/tests.
 bun run dogfood:report
 bun run storybook:build
-bun run governanator snapshot export \
+bun run governator snapshot export \
   --report artifacts/dogfood-governance.json \
   --release artifacts/dogfood-release.json \
   --config governance/release.json \
@@ -40,7 +40,7 @@ The qualification smoke also checks the built Storybook report. Build Storybook 
 The same service is available without MCP:
 
 ```sh
-bun run governanator query --snapshot artifacts/m2-snapshot.json \
+bun run governator query --snapshot artifacts/m2-snapshot.json \
   --tool get_component --args '{"componentId":"ui.button"}'
 ```
 

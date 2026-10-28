@@ -6,7 +6,7 @@ await Effect.runPromise(
   Effect.tryPromise({
     try: () => start(Bun.argv.slice(2)),
     catch: () =>
-      "Governanator MCP startup failed: invalid options or snapshot; export a fresh snapshot for a clean matching source.\n",
+      "Governator MCP startup failed: invalid options or snapshot; export a fresh snapshot for a clean matching source.\n",
   }).pipe(
     Effect.catch((error) =>
       Effect.sync(() => {

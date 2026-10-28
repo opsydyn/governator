@@ -11,7 +11,7 @@ function git(root: string, ...args: string[]) {
 }
 export async function releaseProject(fails = false, unbumped = false) {
   const contract = unbumped ? "1.0.0" : "1.0.1";
-  const root = await mkdtemp(join(tmpdir(), "governanator-release-"));
+  const root = await mkdtemp(join(tmpdir(), "governator-release-"));
   for (const dir of ["src", "tests", "governance", ".changeset"]) await mkdir(join(root, dir));
   await symlink(join(import.meta.dirname, "../node_modules"), join(root, "node_modules"));
   const api = (version: string, contract: string) => ({

@@ -1,5 +1,5 @@
 import { Schema, Match } from "effect";
-import { Lifecycle, ComponentId, SemVer } from "@governanator/core";
+import { Lifecycle, ComponentId, SemVer } from "@governator/core";
 const text = Schema.String.check(Schema.isMinLength(1));
 const version = text;
 const page = {

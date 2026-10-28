@@ -6,9 +6,9 @@ description: Capture a tarball and verify intended bumps against actual compatib
 Use the full clean, committed checkout, Bun 1.4.2 and installed pinned dependencies. Generated candidate directories must be new direct children of ignored `artifacts/`.
 
 ```sh
-bun run governanator release candidate \
+bun run governator release candidate \
   --config governance/release.json --out artifacts/my-candidate
-bun run governanator release check --config governance/release.json \
+bun run governator release check --config governance/release.json \
   --candidate artifacts/my-candidate/candidate.json
 ```
 

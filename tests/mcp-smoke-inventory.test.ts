@@ -13,7 +13,7 @@ function fixtureGit(root: string, args: string[]): string {
 }
 
 test("smoke inventory hashes the complete independent index of ordinary and linked checkouts", async () => {
-  const root = await mkdtemp("/private/tmp/governanator-index-audit-");
+  const root = await mkdtemp("/private/tmp/governator-index-audit-");
   await (async () => {
     const main = `${root}/main`,
       worktree = `${root}/linked`;

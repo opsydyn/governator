@@ -7,7 +7,7 @@ import {
   SemVer,
   Timestamp,
   validTimestamp,
-} from "@governanator/core";
+} from "@governator/core";
 import { Hash } from "./release-schema.ts";
 
 const text = Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(256));

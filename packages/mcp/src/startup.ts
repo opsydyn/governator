@@ -1,11 +1,11 @@
 import { serveStdio, StdioServerTransport } from "@modelcontextprotocol/server/stdio";
-import { loadSnapshot, createQueryService, queryEnsure } from "@governanator/query";
+import { loadSnapshot, createQueryService, queryEnsure } from "@governator/query";
 import { createMcpServer } from "./server.ts";
 
 export async function start(args: readonly string[]) {
   if (args.length === 1 && args[0] === "--help") {
     process.stdout.write(
-      "governanator-mcp --root PATH --snapshot PATH\nRead-only local stdio. Generate a snapshot explicitly with the Governanator CLI.\n",
+      "governator-mcp --root PATH --snapshot PATH\nRead-only local stdio. Generate a snapshot explicitly with the Governator CLI.\n",
     );
     return;
   }
@@ -26,7 +26,7 @@ export async function start(args: readonly string[]) {
   const service = createQueryService(await loadSnapshot(root, snapshot));
   const handle = serveStdio(() => createMcpServer(service), {
     transport: new StdioServerTransport(process.stdin, process.stdout, { maxBufferSize: 16384 }),
-    onerror: () => process.stderr.write("Governanator MCP transport error\n"),
+    onerror: () => process.stderr.write("Governator MCP transport error\n"),
   });
   process.once("SIGTERM", () => {
     void handle.close();

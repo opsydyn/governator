@@ -10,7 +10,7 @@ export async function queryProject(
 ) {
   const at = new Date().toISOString();
   const selectedRegistry = { ...registry, components };
-  const root = await realpath(await mkdtemp(join(tmpdir(), "governanator-query-")));
+  const root = await realpath(await mkdtemp(join(tmpdir(), "governator-query-")));
   for (const dir of ["governance", "fixtures", "artifacts"]) await mkdir(join(root, dir));
   const files: Record<string, string> = {
     ".gitignore": "artifacts/\nnode_modules\n",

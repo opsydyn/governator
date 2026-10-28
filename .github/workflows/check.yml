@@ -29,5 +29,5 @@ jobs:
       - run: bun run release:demo
       - run: bun run dogfood:report
       - run: bun run storybook:build
-      - run: bun run governanator snapshot export --report artifacts/dogfood-governance.json --release artifacts/dogfood-release.json --config governance/release.json --out artifacts/m2-snapshot.json
+      - run: bun run governator snapshot export --report artifacts/dogfood-governance.json --release artifacts/dogfood-release.json --config governance/release.json --out artifacts/m2-snapshot.json
       - run: bun run mcp:smoke --snapshot artifacts/m2-snapshot.json

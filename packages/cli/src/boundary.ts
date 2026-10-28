@@ -1,5 +1,5 @@
 import { Effect, Match } from "effect";
-import { GovernanceError } from "@governanator/core";
+import { GovernanceError } from "@governator/core";
 import { executeCli } from "./commands.ts";
 import type { CliResult } from "./commands.ts";
 
@@ -16,7 +16,7 @@ export const runCli = (args: readonly string[]): Promise<CliResult> => {
       onFailure: (cause) => ({
         code: 2 as const,
         stdout: "",
-        stderr: `Governanator input/runtime error: ${cause.message}\n`,
+        stderr: `Governator input/runtime error: ${cause.message}\n`,
       }),
     }),
   );

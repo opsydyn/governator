@@ -7,8 +7,8 @@ The release gate compares a real local tarball to an explicit, immutable local b
 Run from a clean committed source snapshot with installed pinned dependencies:
 
 ```sh
-bun run governanator release candidate --config governance/release.json --out artifacts/my-candidate
-bun run governanator release check --config governance/release.json --candidate artifacts/my-candidate/candidate.json
+bun run governator release candidate --config governance/release.json --out artifacts/my-candidate
+bun run governator release check --config governance/release.json --candidate artifacts/my-candidate/candidate.json
 # Or capture and inspect a new candidate in one invocation:
 bun run release:plan
 # Real isolated React package simulation; asserts the expected outcomes, without publication:

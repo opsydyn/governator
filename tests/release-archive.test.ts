@@ -18,7 +18,7 @@ const config = {
   ],
 };
 async function archive(link = false, missingExport = false, decoy = false, special?: string) {
-  const root = await mkdtemp(join(tmpdir(), "governanator-archive-"));
+  const root = await mkdtemp(join(tmpdir(), "governator-archive-"));
   await mkdir(join(root, "package/dist"), { recursive: true });
   await writeFile(
     join(root, "package/package.json"),

@@ -1,11 +1,11 @@
 import { basename, resolve } from "node:path";
 import { realpath, readFile } from "node:fs/promises";
-import { evaluate, ensure, importVitest } from "@governanator/core";
+import { evaluate, ensure, importVitest } from "@governator/core";
 import { loadProject } from "./files.ts";
 import { containedFile } from "./files.ts";
 import { git } from "./source.ts";
 import { runLocalCheck, readMappedTests } from "./evidence.ts";
-import type { GovernanceReport } from "@governanator/protocol";
+import type { GovernanceReport } from "@governator/protocol";
 import { runRelease } from "./release.ts";
 import { runContracts } from "./contracts.ts";
 import { runQueryCommand } from "./queries.ts";
@@ -15,18 +15,18 @@ export interface CliResult {
   readonly stdout: string;
   readonly stderr: string;
 }
-const help = `governanator validate [--root PATH]
-governanator snapshot export --report PATH --out artifacts/NAME.json [--root PATH] [--release PATH --config PATH]
-governanator query --snapshot PATH --tool NAME [--args JSON] [--root PATH]
-governanator evaluate [--root PATH] [--target stable] [--component ID]
+const help = `governator validate [--root PATH]
+governator snapshot export --report PATH --out artifacts/NAME.json [--root PATH] [--release PATH --config PATH]
+governator query --snapshot PATH --tool NAME [--args JSON] [--root PATH]
+governator evaluate [--root PATH] [--target stable] [--component ID]
   [--at YYYY-MM-DDTHH:mm:ss.sssZ] [--format json|text] [--report-schema 1|2] [--demo]
-governanator evidence import --format vitest --file PATH --mapping PATH [--root PATH] [--commit SHA] [--report-root PATH]
-governanator check --mapping PATH [--root PATH] [--target stable] [--component ID] [--format json|text] [--report-schema 1|2]
-governanator release candidate --config PATH --out artifacts/NAME [--root PATH]
-governanator release plan --config PATH [--candidate PATH] [--root PATH] [--demo]
-governanator release check --config PATH --candidate PATH [--root PATH] [--demo]
-governanator contracts snapshot --config PATH --declarations PATH [--root PATH]
-governanator contracts diff --baseline PATH --candidate PATH --baseline-digest PATH [--root PATH]
+governator evidence import --format vitest --file PATH --mapping PATH [--root PATH] [--commit SHA] [--report-root PATH]
+governator check --mapping PATH [--root PATH] [--target stable] [--component ID] [--format json|text] [--report-schema 1|2]
+governator release candidate --config PATH --out artifacts/NAME [--root PATH]
+governator release plan --config PATH [--candidate PATH] [--root PATH] [--demo]
+governator release check --config PATH --candidate PATH [--root PATH] [--demo]
+governator contracts snapshot --config PATH --declarations PATH [--root PATH]
+governator contracts diff --baseline PATH --candidate PATH --baseline-digest PATH [--root PATH]
 
 Demo mode accepts only labelled demo evidence and never proves publication or deployment.
 Raw imports remain unverified. Local check executes installed Vitest 4 in a clean repository; it proves only that local process, never external approval or publication.
@@ -175,7 +175,7 @@ function renderReport(report: GovernanceReport, values: Map<string, string>): Cl
     values.get("--format") === "json"
       ? `${JSON.stringify(filtered, null, 2)}\n`
       : [
-          `Governanator — ${report.assurance}; policy ${report.policyVersion}; source ${report.commit}`,
+          `Governator — ${report.assurance}; policy ${report.policyVersion}; source ${report.commit}`,
           ...filtered.decisions.flatMap((c) => [
             `${c.componentId} [contract ${c.contractVersion}; package ${c.packageVersion ?? "unknown"}]: ${c.lifecycle} -> ${c.target}: ${c.gate}`,
             ...c.checks.map((check) => `  ${check.check}: ${check.result} — ${check.reason}`),

@@ -3,9 +3,9 @@ title: CLI commands and exit codes
 description: Source-checkout command forms, options and result semantics.
 ---
 
-Run from the full source checkout using Bun 1.4.2 and installed dependencies. `bun run governanator --help` prints the current interface. There is no initialization command. Canonical input paths are described in [policy and registry](/reference/policy-and-registry/).
+Run from the full source checkout using Bun 1.4.2 and installed dependencies. `bun run governator --help` prints the current interface. There is no initialization command. Canonical input paths are described in [policy and registry](/reference/policy-and-registry/).
 
-| Command after `bun run governanator`                                     | Purpose and required arguments                                                 |
+| Command after `bun run governator`                                       | Purpose and required arguments                                                 |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
 | `validate`                                                               | Validate shape, references and contained paths.                                |
 | `evaluate`                                                               | Evaluate canonical inputs; no local test execution.                            |

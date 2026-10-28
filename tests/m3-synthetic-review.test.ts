@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { digest } from "@governanator/core";
+import { digest } from "@governator/core";
 import { evaluateSyntheticReview } from "../packages/versioning/src/synthetic-review.ts";
 import { syntheticReviewFixture } from "./m3-synthetic-fixtures.ts";
 

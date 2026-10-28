@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "@governanator/docs",
+      "name": "@governator/docs",
       "dependencies": {
         "@astrojs/starlight": "0.39.2",
         "astro": "6.3.6"

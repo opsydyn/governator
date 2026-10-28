@@ -8,7 +8,7 @@ Use an existing React/Vite Storybook project. The qualified development referenc
 In the source checkout the demo is already wired. For a configured consumer, add the package name to the existing `.storybook/main.ts` addon list:
 
 ```ts
-addons: ["@governanator/storybook-addon"];
+addons: ["@governator/storybook-addon"];
 ```
 
 Add governance parameters to the story's default export:

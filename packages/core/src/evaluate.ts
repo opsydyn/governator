@@ -13,7 +13,7 @@ import type {
   GovernanceReport,
   GovernanceReportV1,
   GovernanceReportV2,
-} from "@governanator/protocol";
+} from "@governator/protocol";
 import { canonicalJson, digest } from "./digest.ts";
 
 function trusted(item: Evidence | Waiver, input: Evaluation, kind: "evidence" | "waiver"): boolean {

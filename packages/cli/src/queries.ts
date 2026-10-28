@@ -1,7 +1,7 @@
 import { mkdir, realpath, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { ensure } from "@governanator/core";
-import { createSnapshot, loadSnapshot, createQueryService } from "@governanator/query";
+import { ensure } from "@governator/core";
+import { createSnapshot, loadSnapshot, createQueryService } from "@governator/query";
 import { git } from "./source.ts";
 import type { CliResult } from "./commands.ts";
 

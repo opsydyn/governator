@@ -58,7 +58,7 @@ let diagnostics = "";
 transport.stderr?.on("data", (chunk) => {
   diagnostics += chunk;
 });
-const client = new Client({ name: "governanator-local-qualification", version: "0.1.0" });
+const client = new Client({ name: "governator-local-qualification", version: "0.1.0" });
 const component = snapshot.payload.registry.components[0],
   baseline = snapshot.payload.baseline,
   candidate = snapshot.payload.candidate;

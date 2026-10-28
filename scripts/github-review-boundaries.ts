@@ -12,7 +12,7 @@ export function inspectGithubReader(source: string): string[] {
       ts.isStringLiteral(node.moduleSpecifier)
     ) {
       const name = node.moduleSpecifier.text;
-      if (!name.startsWith(".") && name !== "effect" && name !== "@governanator/core")
+      if (!name.startsWith(".") && name !== "effect" && name !== "@governator/core")
         errors.push(`Forbidden reader import: ${name}`);
     }
     if (ts.isIdentifier(node) && forbidden.has(node.text))

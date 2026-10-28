@@ -1,5 +1,5 @@
 {
-  "name": "governanator-workspace",
+  "name": "governator-workspace",
   "private": true,
   "workspaces": [
     "packages/*",
@@ -16,7 +16,7 @@
     "format:check": "moon run workspace:format",
     "test": "moon run workspace:test",
     "check": "moon run workspace:check",
-    "governanator": "bun packages/cli/src/main.ts",
+    "governator": "bun packages/cli/src/main.ts",
     "protocol:generate": "bun scripts/protocol.ts",
     "protocol:check": "bun scripts/protocol.ts --check",
     "boundaries": "bun scripts/boundaries.ts && bun scripts/mcp-boundaries.ts && bun scripts/github-review-boundaries.ts && bun scripts/fixture-attestation-boundaries.ts && bun scripts/fixture-policy-boundaries.ts",

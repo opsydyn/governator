@@ -1,5 +1,5 @@
 {
-  "name": "@governanator/query",
+  "name": "@governator/query",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
@@ -31,9 +31,9 @@
     "build": "bun --bun tsdown"
   },
   "dependencies": {
-    "@governanator/core": "workspace:*",
-    "@governanator/protocol": "workspace:*",
-    "@governanator/versioning": "workspace:*",
+    "@governator/core": "workspace:*",
+    "@governator/protocol": "workspace:*",
+    "@governator/versioning": "workspace:*",
     "effect": "4.0.6",
     "tar": "7.5.22",
     "typescript": "5.9.3",

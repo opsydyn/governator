@@ -6,7 +6,7 @@ description: Create a fresh immutable query view and launch the read-only stdio 
 Start from the clean, committed source checkout with Bun 1.4.2 and installed dependencies. Complete the [local dogfood tutorial](/tutorials/local-dogfood/) to produce report/release artifacts and build the adapter.
 
 ```sh
-bun run governanator snapshot export \
+bun run governator snapshot export \
   --report artifacts/dogfood-governance.json \
   --release artifacts/dogfood-release.json \
   --config governance/release.json \
@@ -31,7 +31,7 @@ Both flags are required. Startup validation failures exit 2 on stderr; serving s
 To inspect without an MCP client:
 
 ```sh
-bun run governanator query --snapshot artifacts/mcp-snapshot.json \
+bun run governator query --snapshot artifacts/mcp-snapshot.json \
   --tool get_component --args '{"componentId":"ui.button"}'
 ```
 

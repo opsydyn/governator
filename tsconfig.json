@@ -14,15 +14,15 @@
     "noEmit": true,
     "types": ["bun"],
     "paths": {
-      "@governanator/protocol": ["./packages/protocol/src/index.ts"],
-      "@governanator/core": ["./packages/core/src/index.ts"],
-      "@governanator/versioning": ["./packages/versioning/src/index.ts"],
+      "@governator/protocol": ["./packages/protocol/src/index.ts"],
+      "@governator/core": ["./packages/core/src/index.ts"],
+      "@governator/versioning": ["./packages/versioning/src/index.ts"],
       "@example/ui": ["./packages/demo-ui/src/index.ts"],
-      "@governanator/query": ["./packages/query/src/index.ts"],
-      "@governanator/query/*": ["./packages/query/src/*.ts"],
-      "@governanator/fixture-attestation": ["./packages/fixture-attestation/src/index.ts"],
-      "@governanator/github-review": ["./packages/github-review/src/index.ts"],
-      "@governanator/fixture-policy": ["./packages/fixture-policy/src/index.ts"]
+      "@governator/query": ["./packages/query/src/index.ts"],
+      "@governator/query/*": ["./packages/query/src/*.ts"],
+      "@governator/fixture-attestation": ["./packages/fixture-attestation/src/index.ts"],
+      "@governator/github-review": ["./packages/github-review/src/index.ts"],
+      "@governator/fixture-policy": ["./packages/fixture-policy/src/index.ts"]
     },
     "jsx": "react-jsx"
   },

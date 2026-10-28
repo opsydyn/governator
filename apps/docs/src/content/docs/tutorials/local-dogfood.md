@@ -16,7 +16,7 @@ bun --version
 bun install --frozen-lockfile
 bun install --cwd apps/docs --frozen-lockfile
 bun run build
-bun run governanator validate
+bun run governator validate
 bun run dogfood:report
 ```
 
@@ -40,12 +40,12 @@ For a static view, build Storybook after producing its report, then export a sna
 
 ```sh
 bun run storybook:build
-bun run governanator snapshot export \
+bun run governator snapshot export \
   --report artifacts/dogfood-governance.json \
   --release artifacts/dogfood-release.json \
   --config governance/release.json \
   --out artifacts/tutorial-snapshot.json
-bun run governanator query --snapshot artifacts/tutorial-snapshot.json \
+bun run governator query --snapshot artifacts/tutorial-snapshot.json \
   --tool get_component --args '{"componentId":"ui.button"}'
 bun run mcp:smoke --snapshot artifacts/tutorial-snapshot.json
 ```

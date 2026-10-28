@@ -1,4 +1,4 @@
-import { decode, decodeReport } from "@governanator/core";
+import { decode, decodeReport } from "@governator/core";
 import { QueryEnvelope, queryEnsure, freeze } from "./domain.ts";
 import type { QuerySnapshot, QueryResult } from "./domain.ts";
 import { createProjector } from "./governance.ts";

@@ -9,8 +9,8 @@ import {
   Waiver,
   VersionedReport,
   ReleaseSummary,
-} from "@governanator/core";
-import { Hash, ReleaseArtifact } from "@governanator/versioning";
+} from "@governator/core";
+import { Hash, ReleaseArtifact } from "@governator/versioning";
 const text = Schema.String.check(Schema.isMinLength(1));
 export class QueryError extends Data.TaggedError("QueryError")<{
   readonly code: string;
@@ -119,7 +119,7 @@ export interface SnapshotSelection {
   readonly config?: string;
 }
 export type QuerySnapshot = Snapshot & {
-  readonly computedDiff: ReturnType<typeof import("@governanator/versioning").diffApi> | null;
+  readonly computedDiff: ReturnType<typeof import("@governator/versioning").diffApi> | null;
 };
 export { freeze } from "./values.ts";
 

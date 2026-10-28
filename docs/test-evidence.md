@@ -23,7 +23,7 @@ Run the project's declared Vitest 4 installation, for example:
 
 ```sh
 bun --bun vitest run --reporter=json --outputFile=artifacts/vitest.json
-bun run governanator evidence import --format vitest \
+bun run governator evidence import --format vitest \
   --file artifacts/vitest.json --mapping governance/tests.json
 ```
 
@@ -36,7 +36,7 @@ Import prints a versioned JSON envelope with the report digest, source associati
 For a repository with tracked source, a tracked root `vitest.config.ts`, a declared installed Vitest 4 dependency and a clean Git tree without assume-unchanged/skip-worktree index flags:
 
 ```sh
-bun run governanator check --mapping governance/tests.json --format json \
+bun run governator check --mapping governance/tests.json --format json \
   > artifacts/governance.json
 ```
 
@@ -61,8 +61,8 @@ Known minor: assertion counters and failure flags are validated, but all top-lev
 `evaluate` and `check` default to report schema 1. Pass `--report-schema 2` with either command to include selected evidence metadata; explicit `--report-schema 1` preserves compatibility output. Unsupported, missing or duplicate values fail with exit 2. Version selection changes the report shape, never the readiness decision or evidence trust.
 
 ```sh
-bun run governanator evaluate --format json --report-schema 2
-bun run governanator check --mapping governance/tests.json --format json --report-schema 2
+bun run governator evaluate --format json --report-schema 2
+bun run governator check --mapping governance/tests.json --format json --report-schema 2
 ```
 
 Programmatic local callers use `runLocalCheck(root, mappingPath, target, 2)`; omitting the fourth argument retains schema 1. Core callers use `evaluate(input, 2)` with the same default of 1. The dogfood report explicitly requests schema 2. Older schema-1-only consumers reject schema 2; choose schema 1 for those consumers.

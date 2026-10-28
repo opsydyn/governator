@@ -16,7 +16,7 @@ test("addon allows only Storybook peers and manager-provided React", () => {
     'import "effect";',
     'import {jsx} from "react/jsx-runtime";',
     'export {foo} from "node:fs";',
-    'import("@governanator/core")',
+    'import("@governator/core")',
     'require("node:path")',
   ])
     expect(inspectAddon(manifest, [source])).not.toEqual([]);

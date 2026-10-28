@@ -1,5 +1,5 @@
 import { Schema } from "effect";
-import { Commit, SemVer, Timestamp } from "@governanator/core";
+import { Commit, SemVer, Timestamp } from "@governator/core";
 import { ApiSnapshotSchema } from "./api-schema.ts";
 const text = Schema.String.check(Schema.isMinLength(1));
 export const Hash = Schema.String.check(Schema.isPattern(/^sha256:[a-f0-9]{64}$/));

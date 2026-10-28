@@ -9,7 +9,7 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((p) => rm(p, { recursive: true, force: true })));
 });
 test("CLI snapshots emitted declarations and blocks an incompatible patch against its exact baseline", async () => {
-  const root = await mkdtemp(join(tmpdir(), "governanator-api-"));
+  const root = await mkdtemp(join(tmpdir(), "governator-api-"));
   roots.push(root);
   const config = {
     packageId: "@example/ui",

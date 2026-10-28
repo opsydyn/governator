@@ -88,7 +88,7 @@ async function main() {
   );
   const repo = resolve(import.meta.dirname, "..");
   const evidence = await mkdtemp(join(repo, "artifacts/cli-mcp-consumer-"));
-  const consumer = await realpath(await mkdtemp("/private/tmp/governanator-consumer-"));
+  const consumer = await realpath(await mkdtemp("/private/tmp/governator-consumer-"));
   assert(!consumer.startsWith(repo + "/"));
   const cache = await realpath(resolve(process.argv[4] ?? join(homedir(), ".bun/install/cache")));
   const logs: any[] = [];
@@ -150,7 +150,7 @@ async function main() {
       const manifest = JSON.parse(
         (await run(`candidate-${i}`, ["tar", "-xOf", destination, "package/package.json"])).stdout,
       );
-      assert.equal(manifest.name, i === 0 ? "@governanator/cli" : "@governanator/mcp");
+      assert.equal(manifest.name, i === 0 ? "@governator/cli" : "@governator/mcp");
       assertConventionalDependencies(manifest);
       candidateFiles.push(destination);
       (summary.candidates ??= []).push({
@@ -217,18 +217,18 @@ async function main() {
     // Force every npm scope through the bounded server and ignore ambient npm configuration.
     await writeFile(
       join(consumer, ".npmrc"),
-      `registry=${registry}\n@governanator:registry=${registry}\n@modelcontextprotocol:registry=${registry}\nignore-scripts=true\naudit=false\nfund=false\n`,
+      `registry=${registry}\n@governator:registry=${registry}\n@modelcontextprotocol:registry=${registry}\nignore-scripts=true\naudit=false\nfund=false\n`,
     );
     await writeFile(
       join(consumer, "package.json"),
       JSON.stringify(
         {
-          name: "independent-governanator-consumer",
+          name: "independent-governator-consumer",
           private: true,
           type: "module",
           dependencies: {
-            "@governanator/cli": `file:${candidateFiles[0]}`,
-            "@governanator/mcp": `file:${candidateFiles[1]}`,
+            "@governator/cli": `file:${candidateFiles[0]}`,
+            "@governator/mcp": `file:${candidateFiles[1]}`,
             "@modelcontextprotocol/client": "2.4.0",
             vitest: "4.1.12",
           },
@@ -282,7 +282,7 @@ async function main() {
       "Independent installed consumer",
     ]);
     assert.equal((await run("git-clean-before", ["git", "status", "--porcelain"])).stdout, "");
-    const cli = [process.execPath, join(consumer, "node_modules/.bin/governanator")];
+    const cli = [process.execPath, join(consumer, "node_modules/.bin/governator")];
     const evaluate = await run(
       "evaluate",
       [...cli, "evaluate", "--root", consumer, "--format", "json", "--report-schema", "2"],
@@ -338,7 +338,7 @@ async function main() {
     ]);
     const malformed = await run(
       "mcp-invalid",
-      [process.execPath, join(consumer, "node_modules/.bin/governanator-mcp"), "--bad"],
+      [process.execPath, join(consumer, "node_modules/.bin/governator-mcp"), "--bad"],
       [2],
     );
     assert.equal(malformed.stdout, "");
@@ -465,9 +465,9 @@ import {Client} from '@modelcontextprotocol/client';
 import {StdioClientTransport} from '@modelcontextprotocol/client/stdio';
 import {spawnSync} from 'node:child_process';
 const [root,bun] = process.argv.slice(2);
-const cli = root+'/node_modules/.bin/governanator';
+const cli = root+'/node_modules/.bin/governator';
 const client = new Client({name:'independent-consumer',version:'0.1.0'});
-const transport = new StdioClientTransport({command:bun,args:[root+'/node_modules/.bin/governanator-mcp','--root',root,'--snapshot','artifacts/snapshot.json'],cwd:root,stderr:'pipe'});
+const transport = new StdioClientTransport({command:bun,args:[root+'/node_modules/.bin/governator-mcp','--root',root,'--snapshot','artifacts/snapshot.json'],cwd:root,stderr:'pipe'});
 const requests = {
 list_components:{},get_component:{componentId:'ui.button'},get_component_evidence:{componentId:'ui.button'},evaluate_component:{componentId:'ui.button',targetLifecycle:'stable'},explain_governance_failure:{componentId:'ui.button',targetLifecycle:'stable'},get_design_system_report:{},list_approved_components:{},get_component_contract:{componentId:'ui.button'},diff_component_contract:{componentId:'ui.button',fromVersion:'1.0.0',toVersionOrCandidate:'candidate'},list_breaking_changes:{},explain_release_block:{packageId:'@example/ui',candidateVersion:'1.0.1'},get_release_manifest:{packageId:'@example/ui',version:'1.0.1'},get_consumer_compatibility:{packageId:'@example/ui',candidateVersion:'1.0.1'},plan_component_migration:{componentId:'ui.button',fromVersion:'1.0.0',toVersion:'1.0.1'}
 };

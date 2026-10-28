@@ -1,5 +1,5 @@
-import { QueryError } from "@governanator/query";
-import type { ToolName } from "@governanator/query";
+import { QueryError } from "@governator/query";
+import type { ToolName } from "@governator/query";
 import type { CallToolResult } from "@modelcontextprotocol/server";
 
 import type { McpQueryService } from "./service.ts";
@@ -46,7 +46,7 @@ export function callQueryTool(
       content: [
         {
           type: "text",
-          text: `Governanator ${result.scope}; ${result.provenance}. Full query envelope is in structuredContent.`,
+          text: `Governator ${result.scope}; ${result.provenance}. Full query envelope is in structuredContent.`,
         },
       ],
       structuredContent: result,

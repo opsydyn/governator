@@ -1,1 +1,1 @@
-export { containedFile, loadProject } from "@governanator/query/io";
+export { containedFile, loadProject } from "@governator/query/io";

@@ -1,7 +1,7 @@
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { mkdir, mkdtemp, realpath, readFile } from "node:fs/promises";
-import { ensure, decodeTestMap, importVitest, digest, evaluate } from "@governanator/core";
-import type { Evidence } from "@governanator/core";
+import { ensure, decodeTestMap, importVitest, digest, evaluate } from "@governator/core";
+import type { Evidence } from "@governator/core";
 import { containedFile, loadProject } from "./files.ts";
 import { cleanHead, git } from "./source.ts";
 
@@ -58,15 +58,8 @@ export async function runLocalCheck(
   );
   const artifacts = join(root, "artifacts");
   ensure(
-    Bun.spawnSync([
-      "git",
-      "-C",
-      root,
-      "check-ignore",
-      "--quiet",
-      "--",
-      "artifacts/governanator-run",
-    ]).exitCode === 0,
+    Bun.spawnSync(["git", "-C", root, "check-ignore", "--quiet", "--", "artifacts/governator-run"])
+      .exitCode === 0,
     "Ignore artifacts/ in Git before running local checks",
   );
   await mkdir(artifacts, { recursive: true });
@@ -74,7 +67,7 @@ export async function runLocalCheck(
     (await realpath(artifacts)) === artifacts,
     "Symlinked artifact directories are unsupported",
   );
-  const runDir = await mkdtemp(join(artifacts, "governanator-run-"));
+  const runDir = await mkdtemp(join(artifacts, "governator-run-"));
   const reportPath = join(runDir, "vitest.json");
   const startedAt = Date.now();
   const child = Bun.spawn(

@@ -1,1 +1,1 @@
-export { inspectArchive, bytesDigest } from "@governanator/query/archive";
+export { inspectArchive, bytesDigest } from "@governator/query/archive";

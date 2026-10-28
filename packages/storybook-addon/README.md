@@ -1,4 +1,4 @@
-# Governanator Governance addon
+# Governator Governance addon
 
 Read-only Storybook manager panel. Local preview package; private and unpublished.
 
@@ -9,8 +9,8 @@ Use an existing Storybook React/Vite project. The development reference is Story
 Packages remain private at `0.1.0`; registry installation is unavailable. Given an actual locally packed addon tarball, install it in your consumer project (replace the illustrative path):
 
 ```sh
-npm install --save-dev /absolute/path/to/governanator-storybook-addon-0.1.0.tgz
-# Or: pnpm add --save-dev /absolute/path/to/governanator-storybook-addon-0.1.0.tgz
+npm install --save-dev /absolute/path/to/governator-storybook-addon-0.1.0.tgz
+# Or: pnpm add --save-dev /absolute/path/to/governator-storybook-addon-0.1.0.tgz
 ```
 
 These commands still require an available source for your project's Storybook dependencies. Local-cache or reconstructed-source qualification does not establish registry availability.
@@ -18,7 +18,7 @@ These commands still require an available source for your project's Storybook de
 Add the package to your existing `.storybook/main.ts` configuration:
 
 ```ts
-addons: ["@governanator/storybook-addon"];
+addons: ["@governator/storybook-addon"];
 ```
 
 In a story's default export, map its component and optionally supply a same-origin report served by your Storybook static directory:
@@ -32,7 +32,7 @@ parameters: {
 },
 ```
 
-Omit `reportUrl` for the no-report onboarding panel. To supply a report, generate it with the `@governanator/cli` package using `bun ./node_modules/.bin/governanator check --mapping governance/tests.json --format json --report-schema 2 > artifacts/governance.json` in a configured clean consumer Git project (see that package's README for prerequisites), copy the resulting JSON into your configured Storybook static directory as `governance.json`, and rebuild static Storybook after updating it. The addon does not run the CLI or generate evidence.
+Omit `reportUrl` for the no-report onboarding panel. To supply a report, generate it with the `@governator/cli` package using `bun ./node_modules/.bin/governator check --mapping governance/tests.json --format json --report-schema 2 > artifacts/governance.json` in a configured clean consumer Git project (see that package's README for prerequisites), copy the resulting JSON into your configured Storybook static directory as `governance.json`, and rebuild static Storybook after updating it. The addon does not run the CLI or generate evidence.
 
 Set `parameters.governance.componentId` on each component's stories. Optionally set `parameters.governance.reportUrl` to a same-origin JSON report path. Without a report the panel shows onboarding; Storybook still works. Reports older than 24 hours, malformed reports, unsupported schemas and unknown IDs never show a ready gate. Fetch uses no credentials and rejects redirects.
 

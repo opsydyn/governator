@@ -88,7 +88,7 @@ def assert_no_ancestor_modules(root):
 def main():
     repo = Path(__file__).resolve().parent.parent
     evidence = Path(tempfile.mkdtemp(prefix='addon-consumer-', dir=repo / 'artifacts'))
-    home = Path(tempfile.mkdtemp(prefix='governanator-addon-', dir='/private/tmp')).resolve()
+    home = Path(tempfile.mkdtemp(prefix='governator-addon-', dir='/private/tmp')).resolve()
     env = {key: os.environ[key] for key in ['PATH']}
     env.update(HOME=str(home), TMPDIR=str(home), NODE_PATH='', CI='1', STORYBOOK_DISABLE_TELEMETRY='1', DO_NOT_TRACK='1', COREPACK_ENABLE_NETWORK='0', npm_config_update_notifier='false', npm_config_audit='false', npm_config_fund='false', npm_config_ignore_scripts='true', npm_config_fetch_retries='0')
     summary = {'evidence': str(evidence), 'consumerRoot': str(home), 'provenance': 'Dependency archives reconstructed from extracted Bun cache with unchanged original manifests; original npm registry integrity unavailable. No npm registry, publisher tarball or publication qualification.', 'cases': {}, 'commands': []}
@@ -164,8 +164,8 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
             try:
                 (root / '.storybook').mkdir()
                 (root / 'src').mkdir()
-                (root / 'package.json').write_text(json.dumps({'name': 'independent-addon-consumer', 'private': True, 'type': 'module', 'dependencies': {'@governanator/storybook-addon': 'file:' + str(packed), 'storybook': '10.6.4', '@storybook/react-vite': '10.6.4', 'react': '19.3.1', 'react-dom': '19.3.1', 'vite': '8.3.5'}}))
-                common_config = f'registry={registry}\n@storybook:registry={registry}\n@governanator:registry={registry}\nignore-scripts=true\naudit=false\nfund=false\nupdate-notifier=false\n'
+                (root / 'package.json').write_text(json.dumps({'name': 'independent-addon-consumer', 'private': True, 'type': 'module', 'dependencies': {'@governator/storybook-addon': 'file:' + str(packed), 'storybook': '10.6.4', '@storybook/react-vite': '10.6.4', 'react': '19.3.1', 'react-dom': '19.3.1', 'vite': '8.3.5'}}))
+                common_config = f'registry={registry}\n@storybook:registry={registry}\n@governator:registry={registry}\nignore-scripts=true\naudit=false\nfund=false\nupdate-notifier=false\n'
                 manager_config = 'strict-peer-deps=true\n' if manager == 'npm' else 'strict-peer-dependencies=true\nmanage-package-manager-versions=false\n'
                 (root / '.npmrc').write_text(common_config + manager_config)
                 env.update(HOME=str(root), TMPDIR=str(root), npm_config_registry=registry, npm_config_userconfig=str(root / '.npmrc'), npm_config_globalconfig=str(root / 'empty-global'), npm_config_cache=str(root / 'npm-cache'))
@@ -173,7 +173,7 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
                 if manager == 'pnpm':
                     env['npm_config_store_dir'] = str(root / 'pnpm-store')
                 (root / 'empty-global').write_text('')
-                (root / '.storybook/main.ts').write_text("export default {framework:'@storybook/react-vite',stories:['../src/**/*.stories.tsx'],addons:['@governanator/storybook-addon'],core:{disableTelemetry:true}};\n")
+                (root / '.storybook/main.ts').write_text("export default {framework:'@storybook/react-vite',stories:['../src/**/*.stories.tsx'],addons:['@governator/storybook-addon'],core:{disableTelemetry:true}};\n")
                 (root / 'src/Button.stories.tsx').write_text("import React from 'react'; const Button=()=> <button>Independent consumer</button>; export default {title:'Button',component:Button,parameters:{governance:{componentId:'ui.button'}}}; export const Default={};\n")
                 pnpm = Path.home() / '.cache/node/corepack/v1/pnpm/11.9.0/bin/pnpm.cjs'
                 args = ([manager] if manager == 'npm' else ['node', str(pnpm)]) + ['install', '--ignore-scripts', '--registry', registry]

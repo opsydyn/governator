@@ -1,1 +1,1 @@
-export { releaseInputs } from "@governanator/query/release-inputs";
+export { releaseInputs } from "@governator/query/release-inputs";

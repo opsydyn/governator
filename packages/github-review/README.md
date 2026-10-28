@@ -1,6 +1,6 @@
 # Private GitHub review reader
 
-`@governanator/github-review` collects **unverified source-review observations** through a caller-supplied transport. It is private and is not connected to the release evaluator, CLI, public protocol, Storybook addon or MCP. Importing it performs no requests. It discovers no credentials, repository, environment settings or global client and provides no default HTTP implementation.
+`@governator/github-review` collects **unverified source-review observations** through a caller-supplied transport. It is private and is not connected to the release evaluator, CLI, public protocol, Storybook addon or MCP. Importing it performs no requests. It discovers no credentials, repository, environment settings or global client and provides no default HTTP implementation.
 
 ## API
 

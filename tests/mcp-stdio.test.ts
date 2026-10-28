@@ -32,7 +32,7 @@ test.each([1, 2] as const)(
     transport.stderr?.on("data", (chunk) => {
       diagnostics += chunk;
     });
-    const client = new Client({ name: "governanator-stdio-test", version: "0.1.0" });
+    const client = new Client({ name: "governator-stdio-test", version: "0.1.0" });
     const errors: Error[] = [];
     client.onerror = (error) => errors.push(error);
     let pid: number | null = null;
@@ -114,7 +114,7 @@ test("stdout framing is JSON-RPC only and EOF exits without signals", async () =
     expect(await line(reader, state)).toMatchObject({
       jsonrpc: "2.0",
       id: 1,
-      result: { serverInfo: { name: "governanator" } },
+      result: { serverInfo: { name: "governator" } },
     });
     child.stdin.write(
       JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }) +

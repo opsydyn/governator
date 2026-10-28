@@ -13,7 +13,7 @@ for (const name of ["cli", "mcp"]) {
       expect(manifest.engines.bun).toBe(">=1.4.2");
       expect(Object.keys(manifest.dependencies)).not.toContain("effect");
       expect(
-        Object.keys(manifest.dependencies).some((value) => value.startsWith("@governanator/")),
+        Object.keys(manifest.dependencies).some((value) => value.startsWith("@governator/")),
       ).toBe(false);
       if (name === "cli") expect(manifest.dependencies.typescript).toBe("5.9.3");
     });
@@ -31,7 +31,7 @@ for (const name of ["cli", "mcp"]) {
             node.moduleSpecifier &&
             ts.isStringLiteral(node.moduleSpecifier)
           )
-            expect(node.moduleSpecifier.text).not.toMatch(/^(?:@governanator\/|effect(?:\/|$))/);
+            expect(node.moduleSpecifier.text).not.toMatch(/^(?:@governator\/|effect(?:\/|$))/);
           if (
             ts.isCallExpression(node) &&
             (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
@@ -39,7 +39,7 @@ for (const name of ["cli", "mcp"]) {
             node.arguments[0] &&
             ts.isStringLiteral(node.arguments[0])
           )
-            expect(node.arguments[0].text).not.toMatch(/^(?:@governanator\/|effect(?:\/|$))/);
+            expect(node.arguments[0].text).not.toMatch(/^(?:@governator\/|effect(?:\/|$))/);
           ts.forEachChild(node, inspect);
         }
         inspect(ast);
@@ -49,7 +49,7 @@ for (const name of ["cli", "mcp"]) {
 }
 
 test("strict public declarations can be imported without workspace path aliases", () => {
-  const consumer = `/private/tmp/governanator-distribution-types-${process.pid}.mts`;
+  const consumer = `/private/tmp/governator-distribution-types-${process.pid}.mts`;
   const source = `import { runCli } from ${JSON.stringify(`${process.cwd()}/packages/cli/dist/index.mjs`)};
 import { createMcpServer } from ${JSON.stringify(`${process.cwd()}/packages/mcp/dist/server.mjs`)};
 const result: Promise<{ readonly code: 0 | 1 | 2; readonly stdout: string; readonly stderr: string }> = runCli([]);
@@ -81,7 +81,7 @@ void result;`;
 });
 
 test("packed manifests, exports and Bun bins retain the distribution contract", async () => {
-  const root = await mkdtemp("/private/tmp/governanator-packed-boundary-");
+  const root = await mkdtemp("/private/tmp/governator-packed-boundary-");
   await (async () => {
     for (const name of ["cli", "mcp"]) {
       const child = Bun.spawnSync(
@@ -95,14 +95,14 @@ test("packed manifests, exports and Bun bins retain the distribution contract", 
       expect(child.exitCode, child.stderr.toString()).toBe(0);
       const unpacked = `${root}/${name}`;
       await mkdir(unpacked);
-      await extract({ file: `${root}/governanator-${name}-0.1.0.tgz`, cwd: unpacked });
+      await extract({ file: `${root}/governator-${name}-0.1.0.tgz`, cwd: unpacked });
       const pkg = `${unpacked}/package`;
       const manifest = JSON.parse(await readFile(`${pkg}/package.json`, "utf8"));
       expect(manifest.private).toBe(true);
       expect(manifest.engines.bun).toBe(">=1.4.2");
       expect(
         Object.keys(manifest.dependencies).some(
-          (value) => value.startsWith("@governanator/") || value === "effect",
+          (value) => value.startsWith("@governator/") || value === "effect",
         ),
       ).toBe(false);
       for (const target of Object.values(manifest.exports["."]) as string[])
@@ -113,7 +113,7 @@ test("packed manifests, exports and Bun bins retain the distribution contract", 
 });
 
 test("output cleaning refuses nested links before touching their targets", async () => {
-  const root = await mkdtemp("/private/tmp/governanator-safe-output-");
+  const root = await mkdtemp("/private/tmp/governator-safe-output-");
   await (async () => {
     await mkdir(`${root}/output`);
     await mkdir(`${root}/retained`);

@@ -8,7 +8,7 @@ import { at, registry, policy, evidence } from "./fixtures.ts";
 
 const dirs: string[] = [];
 async function fixture() {
-  const root = await mkdtemp(join(tmpdir(), "governanator-"));
+  const root = await mkdtemp(join(tmpdir(), "governator-"));
   dirs.push(root);
   await mkdir(join(root, "governance"));
   await mkdir(join(root, "fixtures"));

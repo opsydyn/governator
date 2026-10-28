@@ -1,5 +1,5 @@
 {
-  "name": "@governanator/versioning",
+  "name": "@governator/versioning",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
@@ -25,8 +25,8 @@
   },
   "dependencies": {
     "@changesets/parse": "0.4.3",
-    "@governanator/core": "workspace:*",
-    "@governanator/protocol": "workspace:*",
+    "@governator/core": "workspace:*",
+    "@governator/protocol": "workspace:*",
     "effect": "4.0.6",
     "semver": "7.8.5",
     "typescript": "5.9.3"

@@ -1,7 +1,7 @@
 import { relative, resolve, join } from "node:path";
-import { ensure, decode, digest } from "@governanator/core";
-import { ReleaseConfig, ReleaseArtifact, ChangeRecord } from "@governanator/versioning";
-import { ApiConfigSchema } from "@governanator/versioning";
+import { ensure, decode, digest } from "@governator/core";
+import { ReleaseConfig, ReleaseArtifact, ChangeRecord } from "@governator/versioning";
+import { ApiConfigSchema } from "@governator/versioning";
 import { loadProject, containedFile } from "./io.ts";
 import { cleanHead, git } from "./io.ts";
 import { bytesDigest, inspectArchive } from "./archive.ts";

@@ -1,4 +1,4 @@
-import { evaluate, decode, digest } from "@governanator/core";
+import { evaluate, decode, digest } from "@governator/core";
 import { queryEnsure, QueryScope } from "./domain.ts";
 import type { QuerySnapshot, QueryResult } from "./domain.ts";
 import type { Args, ToolName } from "./requests.ts";

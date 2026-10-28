@@ -5,7 +5,7 @@ export function checkConsumers(
   declaration: string,
   fixtures: readonly string[],
 ): string[] {
-  const root = ts.sys.getCurrentDirectory() + "/.governanator-consumers";
+  const root = ts.sys.getCurrentDirectory() + "/.governator-consumers";
   const api = root + "/api.ts";
   const files = new Map([
     [api, declaration],

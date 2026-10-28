@@ -1,12 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
-import { toolNames, toolInputJsonSchema, queryJsonSchema } from "@governanator/query";
+import { toolNames, toolInputJsonSchema, queryJsonSchema } from "@governator/query";
 import type { McpQueryService } from "./service.ts";
 import { callQueryTool } from "./boundary.ts";
 
 export function createMcpServer(service: McpQueryService): McpServer {
   const server = new McpServer(
-    { name: "governanator", version: "0.1.0" },
+    { name: "governator", version: "0.1.0" },
     { capabilities: { tools: {} } },
   );
   const outputSchema = z.fromJSONSchema(queryJsonSchema().schema);

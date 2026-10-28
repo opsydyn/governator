@@ -1,4 +1,4 @@
-import { digest } from "@governanator/core";
+import { digest } from "@governator/core";
 
 /** Entirely synthetic observations; no provider, identity or binding is authenticated. */
 export function syntheticReviewFixture() {

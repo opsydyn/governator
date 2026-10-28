@@ -1,10 +1,10 @@
 {
-  "name": "@governanator/cli",
+  "name": "@governator/cli",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
   "bin": {
-    "governanator": "./dist/main.mjs"
+    "governator": "./dist/main.mjs"
   },
   "files": [
     "dist",
@@ -34,10 +34,10 @@
     "yaml": "2.9.1"
   },
   "devDependencies": {
-    "@governanator/core": "workspace:*",
-    "@governanator/protocol": "workspace:*",
-    "@governanator/query": "workspace:*",
-    "@governanator/versioning": "workspace:*",
+    "@governator/core": "workspace:*",
+    "@governator/protocol": "workspace:*",
+    "@governator/query": "workspace:*",
+    "@governator/versioning": "workspace:*",
     "effect": "4.0.6"
   },
   "engines": {

@@ -32,7 +32,7 @@ export function inspectAddon(
           !name.startsWith(".") &&
           !/^storybook(?:\/|$)/.test(name) &&
           name !== "react" &&
-          !(typeOnly && name === "@governanator/protocol")
+          !(typeOnly && name === "@governator/protocol")
         )
           errors.push(`Forbidden addon import ${name}`);
       }

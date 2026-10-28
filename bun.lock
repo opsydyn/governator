@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "governanator-workspace",
+      "name": "governator-workspace",
       "devDependencies": {
         "@changesets/cli": "2.31.0",
         "@modelcontextprotocol/client": "2.4.0",
@@ -29,11 +29,11 @@
       },
     },
     "apps/storybook-demo": {
-      "name": "@governanator/storybook-demo",
+      "name": "@governator/storybook-demo",
       "version": "0.1.0",
       "dependencies": {
         "@example/ui": "workspace:*",
-        "@governanator/storybook-addon": "workspace:*",
+        "@governator/storybook-addon": "workspace:*",
         "react": "19.3.1",
         "react-dom": "19.3.1",
       },
@@ -45,10 +45,10 @@
       },
     },
     "packages/cli": {
-      "name": "@governanator/cli",
+      "name": "@governator/cli",
       "version": "0.1.0",
       "bin": {
-        "governanator": "./dist/main.mjs",
+        "governator": "./dist/main.mjs",
       },
       "dependencies": {
         "@changesets/parse": "0.4.3",
@@ -58,18 +58,18 @@
         "yaml": "2.9.1",
       },
       "devDependencies": {
-        "@governanator/core": "workspace:*",
-        "@governanator/protocol": "workspace:*",
-        "@governanator/query": "workspace:*",
-        "@governanator/versioning": "workspace:*",
+        "@governator/core": "workspace:*",
+        "@governator/protocol": "workspace:*",
+        "@governator/query": "workspace:*",
+        "@governator/versioning": "workspace:*",
         "effect": "4.0.6",
       },
     },
     "packages/core": {
-      "name": "@governanator/core",
+      "name": "@governator/core",
       "version": "0.1.0",
       "dependencies": {
-        "@governanator/protocol": "workspace:*",
+        "@governator/protocol": "workspace:*",
         "effect": "4.0.6",
       },
     },
@@ -81,28 +81,28 @@
       },
     },
     "packages/fixture-attestation": {
-      "name": "@governanator/fixture-attestation",
+      "name": "@governator/fixture-attestation",
       "version": "0.1.0",
       "dependencies": {
         "effect": "4.0.6",
       },
     },
     "packages/fixture-policy": {
-      "name": "@governanator/fixture-policy",
+      "name": "@governator/fixture-policy",
       "version": "0.1.0",
     },
     "packages/github-review": {
-      "name": "@governanator/github-review",
+      "name": "@governator/github-review",
       "version": "0.1.0",
       "dependencies": {
         "effect": "4.0.6",
       },
     },
     "packages/mcp": {
-      "name": "@governanator/mcp",
+      "name": "@governator/mcp",
       "version": "0.1.0",
       "bin": {
-        "governanator-mcp": "./dist/main.mjs",
+        "governator-mcp": "./dist/main.mjs",
       },
       "dependencies": {
         "@changesets/parse": "0.4.3",
@@ -114,21 +114,21 @@
         "zod": "4.2.1",
       },
       "devDependencies": {
-        "@governanator/query": "workspace:*",
+        "@governator/query": "workspace:*",
         "effect": "4.0.6",
       },
     },
     "packages/protocol": {
-      "name": "@governanator/protocol",
+      "name": "@governator/protocol",
       "version": "0.1.0",
     },
     "packages/query": {
-      "name": "@governanator/query",
+      "name": "@governator/query",
       "version": "0.1.0",
       "dependencies": {
-        "@governanator/core": "workspace:*",
-        "@governanator/protocol": "workspace:*",
-        "@governanator/versioning": "workspace:*",
+        "@governator/core": "workspace:*",
+        "@governator/protocol": "workspace:*",
+        "@governator/versioning": "workspace:*",
         "effect": "4.0.6",
         "tar": "7.5.22",
         "typescript": "5.9.3",
@@ -136,19 +136,19 @@
       },
     },
     "packages/storybook-addon": {
-      "name": "@governanator/storybook-addon",
+      "name": "@governator/storybook-addon",
       "version": "0.1.0",
       "peerDependencies": {
         "storybook": "^10.6.4",
       },
     },
     "packages/versioning": {
-      "name": "@governanator/versioning",
+      "name": "@governator/versioning",
       "version": "0.1.0",
       "dependencies": {
         "@changesets/parse": "0.4.3",
-        "@governanator/core": "workspace:*",
-        "@governanator/protocol": "workspace:*",
+        "@governator/core": "workspace:*",
+        "@governator/protocol": "workspace:*",
         "effect": "4.0.6",
         "semver": "7.8.5",
         "typescript": "5.9.3",
@@ -288,27 +288,27 @@
 
     "@example/ui": ["@example/ui@workspace:packages/demo-ui"],
 
-    "@governanator/cli": ["@governanator/cli@workspace:packages/cli"],
+    "@governator/cli": ["@governator/cli@workspace:packages/cli"],
 
-    "@governanator/core": ["@governanator/core@workspace:packages/core"],
+    "@governator/core": ["@governator/core@workspace:packages/core"],
 
-    "@governanator/fixture-attestation": ["@governanator/fixture-attestation@workspace:packages/fixture-attestation"],
+    "@governator/fixture-attestation": ["@governator/fixture-attestation@workspace:packages/fixture-attestation"],
 
-    "@governanator/fixture-policy": ["@governanator/fixture-policy@workspace:packages/fixture-policy"],
+    "@governator/fixture-policy": ["@governator/fixture-policy@workspace:packages/fixture-policy"],
 
-    "@governanator/github-review": ["@governanator/github-review@workspace:packages/github-review"],
+    "@governator/github-review": ["@governator/github-review@workspace:packages/github-review"],
 
-    "@governanator/mcp": ["@governanator/mcp@workspace:packages/mcp"],
+    "@governator/mcp": ["@governator/mcp@workspace:packages/mcp"],
 
-    "@governanator/protocol": ["@governanator/protocol@workspace:packages/protocol"],
+    "@governator/protocol": ["@governator/protocol@workspace:packages/protocol"],
 
-    "@governanator/query": ["@governanator/query@workspace:packages/query"],
+    "@governator/query": ["@governator/query@workspace:packages/query"],
 
-    "@governanator/storybook-addon": ["@governanator/storybook-addon@workspace:packages/storybook-addon"],
+    "@governator/storybook-addon": ["@governator/storybook-addon@workspace:packages/storybook-addon"],
 
-    "@governanator/storybook-demo": ["@governanator/storybook-demo@workspace:apps/storybook-demo"],
+    "@governator/storybook-demo": ["@governator/storybook-demo@workspace:apps/storybook-demo"],
 
-    "@governanator/versioning": ["@governanator/versioning@workspace:packages/versioning"],
+    "@governator/versioning": ["@governator/versioning@workspace:packages/versioning"],
 
     "@inquirer/external-editor": ["@inquirer/external-editor@1.0.3", "", { "dependencies": { "chardet": "^2.1.1", "iconv-lite": "^0.7.0" }, "peerDependencies": { "@types/node": ">=18" }, "optionalPeers": ["@types/node"] }, "sha512-RWbSrDiYmO4LbejWY7ttpxczuwQyZLBUyygsA9Nsv95hpzUWwnNTVQmAq3xuh7vNwCp07UTmE5i11XAEExx4RA=="],
 

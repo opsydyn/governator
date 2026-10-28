@@ -478,7 +478,7 @@ function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: 
     </span>
   );
 }
-addons.register("governanator", () => {
+addons.register("governator", () => {
   const previous = addons.getConfig().sidebar;
   addons.setConfig({
     sidebar: {
@@ -493,7 +493,7 @@ addons.register("governanator", () => {
       },
     },
   });
-  addons.add("governanator/governance", {
+  addons.add("governator/governance", {
     title: "Governance",
     type: types.PANEL,
     render: ({ active }) => (

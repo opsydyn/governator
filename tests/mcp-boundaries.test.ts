@@ -10,7 +10,7 @@ test("readonly query boundary rejects process, network, filesystem and dynamic e
   ])
     expect(inspectReadonlyQuery(source).length).toBeGreaterThan(0);
   expect(
-    inspectReadonlyQuery('import {evaluate} from "@governanator/core"; evaluate(input);'),
+    inspectReadonlyQuery('import {evaluate} from "@governator/core"; evaluate(input);'),
   ).toEqual([]);
 });
 test("qualification guard actively blocks write, process and network attempts", async () => {

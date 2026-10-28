@@ -4,7 +4,7 @@
 
 Offline design-system governance: a component's status should show its evidence.
 
-Governator is the product name. The current local commands and private package names still use the earlier `governanator` spelling; the examples below use their actual names.
+The local CLI uses the `governator` command and the private packages use the `@governator` scope.
 
 The local workspace includes a deterministic policy engine, source-bound Vitest checks, TypeScript declaration compatibility analysis, a Bun CLI, fourteen read-only MCP queries and a real React/Storybook dogfood app. All packages remain private and unpublished.
 
@@ -21,7 +21,7 @@ bun install --frozen-lockfile
 bun run docs:install
 bun run check
 bun run build
-bun run governanator validate
+bun run governator validate
 # Requires clean, committed source. Rebuilds actual declarations and runs actual UI tests.
 bun run dogfood:report
 bun run storybook
@@ -36,9 +36,9 @@ The deliberately removed Button `tone` prop requires a major bump. Proposed cont
 ## API commands
 
 ```sh
-bun run governanator contracts snapshot --config governance/api-config.json --declarations packages/demo-ui/dist/index.d.mts > artifacts/candidate.json
+bun run governator contracts snapshot --config governance/api-config.json --declarations packages/demo-ui/dist/index.d.mts > artifacts/candidate.json
 # Expected exit 1: removed Button prop and insufficient version bumps.
-bun run governanator contracts diff --baseline governance/api-baselines/ui-8.4.1.json --candidate artifacts/candidate.json --baseline-digest governance/api-baselines/ui-8.4.1.json.sha256
+bun run governator contracts diff --baseline governance/api-baselines/ui-8.4.1.json --candidate artifacts/candidate.json --baseline-digest governance/api-baselines/ui-8.4.1.json.sha256
 ```
 
 Pinned TypeScript 5.9.3 analyzes actual emitted declarations. Baselines are explicit digest-checked local release fixtures, not authenticated npm releases. The comparison checks exported props, full structural assignability and callable return types; unsupported callable shapes require review, and global/module augmentations are rejected. Static types do not prove behavior, visuals, focus or accessibility compatibility. [Exact candidate and Changesets enforcement](docs/release-candidates.md) now check actual packed files, fresh consumer/test evidence and release intent.
@@ -47,19 +47,19 @@ CLI exit codes: **0** satisfied the requested check, **1** blocked/insufficient 
 
 ## Packages
 
-| Package                             | Responsibility                                                      |
-| ----------------------------------- | ------------------------------------------------------------------- |
-| `@governanator/protocol`            | Generated plain TypeScript and JSON Schema; no runtime dependencies |
-| `@governanator/core`                | Private Effect schemas, deterministic evaluation and digests        |
-| `@governanator/versioning`          | Private API extraction/diff, SemVer and baseline checks             |
-| `@governanator/fixture-attestation` | Private offline verifier for fixture-signed candidate statements    |
-| `@governanator/fixture-policy`      | Private synthetic signed reviewer-policy lifecycle model            |
-| `@governanator/query`               | Private immutable snapshots and shared read queries                 |
-| `@governanator/mcp`                 | Private Bun stdio MCP adapter                                       |
-| `@governanator/cli`                 | Bun filesystem, Git, local test runner and presentation boundary    |
-| `@governanator/storybook-addon`     | Independently packed read-only manager panel; sole peer Storybook   |
-| `@example/ui`                       | Shared private React library used by the dogfood app                |
-| `@governanator/storybook-demo`      | Storybook 10.6.4 React/Vite app                                     |
+| Package                           | Responsibility                                                      |
+| --------------------------------- | ------------------------------------------------------------------- |
+| `@governator/protocol`            | Generated plain TypeScript and JSON Schema; no runtime dependencies |
+| `@governator/core`                | Private Effect schemas, deterministic evaluation and digests        |
+| `@governator/versioning`          | Private API extraction/diff, SemVer and baseline checks             |
+| `@governator/fixture-attestation` | Private offline verifier for fixture-signed candidate statements    |
+| `@governator/fixture-policy`      | Private synthetic signed reviewer-policy lifecycle model            |
+| `@governator/query`               | Private immutable snapshots and shared read queries                 |
+| `@governator/mcp`                 | Private Bun stdio MCP adapter                                       |
+| `@governator/cli`                 | Bun filesystem, Git, local test runner and presentation boundary    |
+| `@governator/storybook-addon`     | Independently packed read-only manager panel; sole peer Storybook   |
+| `@example/ui`                     | Shared private React library used by the dogfood app                |
+| `@governator/storybook-demo`      | Storybook 10.6.4 React/Vite app                                     |
 
 See [architecture](docs/architecture.md), [dogfood and API runbook](docs/storybook-contracts.md), [verification](docs/storybook-contracts-verification.md), [release conventions](docs/releasing.md) and the [handoff](docs/reference/CODEX_HANDOFF_DESIGN_SYSTEM_GOVERNANCE.md).
 

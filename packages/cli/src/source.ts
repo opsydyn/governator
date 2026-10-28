@@ -1,1 +1,1 @@
-export { git, cleanHead } from "@governanator/query/io";
+export { git, cleanHead } from "@governator/query/io";

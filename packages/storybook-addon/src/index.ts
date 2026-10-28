@@ -1,4 +1,4 @@
-export type { GovernanceReport } from "@governanator/protocol";
+export type { GovernanceReport } from "@governator/protocol";
 export interface GovernanceParameters {
   readonly componentId?: string;
   readonly reportUrl?: string;
