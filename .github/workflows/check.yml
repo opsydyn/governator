@@ -9,6 +9,11 @@ jobs:
   governance:
     name: Governance checks and release gate fixtures
     runs-on: ubuntu-latest
+    # Host image Git filters must not affect source-bound fixture verification.
+    # Repository-local filters remain visible and are rejected by the verifier.
+    env:
+      GIT_CONFIG_NOSYSTEM: "1"
+      GIT_CONFIG_GLOBAL: /dev/null
     steps:
       - uses: actions/checkout@v4
         with:
