@@ -69,11 +69,7 @@ export function GovernanceSidebarFilter() {
   useEffect(
     () =>
       subscribeReportObservations((observedUrl, state, verified) => {
-        if (
-          observedUrl === url &&
-          verified === verifySource &&
-          (!verifySource || state.status !== "ready" || state.source === "local-match")
-        ) {
+        if (observedUrl === url && verified === verifySource) {
           reportGeneration.current++;
           if (state.status !== "ready") safety.current.enabled = false;
           setReportState({ url, verified: verifySource, state: revalidateReport(state) });

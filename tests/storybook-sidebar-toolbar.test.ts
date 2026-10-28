@@ -706,3 +706,56 @@ test("a hung source recheck times out and clears an active filter", async () => 
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });
+
+test("a verified-mode static snapshot observation can enable its toolbar", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.useFakeTimers();
+  vi.setSystemTime(Date.parse(at));
+  sb.params = { reportUrl: "/report.json", registryEditor: true } as typeof sb.params;
+  sb.refs = {};
+  const pending = new Promise<Response>(() => {});
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string | URL) =>
+      String(url).includes("governator-story-map")
+        ? new Response(
+            JSON.stringify({
+              version: 1,
+              stories: [
+                {
+                  id: "button--one",
+                  componentId: "ui.button",
+                  importPath: "./Button.stories.tsx",
+                  exportName: "One",
+                },
+              ],
+            }),
+          )
+        : pending,
+    ),
+  );
+  const el = document.createElement("div");
+  document.body.append(el);
+  const root = createRoot(el);
+  await act(async () => {
+    root.render(React.createElement(GovernanceSidebarFilter));
+    for (let i = 0; i < 12; i++) await Promise.resolve();
+  });
+  await act(async () => {
+    publishReportObservation(
+      "/report.json",
+      { status: "ready", report: evaluate(evaluation()), source: "snapshot" },
+      true,
+    );
+    for (let i = 0; i < 12; i++) await Promise.resolve();
+  });
+  expect(
+    el.querySelector<HTMLSelectElement>('select[aria-label="Filter sidebar by readiness"]')!
+      .disabled,
+  ).toBe(false);
+  await act(async () => root.unmount());
+  el.remove();
+  sb.params = { reportUrl: "/report.json" };
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
