@@ -1,0 +1,12 @@
+# Storybook governance metadata editor: local verification
+
+Implementation candidate: `7e0eb8f4c3a813cf743f37e5518ca6142c79c95f` (2026-10-28).
+
+- `bun run check` passed: 65 test files, 733 tests, lint, typecheck, addon dependency and bundle checks, and docs build and internal links. Moon reported eight cached tasks. The browser manager was 51,115 bytes raw / 14,184 bytes gzip against the existing 128 KiB / 16 KiB limits.
+- `bun run storybook:build` passed for the dogfood app, with Vite's chunk-size warning. An earlier candidate (`a565a0f`) local browser smoke test with a fresh report saved a temporary name change to the registry, showed the report and sidebar as unverified, and kept the old report unverified after reload. The registry was restored byte-for-byte afterward.
+- A local browser smoke test of the dogfood static build showed a report snapshot with the local authoring UI unavailable. It is not human or accessibility acceptance.
+- Freshly packed React/Vite Storybook 10.6.4 consumers installed with npm and strict-peer pnpm and built with and without a configured report, using the documented development-only editor parameter. Tarball SHA-256: `10d631be4fae48fe2c6380ca997df02c2d96339a5e233b883c79ce5d948e9f74`.
+- Supplemental browser checks in the packed npm consumer showed the configured report as a static snapshot with a working readiness filter, the no-report onboarding state, and a development editor save persisting across reload in a disposable local Git fixture. The pnpm consumer was built but not browser-tested. The runner's automated browser fields remain marked open; these supplemental checks were separate.
+- Consumer dependencies were reconstructed from the local Bun cache with original manifests and lifecycle scripts disabled. This does not establish original registry integrity, registry availability, hosted CI, publication or production trust. The local runner evidence is retained in `artifacts/addon-consumer-_uy81vx3/`.
+
+The editor validates declared registry data and source mapping, detects common concurrent changes and does not grant approval. Source verification compares the registry with the report commit; it does not authenticate the report producer or establish consistency of other inputs. Independent writers do not share a lock. Human validation, broader Storybook compatibility, trusted hosted evidence and publication qualification remain open.
