@@ -27,6 +27,16 @@ test.each([1, 2] as const)(
       command: process.execPath,
       args: [entry, "--root", f.root, "--snapshot", "artifacts/snapshot.json"],
       stderr: "pipe",
+      // The SDK only inherits a small environment allowlist; preserve CI's
+      // explicit Git isolation without exposing unrelated credentials.
+      env: {
+        ...(process.env.GIT_CONFIG_GLOBAL
+          ? { GIT_CONFIG_GLOBAL: process.env.GIT_CONFIG_GLOBAL }
+          : {}),
+        ...(process.env.GIT_CONFIG_NOSYSTEM
+          ? { GIT_CONFIG_NOSYSTEM: process.env.GIT_CONFIG_NOSYSTEM }
+          : {}),
+      },
     });
     let diagnostics = "";
     transport.stderr?.on("data", (chunk) => {
