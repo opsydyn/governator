@@ -1,0 +1,14 @@
+---
+title: Release status
+description: Public CI and npm observations for Governator.
+---
+
+import ReleaseDashboard from "../../components/ReleaseDashboard.astro";
+
+<ReleaseDashboard />
+
+## Reading this dashboard
+
+The GitHub Actions panel shows the latest governance workflow push run on `main` and its commit. npm reports the latest public version of each package; a missing package is not a published release. These sources update independently, and a successful CI run is not release approval.
+
+The dashboard checks public sources when opened. A build snapshot may appear while that lookup is in progress. When a live source is unavailable, the last build observation is labelled with its timestamp and may be stale. Otherwise the source is shown as unavailable.

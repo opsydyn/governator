@@ -12,3 +12,6 @@ storybook-static/
 apps/storybook-demo/public/governance-report.json
 
 apps/docs/.astro/
+
+# Generated Pages status observations
+apps/docs/public/status-snapshot.json

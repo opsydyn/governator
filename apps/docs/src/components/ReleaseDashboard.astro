@@ -1,0 +1,74 @@
+---
+const snapshotUrl = `${import.meta.env.BASE_URL}status-snapshot.json`;
+---
+
+<section class="release-dashboard" data-release-dashboard data-snapshot-url={snapshotUrl} aria-label="Governator release status">
+  <div class="release-dashboard-header">
+    <span class="release-kicker">GOVERNATOR / LIVE STATUS</span>
+    <h2>Control room</h2>
+    <p>Public observations for Governator itself. Status is checked when you open this page.</p>
+    <p class="release-time" data-status-time role="status">Loading status…</p>
+  </div>
+  <div class="release-grid">
+    <article class="release-card">
+      <h3>Governance CI</h3>
+      <p class="release-value" data-ci-state>Checking…</p>
+      <p data-ci-detail>GitHub Actions · main push</p>
+      <a data-ci-link href="https://github.com/opsydyn/governator/actions/workflows/check.yml">View workflow ↗</a>
+    </article>
+    <article class="release-card">
+      <h3>Public packages</h3>
+      <ul data-packages><li>Checking npm…</li></ul>
+    </article>
+    <article class="release-card">
+      <h3>Release authorization</h3>
+      <p class="release-value">Not qualified</p>
+      <p>As assessed on 28 October 2026, trusted review and exact archive custody are not qualified for publication. This assessment is maintained manually.</p>
+      <a href="https://github.com/opsydyn/governator/blob/main/docs/qualification/trusted-review-custody-2026-10-28.md">Read qualification ↗</a>
+    </article>
+    <article class="release-card">
+      <h3>Design system demo</h3>
+      <p class="release-value">Example data</p>
+      <p>Component readiness in the demo is separate from Governator's release status.</p>
+      <a href="https://opsydyn.github.io/governator/storybook/">Explore Storybook ↗</a>
+    </article>
+  </div>
+  <p class="release-footnote">CI and registry observations do not authorize a release. Snapshot observations are labelled and may be stale.</p>
+</section>
+<script>
+  /* Browser DOM adapter: native rendering and fetch failure handling avoid bundling runtime dependencies. */
+  /* oxlint-disable linteffect/no-return-in-arrow, linteffect/no-try-catch */
+  import { collectReleaseStatus, withSnapshotFallback, type ReleaseStatus } from "../lib/release-status";
+  const root = document.querySelector<HTMLElement>("[data-release-dashboard]");
+  if (root) {
+    const time = root.querySelector<HTMLElement>("[data-status-time]");
+    const state = root.querySelector<HTMLElement>("[data-ci-state]");
+    const detail = root.querySelector<HTMLElement>("[data-ci-detail]");
+    const link = root.querySelector<HTMLAnchorElement>("[data-ci-link]");
+    const packages = root.querySelector<HTMLElement>("[data-packages]");
+    const render = (data: ReturnType<typeof withSnapshotFallback>, source: string) => {
+      if (time) time.textContent = `${source} · checked ${new Date(data.observedAt).toLocaleString()} (${data.observedAt})`;
+      if (state) { state.textContent = data.ci.state.replaceAll("_", " "); state.dataset.state = data.ci.state; }
+      if (detail) detail.textContent = data.ci.commit ? `main · commit ${data.ci.commit.slice(0, 12)} · run updated ${data.ci.updatedAt ?? "unknown"}` : "GitHub Actions · status unavailable";
+      if (detail && data.ci.snapshotAt) detail.textContent += ` · snapshot ${data.ci.snapshotAt} (may be stale)`;
+      if (link && data.ci.url) link.href = data.ci.url;
+      if (packages) {
+        packages.replaceChildren(...data.packages.map((item) => {
+          const li = document.createElement("li");
+          li.textContent = `${item.name}: ${item.state === "published" ? item.version : item.state === "not_found" ? "not found on public npm" : "unavailable"}${item.snapshotAt ? ` · snapshot ${item.snapshotAt} (may be stale)` : ""}`;
+          return li;
+        }));
+      }
+    };
+    const update = async () => {
+      let fallback: ReleaseStatus | undefined;
+      try {
+        const snapshot = await fetch(root.dataset.snapshotUrl ?? "", { signal: AbortSignal.timeout(5000) });
+        if (snapshot.ok) { fallback = await snapshot.json(); if (fallback) render(fallback, "Build snapshot (may be stale)"); }
+      } catch { /* A fresh public lookup follows. */ }
+      const current = await collectReleaseStatus((url) => fetch(url, { signal: AbortSignal.timeout(8000) }), new Date().toISOString());
+      render(fallback ? withSnapshotFallback(current, fallback) : current, "Live public lookup");
+    };
+    void update();
+  }
+</script>

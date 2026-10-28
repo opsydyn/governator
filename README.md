@@ -4,15 +4,19 @@
 
 _Illustration only; the version and status panels are not live release results._
 
+[![Governance CI](https://github.com/opsydyn/governator/actions/workflows/check.yml/badge.svg?branch=main)](https://github.com/opsydyn/governator/actions/workflows/check.yml) [View live release status](https://opsydyn.github.io/governator/status/)
+
+[![Storybook addon on npm](https://img.shields.io/npm/v/%40governator%2Fstorybook-addon?label=addon)](https://www.npmjs.com/package/@governator/storybook-addon) [![CLI on npm](https://img.shields.io/npm/v/%40governator%2Fcli?label=CLI)](https://www.npmjs.com/package/@governator/cli) [![MCP on npm](https://img.shields.io/npm/v/%40governator%2Fmcp?label=MCP)](https://www.npmjs.com/package/@governator/mcp)
+
 Offline design-system governance: a component's status should show its evidence.
 
 The local CLI uses the `governator` command and packages use the `@governator` scope.
 
-The local workspace includes a deterministic policy engine, source-bound Vitest checks, TypeScript declaration compatibility analysis, a Bun CLI, fourteen read-only MCP queries and a real React/Storybook dogfood app. The addon, CLI and MCP are prepared for public release; all packages remain unpublished.
+The local workspace includes a deterministic policy engine, source-bound Vitest checks, TypeScript declaration compatibility analysis, a Bun CLI, fourteen read-only MCP queries and a real React/Storybook dogfood app. The addon, CLI and MCP are prepared for public release; check the live release dashboard for public registry observations.
 
 ## Use in another project
 
-The addon, CLI and MCP are public release candidates at `0.1.0`; npm registry installation is unverified. Local tarballs are release-preparation artifacts. Start with the [addon-only setup](packages/storybook-addon/README.md) for Storybook React/Vite 10.6.4, or the [Bun CLI quick start](packages/cli/README.md) and [read-only MCP quick start](packages/mcp/README.md). The addon needs only its Storybook peer; CLI/MCP require Bun >=1.4.2 and declared runtime dependencies. Independent clean-consumer results must be recorded separately from workspace builds, with any reconstructed local package source identified.
+The addon, CLI and MCP are public release candidates at `0.1.0`; npm registry installation has not yet been qualified. Local tarballs are release-preparation artifacts. Start with the [addon-only setup](packages/storybook-addon/README.md) for Storybook React/Vite 10.6.4, or the [Bun CLI quick start](packages/cli/README.md) and [read-only MCP quick start](packages/mcp/README.md). The addon needs only its Storybook peer; CLI/MCP require Bun >=1.4.2 and declared runtime dependencies. Independent clean-consumer results must be recorded separately from workspace builds, with any reconstructed local package source identified.
 
 ## Run locally
 

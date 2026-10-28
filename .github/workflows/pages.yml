@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
 
 permissions:
   contents: read
@@ -18,6 +20,7 @@ jobs:
     permissions:
       contents: read
       pages: read
+      actions: read
     env:
       GOVERNATOR_PAGES: "true"
       GIT_CONFIG_NOSYSTEM: "1"
@@ -36,6 +39,10 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun install --cwd apps/docs --frozen-lockfile
       - uses: actions/configure-pages@v5
+      - name: Generate public status snapshot
+        run: bun scripts/release-status-snapshot.ts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: bun run --cwd apps/docs build
       - run: bun run dogfood:report
       - run: bun run storybook:build
