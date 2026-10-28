@@ -5,6 +5,22 @@
   --sl-color-accent-low: #470e17;
   --sl-color-accent: #ff5c70;
   --sl-color-accent-high: #ffc4cb;
+  /* Starlight semantic blues and purples inherit the control-room red palette. */
+  --sl-color-blue-low: #470e17;
+  --sl-color-blue: #ff5c70;
+  --sl-color-blue-high: #ffc4cb;
+  --sl-color-purple-low: #470e17;
+  --sl-color-purple: #ff5c70;
+  --sl-color-purple-high: #ffc4cb;
+  --sl-color-red-low: #470e17;
+  --sl-color-red: #ff5c70;
+  --sl-color-red-high: #ffc4cb;
+  --sl-color-orange-low: #49330a;
+  --sl-color-orange: #ffcb66;
+  --sl-color-orange-high: #ffe4ad;
+  --sl-color-green-low: #12382c;
+  --sl-color-green: #7fffc3;
+  --sl-color-green-high: #c5ffe2;
   --docs-focus: #ff9caa;
   --sl-content-width: 49rem;
 }
@@ -18,6 +34,21 @@
   --sl-color-accent-low: #ffe3e6;
   --sl-color-accent: #a6001d;
   --sl-color-accent-high: #5c0010;
+  --sl-color-blue-low: #ffe3e6;
+  --sl-color-blue: #a6001d;
+  --sl-color-blue-high: #5c0010;
+  --sl-color-purple-low: #ffe3e6;
+  --sl-color-purple: #a6001d;
+  --sl-color-purple-high: #5c0010;
+  --sl-color-red-low: #ffe3e6;
+  --sl-color-red: #a6001d;
+  --sl-color-red-high: #5c0010;
+  --sl-color-orange-low: #fff0d2;
+  --sl-color-orange: #8a5000;
+  --sl-color-orange-high: #603600;
+  --sl-color-green-low: #dbfae9;
+  --sl-color-green: #176c4b;
+  --sl-color-green-high: #104a34;
   --docs-focus: #9f001a;
 }
 
@@ -34,6 +65,15 @@ header.header {
 
 .sl-markdown-content h2 {
   letter-spacing: -0.025em;
+}
+
+/* Starlight cycles Card icon colors by position; keep decorative icons on brand. */
+.sl-markdown-content .card {
+  --sl-card-border: var(--sl-color-accent);
+  --sl-card-bg: var(--sl-color-accent-low);
+}
+.sl-markdown-content .card .icon {
+  color: var(--sl-color-accent-high);
 }
 
 .governator-hero {

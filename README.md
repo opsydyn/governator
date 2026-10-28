@@ -1,6 +1,8 @@
 # GOVERNATOR
 
-![Governator: design system governance. Control before you ship.](apps/docs/public/brand/repo-banner.svg)
+![Governator design system governance: illustrated control room, component status and release checks.](apps/docs/public/brand/governator-repo-banner.png)
+
+_Illustration only; the version and status panels are not live release results._
 
 Offline design-system governance: a component's status should show its evidence.
 
