@@ -36,6 +36,26 @@ Omit `reportUrl` for the no-report onboarding panel. To supply a report, generat
 
 Set `parameters.governance.componentId` on each component's stories. Optionally set `parameters.governance.reportUrl` to a same-origin JSON report path. Without a report the panel shows onboarding; Storybook still works. Reports older than 24 hours, malformed reports, unsupported schemas and unknown IDs never show a ready gate. Fetch uses no credentials and rejects redirects.
 
+## Edit descriptive tags locally
+
+The optional editor is supported for local React/Vite Storybook 10.6.4. Enable the development-only Vite plugin in `.storybook/main.ts`:
+
+```ts
+import { tagEditor } from "@governator/storybook-addon/tag-editor";
+
+// Add this property to the existing Storybook configuration.
+viteFinal: async (config) => ({
+  ...config,
+  plugins: [...(config.plugins ?? []), tagEditor()],
+}),
+```
+
+Open a story's Governance panel to add or remove descriptive tags and save them to the component metadata in that story file. Storybook reindexes the file and its existing sidebar tag filter can include or exclude the tags. Tags apply to stories in that file; other files for the same component are not changed. They do not modify lifecycle, readiness or release policy.
+
+The editor only handles static CSF component metadata and literal string tag arrays. Built-in Storybook tags and negated tags are preserved and cannot be edited in the panel. Dynamic metadata, comments inside the tag array, linked files and stories outside the project are not editable. The editor checks the file revision and reports a conflict if it has changed; save again only after reloading. Edits through a single editor process are serialized, but other independent writers are not locked. Review the resulting file change in Git.
+
+The writer only handles loopback requests; JSON writes require a same-origin request. Static Storybook builds and installations without this opt-in plugin remain read-only and display the story's indexed tags. This dev-only writer is not a hosted collaboration service. Do not expose a development server containing sensitive project data to an untrusted network.
+
 The panel displays the snapshot's readiness and optional API compatibility independently. It performs no policy evaluation and grants no approval. Provenance and publication/deployment/adoption remain visible. Only configure reports produced by an engine you trust; schema validation does not authenticate a JSON file.
 
 The browser bundle has no runtime dependency on the CLI, engine, Effect, Node or MCP. Storybook is the sole peer. The manager build supplies React. Bundle budget: 128 KiB raw / 16 KiB gzip.

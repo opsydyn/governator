@@ -54,7 +54,7 @@ def validate_candidate_file(specifier, root, candidate):
 
 def source_hashes(repo):
     paths = list((repo / 'packages/storybook-addon/src').rglob('*'))
-    paths += [repo / 'packages/storybook-addon' / name for name in ['package.json', 'README.md', 'LICENSE', 'tsdown.config.ts', 'tsconfig.json']]
+    paths += [repo / 'packages/storybook-addon' / name for name in ['package.json', 'README.md', 'LICENSE', 'tsdown.config.ts', 'tsdown.tag-editor.config.ts', 'tsconfig.json']]
     paths += [repo / 'tsconfig.json']
     return {str(p.relative_to(repo)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(paths) if p.is_file()}
 
@@ -128,9 +128,12 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
         fresh_dist = home / 'fresh-addon-dist'
         assert not fresh_dist.exists(), 'Addon build output must be fresh'
         safe_output(fresh_dist)
-        rebuilt = run('addon-build', ['bun', 'run', 'build', '--out-dir', fresh_dist, '--no-clean'], package)
+        rebuilt = run('addon-build', ['bun', '--bun', 'tsdown', '--out-dir', fresh_dist, '--no-clean'], package)
         if rebuilt.returncode:
             raise RuntimeError('Current-source addon build failed')
+        editor = run('addon-editor-build', ['bun', '--bun', 'tsdown', '--config', 'tsdown.tag-editor.config.ts', '--out-dir', fresh_dist, '--no-clean'], package)
+        if editor.returncode:
+            raise RuntimeError('Current-source addon editor build failed')
         after = source_hashes(repo)
         assert before == after, 'Addon source changed during build'
         assert directory_hashes(package / 'dist') == repo_dist, 'Repository addon dist changed during fresh build'
@@ -173,7 +176,7 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
                 if manager == 'pnpm':
                     env['npm_config_store_dir'] = str(root / 'pnpm-store')
                 (root / 'empty-global').write_text('')
-                (root / '.storybook/main.ts').write_text("export default {framework:'@storybook/react-vite',stories:['../src/**/*.stories.tsx'],addons:['@governator/storybook-addon'],core:{disableTelemetry:true}};\n")
+                (root / '.storybook/main.ts').write_text("import {tagEditor} from '@governator/storybook-addon/tag-editor'; export default {framework:'@storybook/react-vite',stories:['../src/**/*.stories.tsx'],addons:['@governator/storybook-addon'],viteFinal:async(config)=>({...config,plugins:[...(config.plugins||[]),tagEditor()]}),core:{disableTelemetry:true}};\n")
                 (root / 'src/Button.stories.tsx').write_text("import React from 'react'; const Button=()=> <button>Independent consumer</button>; export default {title:'Button',component:Button,parameters:{governance:{componentId:'ui.button'}}}; export const Default={};\n")
                 pnpm = Path.home() / '.cache/node/corepack/v1/pnpm/11.9.0/bin/pnpm.cjs'
                 args = ([manager] if manager == 'npm' else ['node', str(pnpm)]) + ['install', '--ignore-scripts', '--registry', registry]

@@ -1,11 +1,12 @@
 /** @jsxRuntime classic */
 import React, { useEffect, useRef, useState } from "react";
 import type { API, HashEntry } from "storybook/manager-api";
-import { addons, types, useParameter } from "storybook/manager-api";
+import { addons, types, useParameter, useStorybookState } from "storybook/manager-api";
 import { AddonPanel } from "storybook/internal/components";
 import { useTheme } from "storybook/theming";
 import { loadReport, reportExpiry, revalidateReport } from "./report.ts";
 import type { ReportState } from "./report.ts";
+import { TagEditor } from "./tag-editor-ui.tsx";
 
 function useFreshness(
   state: ReportState,
@@ -93,6 +94,7 @@ class FocusRecovery extends React.Component<{
 }
 function Panel() {
   const theme = useTheme();
+  const { storyId } = useStorybookState();
   const params = useParameter<{ componentId?: unknown; reportUrl?: unknown }>("governance", {});
   const componentId = typeof params.componentId === "string" ? params.componentId : undefined;
   const reportUrl = typeof params.reportUrl === "string" ? params.reportUrl : undefined;
@@ -154,7 +156,10 @@ function Panel() {
   const compatibility = component?.compatibility;
   return (
     <FocusRecovery style={{ color: theme.color.defaultText, background: theme.background.content }}>
-      <style>{css}</style>
+      <style>
+        {css +
+          `.gn-tag-list{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0!important;margin:12px 0!important}.gn-tag-list li{display:flex;align-items:center;gap:6px;border:1px solid color-mix(in srgb,currentColor 25%,transparent);padding:3px 6px;border-radius:4px}.gn-tag-label{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}.gn-tag-label input{font:inherit;color:inherit;background:transparent;border:1px solid currentColor;border-radius:4px;padding:5px 8px;max-width:100%}.gn-tag-label input:focus-visible{outline:3px solid #6b9bff;outline-offset:2px}`}
+      </style>
       <div className="gn-top">
         <div>
           <h2>{component?.componentId ?? (report ? "Unverified component" : "Governance")}</h2>
@@ -193,6 +198,7 @@ function Panel() {
               ? `No registry decision for ${componentId}.`
               : "Link this story with parameters.governance.componentId."}
       </div>
+      {storyId && <TagEditor key={storyId} storyId={storyId} />}
       {!report ? (
         <p className="gn-small">
           A report is optional. This panel never grants approval or infers production deployment.

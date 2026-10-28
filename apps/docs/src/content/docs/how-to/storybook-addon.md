@@ -29,3 +29,21 @@ The addon reads strict schema 1 or 2 reports; it never evaluates policy or runs 
 Schema 2 displays reported evidence producer, provenance, observation time, age at evaluation and optional source. Schema 1 metadata is unknown. HTTP(S) sources without credentials can be links; relative and unsafe sources remain text. No evidence source is fetched. Only use reports from a producer you trust: validation cannot authenticate JSON.
 
 The addon has Storybook as its sole peer and no runtime engine, Effect, CLI or MCP dependency. See [report contracts](/reference/report-schemas/) for reader compatibility.
+
+## Edit descriptive tags in local Storybook
+
+For React/Vite 10.6.4, enable the optional local development writer in `.storybook/main.ts`:
+
+```ts
+import { tagEditor } from "@governator/storybook-addon/tag-editor";
+
+// Add to your existing configuration object:
+viteFinal: async (config) => ({
+  ...config,
+  plugins: [...(config.plugins ?? []), tagEditor()],
+}),
+```
+
+In a story's Governance panel, add or remove descriptive tags and select **Save tags**. The editor changes the static component tags in that story file. Use Storybook's sidebar tag filter to find matching stories. Review and commit the changed file through your normal workflow; tags do not change a policy decision or grant approval.
+
+This editor supports static CSF metadata and literal string tag arrays. It preserves built-in and negated tags, rejects unsafe or unsupported files, and asks you to reload if its revision check detects another edit. It serializes its own writes, but cannot lock unrelated external editors. Tags apply to the selected story file; other files for the same component are not changed. Static Storybook builds and setups without the opt-in plugin show indexed tags read-only.

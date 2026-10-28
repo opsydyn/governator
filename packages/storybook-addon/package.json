@@ -16,10 +16,11 @@
     },
     "./preset": "./dist/preset.js",
     "./manager": "./dist/manager.js",
+    "./tag-editor": "./dist/tag-editor.mjs",
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "bun --bun tsdown",
+    "build": "bun --bun tsdown && bun --bun tsdown --config tsdown.tag-editor.config.ts",
     "prepack": "bun run build"
   },
   "peerDependencies": {

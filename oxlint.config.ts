@@ -85,6 +85,32 @@ export default defineConfig({
       rules: { "linteffect/no-try-catch": "off" },
     },
     {
+      // Native React UI and browser serialization stay independent of the private Effect engine.
+      files: ["packages/storybook-addon/src/tag-editor-ui.tsx"],
+      rules: {
+        "linteffect/no-react-state": "off",
+        "linteffect/no-try-catch": "off",
+        "linteffect/no-return-in-arrow": "off",
+        "linteffect/no-naked-object-state-update": "off",
+      },
+    },
+    {
+      // Optional Node-only authoring boundary handles CSF parsing, HTTP and filesystem cleanup.
+      files: ["packages/storybook-addon/src/tag-{csf,storage,editor-server}.ts"],
+      rules: {
+        "linteffect/no-node-platform-in-shared-code": "off",
+        "linteffect/no-try-catch": "off",
+        "linteffect/no-return-in-arrow": "off",
+        "linteffect/no-string-sentinel-const": "off",
+        "linteffect/no-naked-object-state-update": "off",
+      },
+    },
+    {
+      // The rendered UI test uses a small deterministic fetch stub.
+      files: ["tests/storybook-tag-editor-ui.test.ts"],
+      rules: { "linteffect/no-return-in-arrow": "off" },
+    },
+    {
       // These files implement wire serialization or deliberately construct malformed test inputs.
       files: [
         "scripts/protocol.ts",

@@ -7,6 +7,7 @@ import { at, evaluation } from "./fixtures.ts";
 
 const storybook = vi.hoisted(() => ({
   params: { componentId: "ui.button", reportUrl: "/interactions.json" },
+  storyId: undefined as string | undefined,
   renderPanel: undefined as undefined | ((props: { active: boolean }) => React.ReactNode),
 }));
 vi.mock("storybook/manager-api", () => ({
@@ -20,6 +21,7 @@ vi.mock("storybook/manager-api", () => ({
   },
   types: { PANEL: "panel" },
   useParameter: () => storybook.params,
+  useStorybookState: () => ({ storyId: storybook.storyId }),
 }));
 vi.mock("storybook/internal/components", () => ({
   AddonPanel: ({ children }: { children: React.ReactNode }) => children,
@@ -102,6 +104,7 @@ beforeEach(() => {
     vi.fn(async () => response()),
   );
   storybook.params = { componentId: "ui.button", reportUrl: "/interactions.json" };
+  storybook.storyId = undefined;
   clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, "clipboard");
   container = document.createElement("div");
   document.body.append(container);
@@ -118,6 +121,26 @@ afterEach(async () => {
 });
 
 describe("panel interactions", () => {
+  test("offers descriptive tags even when governance identity is not configured", async () => {
+    storybook.params = { componentId: "", reportUrl: "" };
+    storybook.storyId = "button--primary";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string | URL) =>
+        String(url).includes("index.json")
+          ? new Response(
+              JSON.stringify({
+                entries: { "button--primary": { importPath: "./Button.stories.tsx" } },
+              }),
+            )
+          : new Response(JSON.stringify({ tags: ["forms"], revision: "abc" })),
+      ),
+    );
+    await act(async () => root.render(render()));
+    await flush();
+    expect(container.textContent).toContain("Descriptive tags");
+    expect(container.textContent).toContain("forms");
+  });
   test("keyboard reload retains a usable focused control through loading, error and recovery", async () => {
     const retry = deferred<Response>();
     const recovery = deferred<Response>();

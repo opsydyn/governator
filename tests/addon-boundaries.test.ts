@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import manifest from "../packages/storybook-addon/package.json";
-import { inspectAddon } from "../scripts/addon-boundaries.ts";
+import { inspectAddon, inspectEditor } from "../scripts/addon-boundaries.ts";
 test("addon allows only Storybook peers and manager-provided React", () => {
   const manifest = { peerDependencies: { storybook: "^10.6.4" } };
   expect(
@@ -18,6 +18,7 @@ test("addon allows only Storybook peers and manager-provided React", () => {
     'export {foo} from "node:fs";',
     'import("@governator/core")',
     'require("node:path")',
+    'import "./tag-storage.ts"',
   ])
     expect(inspectAddon(manifest, [source])).not.toEqual([]);
 });
@@ -28,4 +29,15 @@ test("addon advertises only the qualified renderer and preserves preview metadat
   expect(manifest.private).toBe(true);
   expect(manifest.peerDependencies).toEqual({ storybook: "^10.6.4" });
   expect("dependencies" in manifest).toBe(false);
+});
+
+test("local editor only imports its declared server primitives and Storybook parser", () => {
+  expect(
+    inspectEditor([
+      'import { readFile } from "node:fs/promises";',
+      'import { loadCsf } from "storybook/internal/csf-tools";',
+    ]),
+  ).toEqual([]);
+  expect(inspectEditor(['import secret from "arbitrary-package";'])).not.toEqual([]);
+  expect(inspectEditor(['import("node:child_process")'])).not.toEqual([]);
 });

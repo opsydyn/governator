@@ -5,7 +5,7 @@ const meta = {
   component: Button,
   parameters: { governance: { componentId: "ui.button" } },
   args: { label: "Save changes", variant: "primary" },
-  tags: ["stable"],
+  tags: ["stable", "actions"],
 } satisfies Meta<typeof Button>;
 export default meta;
 type Story = StoryObj<typeof meta>;
