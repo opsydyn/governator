@@ -1,35 +1,83 @@
 export type StoryLink = { id: string; name: string };
 
-/** Read only unambiguous mappings for local stories from Storybook's source index. */
+export async function loadStoryMap(
+  base: string,
+  origin: string,
+  fetcher: (url: string, options: RequestInit) => Promise<Response> = fetch,
+  signal?: AbortSignal,
+): Promise<unknown> {
+  try {
+    const url = new URL("./governator-story-map.json", base);
+    if (
+      !["http:", "https:"].includes(url.protocol) ||
+      url.origin !== origin ||
+      url.username ||
+      url.password
+    )
+      return undefined;
+    const response = await fetcher(url.href, {
+      ...(signal ? { signal } : {}),
+      cache: "no-store",
+      credentials: "omit",
+      redirect: "error",
+    });
+    if (!response.ok) return undefined;
+    return await response.json();
+  } catch {
+    return undefined;
+  }
+}
+
+/** Join explicit source mappings only to matching local stories in the current index. */
 export function storiesByComponent(
   index: Record<string, unknown> | undefined,
+  mapping: unknown,
 ): Record<string, StoryLink[]> {
   const result: Record<string, StoryLink[]> = Object.create(null);
-  for (const entry of Object.values(index ?? {})) {
-    if (!entry || typeof entry !== "object") continue;
-    const item = entry as Record<string, unknown>;
+  if (
+    !mapping ||
+    typeof mapping !== "object" ||
+    !("version" in mapping) ||
+    mapping.version !== 1 ||
+    !("stories" in mapping) ||
+    !Array.isArray(mapping.stories) ||
+    mapping.stories.length > 100_000
+  )
+    return result;
+  const seen = new Set<string>();
+  for (const raw of mapping.stories) {
+    if (!raw || typeof raw !== "object") return Object.create(null);
+    const item = raw as Record<string, unknown>;
     if (
-      item.type !== "story" ||
-      item.refId ||
-      typeof item.id !== "string" ||
-      typeof item.name !== "string" ||
-      typeof item.title !== "string" ||
-      !Array.isArray(item.tags)
+      ["id", "componentId", "importPath", "exportName"].some(
+        (key) => typeof item[key] !== "string" || !(item[key] as string).length,
+      )
+    )
+      return Object.create(null);
+    const { id, componentId, importPath, exportName } = item as {
+      id: string;
+      componentId: string;
+      importPath: string;
+      exportName: string;
+    };
+    if (seen.has(id)) return Object.create(null);
+    seen.add(id);
+    if (!index || !Object.hasOwn(index, id)) continue;
+    const entry = index[id];
+    if (!entry || typeof entry !== "object") continue;
+    const story = entry as Record<string, unknown>;
+    if (
+      story.type !== "story" ||
+      story.subtype === "test" ||
+      story.refId ||
+      story.id !== id ||
+      story.importPath !== importPath ||
+      story.exportName !== exportName ||
+      typeof story.name !== "string" ||
+      typeof story.title !== "string"
     )
       continue;
-    if (!item.tags.includes("governator:indexed") || item.tags.includes("governator:unmapped"))
-      continue;
-    const tags = item.tags.filter(
-      (tag): tag is string => typeof tag === "string" && tag.startsWith("governator:component:"),
-    );
-    if (tags.length !== 1) continue;
-    try {
-      const id = decodeURIComponent(tags[0]!.slice("governator:component:".length));
-      if (!id) continue;
-      (result[id] ??= []).push({ id: item.id, name: `${item.title} / ${item.name}` });
-    } catch {
-      /* Invalid markers do not produce a navigation link. */
-    }
+    (result[componentId] ??= []).push({ id, name: `${story.title} / ${story.name}` });
   }
   return result;
 }

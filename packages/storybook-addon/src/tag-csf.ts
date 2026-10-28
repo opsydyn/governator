@@ -1,8 +1,7 @@
 import { loadCsf } from "storybook/internal/csf-tools";
 
 const reserved = new Set(["dev", "test", "autodocs", "manifest", "play-fn", "test-fn"]);
-const isProtected = (tag: string) =>
-  tag.startsWith("!") || tag.startsWith("governator:") || reserved.has(tag);
+const isProtected = (tag: string) => tag.startsWith("!") || reserved.has(tag);
 
 /** Edit only literal component metadata; unsupported forms fail without rewriting the file. */
 export function editComponentTags(

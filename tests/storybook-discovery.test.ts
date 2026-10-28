@@ -128,3 +128,36 @@ test("offers the explicitly mapped stories and navigates to the chosen story", a
   expect(selectStory).toHaveBeenCalledWith("components-select--default");
   await act(async () => root.unmount());
 });
+
+test("announces when unsaved tag edits prevent opening another story", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  const decisions = [
+    {
+      componentId: "ui.select",
+      package: "@example/ui",
+      gate: "blocked" as const,
+      lifecycle: "candidate" as const,
+      owners: [],
+      reasons: [],
+    },
+  ];
+  const selectStory = vi.fn(() => false);
+  const el = document.createElement("div");
+  document.body.append(el);
+  const root = createRoot(el);
+  await act(async () =>
+    root.render(
+      React.createElement(Discovery, {
+        decisions,
+        stories: { "ui.select": [{ id: "select--one", name: "Select / One" }] },
+        selectStory,
+      }),
+    ),
+  );
+  const button = [...el.querySelectorAll("button")].find((item) =>
+    item.textContent?.includes("Select / One"),
+  )!;
+  await act(async () => button.click());
+  expect(el.textContent).toContain("Save or discard your tag edits before opening another story");
+  await act(async () => root.unmount());
+});

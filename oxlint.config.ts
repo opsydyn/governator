@@ -105,6 +105,7 @@ export default defineConfig({
       files: [
         "packages/storybook-addon/src/tag-{csf,storage,editor-server}.ts",
         "packages/storybook-addon/src/story-index.ts",
+        "packages/storybook-addon/src/preset.ts",
       ],
       rules: {
         "linteffect/no-node-platform-in-shared-code": "off",
@@ -116,13 +117,17 @@ export default defineConfig({
     },
     {
       // The rendered UI test uses a small deterministic fetch stub.
-      files: ["tests/storybook-tag-editor-ui.test.ts", "tests/addon-validator-equivalence.test.ts"],
+      files: [
+        "tests/storybook-tag-editor-ui.test.ts",
+        "tests/storybook-map-integration.test.ts",
+        "tests/addon-validator-equivalence.test.ts",
+      ],
       rules: { "linteffect/no-return-in-arrow": "off" },
     },
     {
       // Temporary CSF fixture cleanup and schema generation are boundary operations.
       files: ["tests/storybook-source-navigation.test.ts"],
-      rules: { "linteffect/no-try-catch": "off" },
+      rules: { "linteffect/no-try-catch": "off", "linteffect/no-return-in-arrow": "off" },
     },
     {
       // These files implement wire serialization or deliberately construct malformed test inputs.

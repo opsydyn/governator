@@ -1,44 +1,137 @@
 import { loadCsf } from "storybook/internal/csf-tools";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
+import { resolve } from "node:path";
 import type { Indexer } from "storybook/internal/types";
 
-export const componentTagPrefix = "governator:component:";
+type Snapshot = { source: string; identities: Record<string, string> };
+const snapshots = new Map<string, Snapshot>();
+const generations = new Map<string, number>();
+let revision = 0;
+
+export type StoryMap = {
+  version: 1;
+  stories: { id: string; componentId: string; importPath: string; exportName: string }[];
+};
+
+/** Join source snapshots to Storybook's current canonical index; never manufacture story IDs. */
+export async function storyMapFromIndex(index: unknown, workingDir: string): Promise<StoryMap> {
+  const result: StoryMap = { version: 1, stories: [] };
+  const started = revision;
+  if (!index || typeof index !== "object" || !("entries" in index)) return result;
+  const entries = index.entries;
+  if (!entries || typeof entries !== "object" || Array.isArray(entries)) return result;
+  const candidates: {
+    id: string;
+    componentId: string;
+    importPath: string;
+    exportName: string;
+    fileName: string;
+    snapshot: Snapshot;
+  }[] = [];
+  for (const [key, raw] of Object.entries(entries)) {
+    if (!raw || typeof raw !== "object") continue;
+    const entry = raw as Record<string, unknown>;
+    if (
+      entry.type !== "story" ||
+      (entry.subtype !== undefined && entry.subtype !== "story") ||
+      typeof entry.id !== "string" ||
+      entry.id !== key ||
+      typeof entry.importPath !== "string" ||
+      entry.importPath.startsWith("virtual:") ||
+      typeof entry.exportName !== "string"
+    )
+      continue;
+    const fileName = resolve(workingDir, entry.importPath);
+    const snapshot = snapshots.get(fileName);
+    if (!snapshot || !Object.hasOwn(snapshot.identities, entry.exportName)) continue;
+    const componentId = snapshot.identities[entry.exportName];
+    if (typeof componentId !== "string" || !componentId) continue;
+    candidates.push({
+      id: entry.id,
+      componentId,
+      importPath: entry.importPath,
+      exportName: entry.exportName,
+      fileName,
+      snapshot,
+    });
+  }
+  const counts = new Map<string, number>();
+  for (const candidate of candidates) {
+    const key = JSON.stringify([candidate.fileName, candidate.exportName]);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const verified = new Map<string, boolean>();
+  for (const candidate of candidates) {
+    const key = JSON.stringify([candidate.fileName, candidate.exportName]);
+    if (counts.get(key) !== 1) continue;
+    if (!verified.has(candidate.fileName)) {
+      try {
+        verified.set(
+          candidate.fileName,
+          (await readFile(candidate.fileName, "utf8")) === candidate.snapshot.source,
+        );
+      } catch {
+        verified.set(candidate.fileName, false);
+      }
+    }
+    if (verified.get(candidate.fileName)) {
+      const { id, componentId, importPath, exportName } = candidate;
+      result.stories.push({ id, componentId, importPath, exportName });
+    }
+  }
+  return started === revision ? result : { version: 1, stories: [] };
+}
 
 export function wrapIndexers(indexers: Indexer[]): Indexer[] {
   return indexers.map((indexer) => ({
     ...indexer,
     async createIndex(fileName, options) {
-      const entries = await indexer.createIndex(fileName, options);
-      let identities: Record<string, string> = Object.create(null);
+      const path = resolve(fileName);
+      const generation = (generations.get(path) ?? 0) + 1;
+      generations.set(path, generation);
+      snapshots.delete(path);
+      revision++;
+      let before: string | undefined;
+      let beforeStat: Awaited<ReturnType<typeof stat>> | undefined;
       if (/\.(?:stories|story)\.[cm]?[jt]sx?$/.test(fileName)) {
         try {
-          identities = identitiesFromCsf(
-            await readFile(fileName, "utf8"),
-            fileName,
-            entries.map((entry) => entry.exportName),
-          );
+          beforeStat = await stat(path);
+          before = await readFile(path, "utf8");
         } catch {
-          /* Missing or unsupported sources stay unlinked. */
+          /* Unsupported source remains unmapped. */
         }
       }
-      return entries.map((entry) => {
-        const tags = (entry.tags ?? []).filter((tag) => !tag.startsWith("governator:"));
-        tags.push("governator:indexed");
-        const identity = Object.hasOwn(identities, entry.exportName)
-          ? identities[entry.exportName]
-          : undefined;
-        let mapped = false;
-        if (identity) {
-          try {
-            tags.push(`${componentTagPrefix}${encodeURIComponent(identity)}`);
-            mapped = true;
-          } catch {
-            /* Malformed Unicode stays unlinked. */
+      const entries = await indexer.createIndex(fileName, options);
+      if (before !== undefined) {
+        try {
+          const after = await readFile(path, "utf8");
+          const afterStat = await stat(path);
+          if (
+            before === after &&
+            beforeStat &&
+            beforeStat.ino === afterStat.ino &&
+            beforeStat.size === afterStat.size &&
+            beforeStat.mtimeMs === afterStat.mtimeMs &&
+            beforeStat.ctimeMs === afterStat.ctimeMs &&
+            generations.get(path) === generation
+          ) {
+            const counts = new Map<string, number>();
+            for (const entry of entries)
+              counts.set(entry.exportName, (counts.get(entry.exportName) ?? 0) + 1);
+            const names = entries
+              .filter((entry) => entry.type === "story" && counts.get(entry.exportName) === 1)
+              .map((entry) => entry.exportName);
+            snapshots.set(path, {
+              source: after,
+              identities: identitiesFromCsf(after, fileName, names),
+            });
           }
+        } catch {
+          /* Source changed or disappeared; do not publish a mapping. */
         }
-        if (!mapped) tags.push("governator:unmapped");
-        return { ...entry, tags };
-      });
+      }
+      revision++;
+      return entries;
     },
   }));
 }
@@ -112,7 +205,16 @@ export function identitiesFromCsf(
         )
       )
         return false;
-      if (["CallExpression", "OptionalCallExpression", "NewExpression"].includes(String(item.type)))
+      if (
+        [
+          "CallExpression",
+          "OptionalCallExpression",
+          "NewExpression",
+          "TaggedTemplateExpression",
+          "AwaitExpression",
+          "ImportExpression",
+        ].includes(String(item.type))
+      )
         return true;
       return Object.entries(item).some(
         ([key, child]) => !["loc", "tokens", "comments"].includes(key) && hasEagerCall(child),
@@ -141,8 +243,16 @@ export function identitiesFromCsf(
     const base = identity(property(csf._metaNode, "parameters"));
     for (const name of exports) {
       const declaration = csf._storyExports[name];
+      if (declaration?.type === "FunctionDeclaration") {
+        if (typeof base === "string") result[name] = base;
+        continue;
+      }
       if (declaration?.type !== "VariableDeclarator") continue;
       const story = unwrap(declaration.init);
+      if (story?.type === "ArrowFunctionExpression" || story?.type === "FunctionExpression") {
+        if (typeof base === "string") result[name] = base;
+        continue;
+      }
       if (story?.type !== "ObjectExpression") continue;
       const params = property(story, "parameters");
       const own = identity(params);

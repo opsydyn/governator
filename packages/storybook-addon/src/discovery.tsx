@@ -17,10 +17,11 @@ export function Discovery({
 }: {
   decisions: readonly Decision[];
   stories?: Record<string, StoryLink[]>;
-  selectStory?: (id: string) => void;
+  selectStory?: (id: string) => boolean | void;
 }) {
   const [filter, setFilter] = useState<Filter>("attention");
   const [search, setSearch] = useState("");
+  const [navigationMessage, setNavigationMessage] = useState("");
   const attention = decisions.filter((item) => item.gate !== "ready").length;
   const query = search.trim().toLowerCase();
   const matches = decisions.filter((item) => {
@@ -75,6 +76,9 @@ export function Discovery({
           ? `${matches.length} matching components${matches.length > 100 ? "; showing first 100" : ""}`
           : "No components match"}
       </p>
+      <p role="status" aria-live="polite">
+        {navigationMessage}
+      </p>
       <ul className="gn-discovery-list">
         {matches.slice(0, 100).map((item) => (
           <li key={item.componentId}>
@@ -89,7 +93,18 @@ export function Discovery({
             </span>
             {item.reasons[0] && <p className="gn-small">{item.reasons[0]}</p>}
             {stories[item.componentId]?.map((story) => (
-              <button key={story.id} type="button" onClick={() => selectStory?.(story.id)}>
+              <button
+                key={story.id}
+                type="button"
+                onClick={() => {
+                  const selected = selectStory?.(story.id);
+                  setNavigationMessage(
+                    selected === false
+                      ? "Save or discard your tag edits before opening another story."
+                      : `Opening ${story.name}.`,
+                  );
+                }}
+              >
                 Open {story.name}
               </button>
             ))}

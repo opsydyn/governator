@@ -22,7 +22,7 @@ vi.mock("storybook/manager-api", () => ({
   types: { PANEL: "panel" },
   useParameter: () => storybook.params,
   useStorybookState: () => ({ storyId: storybook.storyId }),
-  useStorybookApi: () => ({ selectStory: () => {} }),
+  useStorybookApi: () => ({ selectStory: () => {}, on: () => () => {} }),
 }));
 vi.mock("storybook/internal/components", () => ({
   AddonPanel: ({ children }: { children: React.ReactNode }) => children,

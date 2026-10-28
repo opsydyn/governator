@@ -1,13 +1,25 @@
 /** @jsxRuntime classic */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 type EditorData = { path: string; revision: string; tags: string[] };
+export type TagDraft = { data: EditorData; draft: string[]; input: string };
 const endpoint = () => new URL("./__governator/tag-editor", document.baseURI);
 const tagPattern = /^[a-zA-Z0-9][a-zA-Z0-9:_-]{0,63}$/;
 const reserved = new Set(["dev", "test", "autodocs", "manifest", "play-fn", "test-fn"]);
 
 /** Editing is optional and available only when the local dev adapter is enabled. */
-export function TagEditor({ storyId }: { storyId: string }) {
+export function TagEditor({
+  storyId,
+  onDirtyChange,
+  drafts,
+}: {
+  storyId: string;
+  onDirtyChange?: (dirty: boolean) => void;
+  drafts?: Map<string, TagDraft>;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const latestData = useRef<EditorData | undefined>(undefined);
   const [data, setData] = useState<EditorData>();
   const [draft, setDraft] = useState<string[]>([]);
   const [storyTags, setStoryTags] = useState<string[]>([]);
@@ -15,6 +27,18 @@ export function TagEditor({ storyId }: { storyId: string }) {
   const [message, setMessage] = useState("Loading tags…");
   const [reload, setReload] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [conflict, setConflict] = useState(false);
+  const dirty =
+    !!data && (JSON.stringify(draft) !== JSON.stringify(data.tags) || input.trim().length > 0);
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+    return () => onDirtyChange?.(false);
+  }, [dirty, onDirtyChange]);
+  useEffect(() => {
+    if (!data || !drafts) return;
+    if (dirty) drafts.set(storyId, { data, draft, input });
+    else drafts.delete(storyId);
+  }, [data, draft, input, dirty, drafts, storyId]);
   useEffect(() => {
     const controller = new AbortController();
     setData(undefined);
@@ -45,10 +69,7 @@ export function TagEditor({ storyId }: { storyId: string }) {
           setStoryTags(
             entry.tags.filter(
               (tag: unknown): tag is string =>
-                typeof tag === "string" &&
-                !reserved.has(tag) &&
-                !tag.startsWith("!") &&
-                !tag.startsWith("governator:"),
+                typeof tag === "string" && !reserved.has(tag) && !tag.startsWith("!"),
             ),
           );
         const url = endpoint();
@@ -74,9 +95,25 @@ export function TagEditor({ storyId }: { storyId: string }) {
         )
           throw new Error("Invalid tag response");
         if (!controller.signal.aborted) {
-          setData({ path: entry.importPath, revision: result.revision, tags: result.tags });
-          setDraft(result.tags);
-          setMessage("");
+          const current = { path: entry.importPath, revision: result.revision, tags: result.tags };
+          latestData.current = current;
+          const saved = drafts?.get(storyId);
+          if (saved) {
+            const changed =
+              saved.data.path !== current.path || saved.data.revision !== current.revision;
+            setData(saved.data);
+            setDraft(saved.draft);
+            setInput(saved.input);
+            setConflict(changed);
+            setMessage(changed ? "" : "Unsaved tag edits restored.");
+          } else {
+            drafts?.delete(storyId);
+            setData(current);
+            setDraft(result.tags);
+            setInput("");
+            setConflict(false);
+            setMessage("");
+          }
         }
       } catch (error) {
         if (!controller.signal.aborted)
@@ -84,10 +121,10 @@ export function TagEditor({ storyId }: { storyId: string }) {
       }
     })();
     return () => controller.abort();
-  }, [storyId, reload]);
+  }, [storyId, reload, drafts]);
   const add = () => {
     const tag = input.trim();
-    if (!tagPattern.test(tag) || reserved.has(tag) || tag.startsWith("governator:")) {
+    if (!tagPattern.test(tag) || reserved.has(tag)) {
       setMessage("Enter a descriptive tag; built-in Storybook tags cannot be edited here.");
       return;
     }
@@ -101,10 +138,10 @@ export function TagEditor({ storyId }: { storyId: string }) {
     }
     setDraft([...draft, tag]);
     setInput("");
-    setMessage("Unsaved changes");
+    setMessage(`Added ${tag}. Unsaved changes.`);
   };
   const save = async () => {
-    if (!data || saving) return;
+    if (!data || saving || conflict) return;
     setSaving(true);
     setMessage("Saving tags…");
     try {
@@ -120,13 +157,28 @@ export function TagEditor({ storyId }: { storyId: string }) {
         typeof result !== "object" ||
         !("revision" in result) ||
         typeof result.revision !== "string"
-      )
+      ) {
+        if (response.status === 409) setConflict(true);
         throw new Error(
           response.status === 409
-            ? "Story changed. Reload tags before saving."
+            ? "Story changed. Your draft is unsaved; discard it and reload to continue."
             : "Could not save tags.",
         );
-      setData({ ...data, tags: draft, revision: result.revision });
+      }
+      const saved = { ...data, tags: draft, revision: result.revision };
+      const pending = drafts?.get(storyId);
+      if (
+        pending &&
+        pending.data.path === data.path &&
+        pending.data.revision === data.revision &&
+        JSON.stringify(pending.draft) === JSON.stringify(draft) &&
+        pending.input === input
+      ) {
+        if (input.trim()) drafts?.set(storyId, { data: saved, draft, input });
+        else drafts?.delete(storyId);
+      }
+      latestData.current = saved;
+      setData(saved);
       setMessage("Tags saved to the story file.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not save tags.");
@@ -135,7 +187,7 @@ export function TagEditor({ storyId }: { storyId: string }) {
     }
   };
   return (
-    <section className="gn-card" aria-label="Descriptive tags">
+    <section ref={sectionRef} tabIndex={-1} className="gn-card" aria-label="Descriptive tags">
       <h3>Descriptive tags</h3>
       <p className="gn-small">
         These tags apply to stories in this file. They organise components; they do not approve
@@ -150,9 +202,10 @@ export function TagEditor({ storyId }: { storyId: string }) {
                 <button
                   aria-label={`Remove ${tag}`}
                   disabled={saving}
-                  onClick={() => {
+                  onClick={(event) => {
+                    if (document.activeElement === event.currentTarget) inputRef.current?.focus();
                     setDraft(draft.filter((item) => item !== tag));
-                    setMessage("Unsaved changes");
+                    setMessage(`Removed ${tag}. Unsaved changes.`);
                   }}
                 >
                   Remove
@@ -163,6 +216,7 @@ export function TagEditor({ storyId }: { storyId: string }) {
           <label className="gn-tag-label">
             New descriptive tag{" "}
             <input
+              ref={inputRef}
               value={input}
               disabled={saving}
               onChange={(event) => setInput(event.currentTarget.value)}
@@ -173,18 +227,61 @@ export function TagEditor({ storyId }: { storyId: string }) {
           </button>{" "}
           <button
             onClick={() => void save()}
-            disabled={saving || JSON.stringify(draft) === JSON.stringify(data.tags)}
+            disabled={saving || conflict || JSON.stringify(draft) === JSON.stringify(data.tags)}
           >
             Save tags
           </button>
+          {dirty && (
+            <button
+              disabled={saving}
+              onClick={(event) => {
+                const current = latestData.current ?? data;
+                if (conflict && current.revision === data.revision) {
+                  if (document.activeElement === event.currentTarget) sectionRef.current?.focus();
+                  drafts?.delete(storyId);
+                  setData(undefined);
+                  setDraft([]);
+                  setInput("");
+                  setConflict(false);
+                  setReload(reload + 1);
+                  return;
+                }
+                if (document.activeElement === event.currentTarget) inputRef.current?.focus();
+                setData(current);
+                setDraft(current.tags);
+                setInput("");
+                setConflict(false);
+                setMessage("Tag edits discarded.");
+              }}
+            >
+              Discard changes
+            </button>
+          )}
         </>
       )}
       {!data && storyTags.length > 0 && <p>Story tags: {storyTags.join(", ")}</p>}
       <p role="status" aria-live="polite">
         {message}
       </p>
-      {message.includes("changed") && (
-        <button onClick={() => setReload(reload + 1)}>Reload tags</button>
+      {conflict && (
+        <p role="status">
+          Story changed. Your draft is unsaved; discard it and reload to continue.
+        </p>
+      )}
+      {conflict && (
+        <button
+          onClick={(event) => {
+            if (document.activeElement === event.currentTarget) sectionRef.current?.focus();
+            drafts?.delete(storyId);
+            setData(undefined);
+            setDraft([]);
+            setInput("");
+            setConflict(false);
+            setReload(reload + 1);
+          }}
+        >
+          Discard draft and reload tags
+        </button>
       )}
     </section>
   );

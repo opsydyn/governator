@@ -1,5 +1,5 @@
 /** @jsxRuntime classic */
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { API, HashEntry } from "storybook/manager-api";
 import {
   addons,
@@ -8,14 +8,19 @@ import {
   useStorybookApi,
   useStorybookState,
 } from "storybook/manager-api";
-import { storiesByComponent } from "./story-navigation.ts";
+import { loadStoryMap, storiesByComponent } from "./story-navigation.ts";
+import { STORY_INDEX_INVALIDATED } from "storybook/internal/core-events";
 import { AddonPanel } from "storybook/internal/components";
 import { useTheme } from "storybook/theming";
 import { loadReport, reportExpiry, revalidateReport } from "./report.ts";
 import type { ReportState } from "./report.ts";
 import { TagEditor } from "./tag-editor-ui.tsx";
+import type { TagDraft } from "./tag-editor-ui.tsx";
 import { Discovery } from "./discovery.tsx";
 import { brandCss } from "./brand.ts";
+
+// Storybook may unmount the panel while the manager stays open.
+const tagDrafts = new Map<string, TagDraft>();
 
 function useFreshness(
   state: ReportState,
@@ -111,6 +116,37 @@ function Panel() {
   const theme = useTheme();
   const { storyId, index } = useStorybookState();
   const api = useStorybookApi();
+  const tagEditsPending = useRef(false);
+  const setTagEditsPending = useCallback((dirty: boolean) => {
+    tagEditsPending.current = dirty;
+  }, []);
+  const mappingGeneration = useRef(0);
+  const [storyMap, setStoryMap] = useState<{ index: typeof index; value: unknown }>();
+  useEffect(
+    () =>
+      api.on(STORY_INDEX_INVALIDATED, () => {
+        mappingGeneration.current++;
+        setStoryMap(undefined);
+      }),
+    [api],
+  );
+  useEffect(() => {
+    const generation = ++mappingGeneration.current;
+    const controller = new AbortController();
+    setStoryMap(undefined);
+    if (index)
+      void loadStoryMap(document.baseURI, window.location.origin, fetch, controller.signal).then(
+        (value) => {
+          if (
+            !controller.signal.aborted &&
+            generation === mappingGeneration.current &&
+            value !== undefined
+          )
+            setStoryMap({ index, value });
+        },
+      );
+    return () => controller.abort();
+  }, [index]);
   const params = useParameter<{ componentId?: unknown; reportUrl?: unknown }>("governance", {});
   const componentId = typeof params.componentId === "string" ? params.componentId : undefined;
   const reportUrl = typeof params.reportUrl === "string" ? params.reportUrl : undefined;
@@ -226,11 +262,25 @@ function Panel() {
       {report && (
         <Discovery
           decisions={report.decisions}
-          stories={storiesByComponent(index)}
-          selectStory={(id) => api.selectStory(id)}
+          stories={storiesByComponent(
+            index,
+            storyMap && storyMap.index === index ? storyMap.value : undefined,
+          )}
+          selectStory={(id) => {
+            if (id !== storyId && tagEditsPending.current) return false;
+            api.selectStory(id);
+            return true;
+          }}
         />
       )}
-      {storyId && <TagEditor key={storyId} storyId={storyId} />}
+      {storyId && (
+        <TagEditor
+          key={storyId}
+          storyId={storyId}
+          onDirtyChange={setTagEditsPending}
+          drafts={tagDrafts}
+        />
+      )}
       {!report ? (
         <p className="gn-small">
           A report is optional. This panel never grants approval or infers production deployment.
