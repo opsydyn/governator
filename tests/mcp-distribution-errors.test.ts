@@ -14,6 +14,21 @@ for (const [label, createServer] of [
   ["source", createSourceServer],
   ["built", createBuiltServer],
 ] as const) {
+  test(`${label} rejects invalid successful output`, async () => {
+    const server = createServer({ query: () => ({ scope: "invalid", provenance: "invalid" }) });
+    const client = new Client({ name: "invalid-output-test", version: "0.1.0" });
+    const [c, s] = InMemoryTransport.createLinkedPair();
+    try {
+      await server.connect(s);
+      await client.connect(c);
+      const response = await client.callTool({ name: "get_design_system_report", arguments: {} });
+      expect(response.isError).toBe(true);
+      expect(response.structuredContent).toBeUndefined();
+    } finally {
+      await client.close();
+      await server.close();
+    }
+  });
   test.each([
     "invalid_request",
     "invalid_snapshot",

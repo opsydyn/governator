@@ -8,6 +8,8 @@ import {
   loadSnapshot,
   createQueryService,
   toolNames,
+  toolInputJsonSchema,
+  queryJsonSchema,
 } from "../packages/query/src/index.ts";
 import { queryProject } from "./query-fixtures.ts";
 const roots: string[] = [];
@@ -37,8 +39,10 @@ test.each([1, 2] as const)(
           idempotentHint: true,
           openWorldHint: false,
         });
-        expect(tool.inputSchema.type).toBe("object");
-        expect(tool.outputSchema?.type).toBe("object");
+        expect(tool.inputSchema).toEqual(
+          toolInputJsonSchema(tool.name as (typeof toolNames)[number]),
+        );
+        expect(tool.outputSchema).toEqual(queryJsonSchema().schema);
       }
       const report = await client.callTool({ name: "get_design_system_report", arguments: {} });
       expect(report.isError).not.toBe(true);
@@ -66,6 +70,10 @@ test.each([1, 2] as const)(
       expect(missing.content).toEqual([
         { type: "text", text: expect.stringContaining("unknown_component") },
       ]);
+      for (const arguments_ of [{ unexpected: true }, { filters: { unexpected: true } }]) {
+        const extra = await client.callTool({ name: "list_components", arguments: arguments_ });
+        expect(extra.isError).toBe(true);
+      }
       const invalid = await client.callTool({ name: "list_components", arguments: { limit: 0 } });
       expect(invalid.isError).toBe(true);
       await expect(client.callTool({ name: "publish", arguments: {} })).rejects.toThrow(
