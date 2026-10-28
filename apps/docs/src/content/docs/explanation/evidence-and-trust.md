@@ -15,4 +15,4 @@ Freshness is bounded: the dogfood unit policy accepts evidence up to 24 hours ol
 
 Explicit digest-checked baseline fixtures, synthetic review evaluators, fixture signatures and synthetic signed policy lifecycles exercise local mechanics. They do not establish authenticated npm releases, independently protected reviewer authority or real GitHub approval. The inactive source-review reader returns unverified observations. Ordinary changed releases remain blocked without a trusted owner-review adapter.
 
-Local builds/tests, consumer compilation and SSR observations do not establish browser, accessibility, human or hosted acceptance. Publication, deployment, usage and adoption need separate evidence. See [report validation](/reference/report-schemas/) and [MCP scope](/reference/mcp-tools/).
+Local builds/tests, consumer compilation and SSR observations do not establish browser, accessibility, human or hosted acceptance. Publication, deployment, usage and adoption need separate evidence. See [report validation](../../reference/report-schemas/) and [MCP scope](../../reference/mcp-tools/).

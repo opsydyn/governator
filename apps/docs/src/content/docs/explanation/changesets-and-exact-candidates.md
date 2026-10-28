@@ -15,4 +15,4 @@ Contract and package versions are checked separately. The removed Button `tone` 
 
 The analyzer currently supports one root exports types entrypoint and optional package.json export. Additional entrypoints, declaration wildcards, unsafe/special archive entries and local runtime links fail closed. Candidate freshness is capped at 24 hours. Local baseline files and their expected hashes remain a reviewed-input trust boundary, not publisher authentication.
 
-Versions in this checkout are already proposed candidates. Stock Changesets versioning belongs on a pre-versioned release branch; applying it again here causes an exact-version mismatch. Publishing is disabled and requires a separate trusted adapter. Use the [release how-to](/how-to/changesets-release/) to inspect the deliberate block safely.
+Versions in this checkout are already proposed candidates. Stock Changesets versioning belongs on a pre-versioned release branch; applying it again here causes an exact-version mismatch. Publishing is disabled and requires a separate trusted adapter. Use the [release how-to](../../how-to/changesets-release/) to inspect the deliberate block safely.

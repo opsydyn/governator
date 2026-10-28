@@ -3,7 +3,7 @@ title: MCP tools and query limits
 description: Fourteen immutable governance queries with explicit provenance and bounded results.
 ---
 
-The private Bun stdio adapter loads an exported snapshot, then serves read-only memory queries. It never runs tests, builds, packing, network requests, edits, approvals or publication. [Export and launch instructions](/how-to/mcp-snapshots/) require a clean matching source checkout.
+The private Bun stdio adapter loads an exported snapshot, then serves read-only memory queries. It never runs tests, builds, packing, network requests, edits, approvals or publication. [Export and launch instructions](../../how-to/mcp-snapshots/) require a clean matching source checkout.
 
 | Tool                         | Result                                                                |
 | ---------------------------- | --------------------------------------------------------------------- |

@@ -3,7 +3,7 @@ title: CLI commands and exit codes
 description: Source-checkout command forms, options and result semantics.
 ---
 
-Run from the full source checkout using Bun 1.4.2 and installed dependencies. `bun run governator --help` prints the current interface. There is no initialization command. Canonical input paths are described in [policy and registry](/reference/policy-and-registry/).
+Run from the full source checkout using Bun 1.4.2 and installed dependencies. `bun run governator --help` prints the current interface. There is no initialization command. Canonical input paths are described in [policy and registry](../policy-and-registry/).
 
 | Command after `bun run governator`                                       | Purpose and required arguments                                                 |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
@@ -27,4 +27,4 @@ All forms accept `--root PATH`. `evaluate` and `check` accept `--target stable`,
 | 1    | Evaluation or release check blocked/insufficient evidence.                                                             |
 | 2    | Invalid input, integrity or runtime failure.                                                                           |
 
-A successful query may return a recorded blocked decision, unavailable history or `not_configured`. A successful import does not mean passing tests. A successful capture does not establish eligibility. Normal evaluations require clean Git HEAD; `validate` is not approval. See [report schemas](/reference/report-schemas/) and [release workflow](/how-to/changesets-release/).
+A successful query may return a recorded blocked decision, unavailable history or `not_configured`. A successful import does not mean passing tests. A successful capture does not establish eligibility. Normal evaluations require clean Git HEAD; `validate` is not approval. See [report schemas](../report-schemas/) and [release workflow](../../how-to/changesets-release/).

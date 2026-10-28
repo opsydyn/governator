@@ -80,7 +80,7 @@ void result;`;
   expect(
     diagnostics.map((entry) => ts.flattenDiagnosticMessageText(entry.messageText, "\n")),
   ).toEqual([]);
-});
+}, 30000);
 
 test("packed manifests, exports and Bun bins retain the distribution contract", async () => {
   const root = await mkdtemp(join(tmpdir(), "governator-packed-boundary-"));

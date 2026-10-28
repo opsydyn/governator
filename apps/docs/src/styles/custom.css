@@ -57,7 +57,7 @@ header.header {
   bottom: 0;
   left: 0;
   height: 36%;
-  background: url("/brand/perspective-grid.svg") center bottom / cover no-repeat;
+  background: var(--governator-hero-grid) center bottom / cover no-repeat;
   opacity: 0.32;
   pointer-events: none;
   content: "";

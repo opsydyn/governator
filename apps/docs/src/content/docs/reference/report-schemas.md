@@ -22,4 +22,4 @@ Portable readers validate strict JSON Schema first, then call protocol `reportSe
 
 The snapshot envelope stays **schema 1** and preserves embedded report schema 1 or 2 exactly. Export/reload reject malformed metadata instead of stripping or downgrading it. Pure snapshot evaluations preserve the recorded report version but cannot restore receipt evidence or claim parity with the recorded metadata. `get_design_system_report` returns the saved report unchanged.
 
-Report expiry is enforced by readers, independently of selected evidence age at evaluation. Storybook rejects reports older than 24 hours; snapshots retain the earliest deadline, also capped at 24 hours. See [evidence trust](/explanation/evidence-and-trust/) and [MCP reference](/reference/mcp-tools/).
+Report expiry is enforced by readers, independently of selected evidence age at evaluation. Storybook rejects reports older than 24 hours; snapshots retain the earliest deadline, also capped at 24 hours. See [evidence trust](../../explanation/evidence-and-trust/) and [MCP reference](../mcp-tools/).

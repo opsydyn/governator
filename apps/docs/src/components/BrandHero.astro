@@ -1,4 +1,8 @@
-<div class="governator-hero">
+---
+const base = import.meta.env.BASE_URL;
+---
+
+<div class="governator-hero" style={`--governator-hero-grid: url('${base}brand/perspective-grid.svg')`}>
   <div class="governator-hero-copy">
     <p class="governator-eyebrow">Design system governance / field manual</p>
     <p class="governator-display">
@@ -10,19 +14,19 @@
       Governator helps design-system maintainers inspect component readiness, compatibility and
       release candidates using explicit policies and evidence.
     </p>
-    <a class="governator-start" href="/tutorials/local-dogfood/">
+    <a class="governator-start" href={`${base}tutorials/local-dogfood/`}>
       Start the local tutorial <span aria-hidden="true">↗</span>
     </a>
   </div>
   <div class="governator-hero-art" aria-hidden="true">
     <img
       class="governator-globe"
-      src="/brand/wireframe-globe.png"
+      src={`${base}brand/wireframe-globe.png`}
       width="306"
       height="218"
       alt=""
     />
-    <img class="governator-mascot" src="/brand/mascot-red.png" width="167" height="165" alt="" />
+    <img class="governator-mascot" src={`${base}brand/mascot-red.png`} width="167" height="165" alt="" />
     <span class="governator-art-label">EVIDENCE / POLICY / RELEASE</span>
   </div>
 </div>

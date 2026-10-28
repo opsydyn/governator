@@ -1,7 +1,13 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
+// The build configuration selects the deployment base; application code has no ambient environment dependency.
+// oxlint-disable-next-line linteffect/no-process-env-direct-read
+const pages = process.env.GOVERNATOR_PAGES === "true";
+const base = pages ? "/governator/" : "/";
+
 export default defineConfig({
+  ...(pages ? { site: "https://opsydyn.github.io", base } : {}),
   integrations: [
     starlight({
       title: "Governator",

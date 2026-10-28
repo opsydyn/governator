@@ -254,8 +254,11 @@ test("concurrent saves from the same revision cannot silently overwrite one anot
   ]);
   expect(results.filter((value) => value.status === "fulfilled")).toHaveLength(1);
   expect(results.filter((value) => value.status === "rejected")).toHaveLength(1);
+  const winner = results.find((value) => value.status === "fulfilled");
+  expect(winner?.status).toBe("fulfilled");
+  if (winner?.status !== "fulfilled") throw new Error("No successful save");
   expect((await readRegistryEditor(options, "button--one", "ui.button")).component.name).toBe(
-    "First",
+    winner.value.component.name,
   );
 });
 

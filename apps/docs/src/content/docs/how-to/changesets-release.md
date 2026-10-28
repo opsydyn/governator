@@ -20,4 +20,4 @@ When preparing intent, enumerate every pending `.changeset/*.md` except `README.
 
 This checkout already contains proposed candidate versions. Apply stock Changesets versioning only on a separately prepared pre-versioned release branch; applying it again here double-bumps the candidate. These instructions do not run versioning or publication. The root release command and publishing workflow remain disabled; no local/demo result authorizes publication.
 
-See [how intent binds to bytes](/explanation/changesets-and-exact-candidates/).
+See [how intent binds to bytes](../../explanation/changesets-and-exact-candidates/).

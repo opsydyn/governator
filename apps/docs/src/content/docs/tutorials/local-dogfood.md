@@ -52,4 +52,4 @@ bun run mcp:smoke --snapshot artifacts/tutorial-snapshot.json
 
 Snapshot export runs no producers. Export and reload preserve the earliest expiry; the lifetime is capped at 24 hours. Use a fresh filename on a repeat run. Saved JSON does not restore the runner's in-process evidence trust.
 
-You now have a real local report and an immutable query view, alongside a blocked release. The main checkout has no demo Changeset; `bun run release:demo` recreates the intentionally insufficient patch in a disposable repository to exercise that specific failure. Continue with [evidence production](/how-to/vitest-evidence/) or [the three independent states](/explanation/lifecycle-readiness-release/).
+You now have a real local report and an immutable query view, alongside a blocked release. The main checkout has no demo Changeset; `bun run release:demo` recreates the intentionally insufficient patch in a disposable repository to exercise that specific failure. Continue with [evidence production](../../how-to/vitest-evidence/) or [the three independent states](../../explanation/lifecycle-readiness-release/).

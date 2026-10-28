@@ -17,9 +17,9 @@ async function htmlFiles(root: string): Promise<string[]> {
   );
   return nested.flat().sort();
 }
-function pageUrl(path: string) {
+function pageUrl(path: string, base: string) {
   const route = path.replaceAll(sep, "/");
-  return `${localOrigin}/${route.endsWith("index.html") ? route.slice(0, -10) : route}`;
+  return `${localOrigin}${base}${route.endsWith("index.html") ? route.slice(0, -10) : route}`;
 }
 function validatePath(href: string, source: string) {
   const rawPath = href.split(/[?#]/, 1)[0] ?? "";
@@ -57,7 +57,8 @@ async function findTarget(root: string, pathname: string) {
   }
   return undefined;
 }
-export async function checkDocsLinks(outputRoot: string): Promise<string[]> {
+export async function checkDocsLinks(outputRoot: string, base = "/"): Promise<string[]> {
+  if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(base)) throw new Error("Invalid site base");
   const root = await realpath(outputRoot);
   const files = await htmlFiles(root);
   if (files.length === 0) throw new Error(`No built HTML found in ${root}`);
@@ -79,8 +80,10 @@ export async function checkDocsLinks(outputRoot: string): Promise<string[]> {
       );
       pages.set(file, {
         links: Array.from(
-          document.querySelectorAll("a[href], area[href]"),
-          (node) => node.getAttribute("href") ?? "",
+          document.querySelectorAll(
+            "a[href], area[href], img[src], script[src], link[rel~=icon][href], link[rel=stylesheet][href]",
+          ),
+          (node) => node.getAttribute("href") ?? node.getAttribute("src") ?? "",
         ),
         ids: new Set(
           Array.from(
@@ -92,13 +95,22 @@ export async function checkDocsLinks(outputRoot: string): Promise<string[]> {
     }
     const issues: string[] = [];
     for (const [file, page] of pages) {
-      const source = pageUrl(relative(root, file));
+      const source = pageUrl(relative(root, file), base);
       for (const href of page.links) {
         try {
           const url = new URL(href, source);
           if (url.origin !== localOrigin || !["https:", "http:"].includes(url.protocol)) continue;
           validatePath(href, source);
-          const target = await findTarget(root, url.pathname);
+          if (
+            relative(root, file) === "404.html" &&
+            !href.startsWith("/") &&
+            !href.startsWith("#") &&
+            !href.startsWith("?")
+          )
+            throw new Error("relative link in 404 page resolves against the missing URL");
+          if (!url.pathname.startsWith(base)) throw new Error("path outside site base");
+          const pathname = "/" + url.pathname.slice(base.length);
+          const target = await findTarget(root, pathname);
           if (!target) throw new Error("missing page");
           const fragment = decodeURIComponent(url.hash.slice(1));
           if (
@@ -122,7 +134,10 @@ export async function checkDocsLinks(outputRoot: string): Promise<string[]> {
 }
 if (import.meta.main) {
   const root = resolve(process.argv[2] ?? join(dirname(import.meta.dir), "apps/docs/dist"));
-  const issues = await checkDocsLinks(root);
+  const issues = await checkDocsLinks(
+    root,
+    process.env.GOVERNATOR_PAGES === "true" ? "/governator/" : "/",
+  );
   if (issues.length > 0) {
     console.error(issues.join("\n"));
     process.exitCode = 1;

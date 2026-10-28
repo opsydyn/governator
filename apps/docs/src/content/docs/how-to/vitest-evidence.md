@@ -38,4 +38,4 @@ bun run governator evidence import --format vitest \
 
 Import emits an envelope, without changing registry, lifecycle or canonical evidence. Exit 0 means conversion succeeded even when tests failed. Imported records stay unverified. For a different checkout use `--root /absolute/repository`; `--report-root /original/ci/checkout` normalizes report filenames, and `--commit SHA` declares a source association. Neither flag verifies that source association.
 
-Raw imports do not reconcile every top-level suite-summary counter; contradictory suite summaries can still become unverified records. Saved receipts and imported reports cannot recreate local runner attestations. See [evidence and trust](/explanation/evidence-and-trust/).
+Raw imports do not reconcile every top-level suite-summary counter; contradictory suite summaries can still become unverified records. Saved receipts and imported reports cannot recreate local runner attestations. See [evidence and trust](../../explanation/evidence-and-trust/).

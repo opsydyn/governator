@@ -59,3 +59,25 @@ test("reports broken relative targets from nested pages", async () => {
   expect(issues).toHaveLength(2);
   expect(issues.every((issue) => issue.startsWith("guide/index.html:"))).toBe(true);
 });
+
+test("validates a project site base and rejects root-relative links that escape it", async () => {
+  const root = await site({
+    "index.html":
+      '<a href="/governator/guide/">Guide</a><img src="/governator/brand/icon.png"><a href="/guide/">Wrong base</a>',
+    "guide/index.html": '<a href="../">Home</a>',
+  });
+  await mkdir(join(root, "brand"));
+  await writeFile(join(root, "brand/icon.png"), "fixture");
+  const issues = await checkDocsLinks(root, "/governator/");
+  expect(issues).toHaveLength(1);
+  expect(issues[0]).toContain('"/guide/"');
+});
+
+test("rejects relative links in the 404 page that change at a nested missing URL", async () => {
+  const root = await site({
+    "index.html": "<h1>Home</h1>",
+    "404.html": '<a href="./">Home</a>',
+  });
+  const issues = await checkDocsLinks(root, "/governator/");
+  expect(issues.join("\n")).toContain("relative link in 404 page");
+});
