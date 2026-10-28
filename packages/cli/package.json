@@ -1,14 +1,26 @@
 {
   "name": "@governator/cli",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
+  "description": "Bun CLI for design system governance, evidence, and release checks.",
+  "homepage": "https://github.com/opsydyn/governator/tree/main/packages/cli#readme",
+  "bugs": {
+    "url": "https://github.com/opsydyn/governator/issues"
+  },
   "license": "MIT",
+  "author": "Alan Currie",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/opsydyn/governator.git",
+    "directory": "packages/cli"
+  },
   "bin": {
     "governator": "./dist/main.mjs"
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "type": "module",
   "sideEffects": false,

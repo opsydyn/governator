@@ -1,8 +1,19 @@
 {
   "name": "@governator/mcp",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
+  "description": "Read-only MCP server for Governator governance snapshots.",
+  "homepage": "https://github.com/opsydyn/governator/tree/main/packages/mcp#readme",
+  "bugs": {
+    "url": "https://github.com/opsydyn/governator/issues"
+  },
   "license": "MIT",
+  "author": "Alan Currie",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/opsydyn/governator.git",
+    "directory": "packages/mcp"
+  },
   "bin": {
     "governator-mcp": "./dist/main.mjs"
   },
@@ -17,6 +28,10 @@
       "types": "./dist/server.d.mts",
       "import": "./dist/server.mjs"
     }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
     "build": "bun --bun tsdown",

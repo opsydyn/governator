@@ -1,6 +1,6 @@
 # @governator/cli
 
-Bun CLI for local governance reports, source-bound Vitest checks, declaration compatibility and snapshot export. Private `0.1.0` preview; registry installation is unavailable. Bun **>=1.4.2** is required; Node runtime compatibility is not claimed. The private engine and Effect are internal implementation details.
+Bun CLI for local governance reports, source-bound Vitest checks, declaration compatibility and snapshot export. Unpublished `0.1.0` release candidate; registry installation is unverified. Bun **>=1.4.2** is required; Node runtime compatibility is not claimed. The private engine and Effect are internal implementation details.
 
 ## Consumer quick start
 

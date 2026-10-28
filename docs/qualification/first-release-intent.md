@@ -1,6 +1,6 @@
 # Initial 0.1.0 release intent
 
-The first intended public packages are `@governator/storybook-addon`, `@governator/cli` and `@governator/mcp`, at 0.1.0. They remain private and publication remains disabled pending package qualification and separate authorization. Other workspace packages remain private. The npm scope and package availability have not been verified.
+The first intended public packages are `@governator/storybook-addon`, `@governator/cli` and `@governator/mcp`, at 0.1.0. They are public release candidates; publication remains disabled pending package qualification and separate authorization. Other workspace packages remain private. The npm scope and package availability have not been verified.
 
 The first release will introduce the Storybook governance addon, the local governance CLI and the read-only MCP interface. This is an initial release note, not a claim that any package has been published or that its final contents have been qualified.
 

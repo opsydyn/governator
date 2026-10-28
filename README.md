@@ -4,13 +4,13 @@
 
 Offline design-system governance: a component's status should show its evidence.
 
-The local CLI uses the `governator` command and the private packages use the `@governator` scope.
+The local CLI uses the `governator` command and packages use the `@governator` scope.
 
-The local workspace includes a deterministic policy engine, source-bound Vitest checks, TypeScript declaration compatibility analysis, a Bun CLI, fourteen read-only MCP queries and a real React/Storybook dogfood app. All packages remain private and unpublished.
+The local workspace includes a deterministic policy engine, source-bound Vitest checks, TypeScript declaration compatibility analysis, a Bun CLI, fourteen read-only MCP queries and a real React/Storybook dogfood app. The addon, CLI and MCP are prepared for public release; all packages remain unpublished.
 
 ## Use in another project
 
-All packages remain private at `0.1.0`; npm registry installation is unavailable. Local tarballs are release-preparation artifacts. Start with the [addon-only setup](packages/storybook-addon/README.md) for Storybook React/Vite 10.6.4, or the [Bun CLI quick start](packages/cli/README.md) and [read-only MCP quick start](packages/mcp/README.md). The addon needs only its Storybook peer; CLI/MCP require Bun >=1.4.2 and declared runtime dependencies. Independent clean-consumer results must be recorded separately from workspace builds, with any reconstructed local package source identified.
+The addon, CLI and MCP are public release candidates at `0.1.0`; npm registry installation is unverified. Local tarballs are release-preparation artifacts. Start with the [addon-only setup](packages/storybook-addon/README.md) for Storybook React/Vite 10.6.4, or the [Bun CLI quick start](packages/cli/README.md) and [read-only MCP quick start](packages/mcp/README.md). The addon needs only its Storybook peer; CLI/MCP require Bun >=1.4.2 and declared runtime dependencies. Independent clean-consumer results must be recorded separately from workspace builds, with any reconstructed local package source identified.
 
 ## Run locally
 
@@ -55,7 +55,7 @@ CLI exit codes: **0** satisfied the requested check, **1** blocked/insufficient 
 | `@governator/fixture-attestation` | Private offline verifier for fixture-signed candidate statements    |
 | `@governator/fixture-policy`      | Private synthetic signed reviewer-policy lifecycle model            |
 | `@governator/query`               | Private immutable snapshots and shared read queries                 |
-| `@governator/mcp`                 | Private Bun stdio MCP adapter                                       |
+| `@governator/mcp`                 | Bun stdio MCP adapter                                               |
 | `@governator/cli`                 | Bun filesystem, Git, local test runner and presentation boundary    |
 | `@governator/storybook-addon`     | Independently packed read-only manager panel; sole peer Storybook   |
 | `@example/ui`                     | Shared private React library used by the dogfood app                |

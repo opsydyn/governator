@@ -1,12 +1,12 @@
 # Governator Governance addon
 
-Read-only Storybook manager panel. Local preview package; private and unpublished.
+Storybook governance panel and opt-in local metadata editor. A 0.1.0 release candidate; unpublished.
 
 ## Addon-only quick start
 
 Use an existing Storybook React/Vite project. The declared and qualified Storybook peer is exactly `10.6.4`. Other renderers and versions have not been qualified. Independent npm and strict-peer pnpm consumers installed and built a local packed addon using reconstructed cache archives with lifecycle scripts disabled. This local evidence does not establish registry availability or original package integrity.
 
-Packages remain private at `0.1.0`; registry installation is unavailable. Given an actual locally packed addon tarball, install it in your consumer project (replace the illustrative path):
+The package is prepared for a public `0.1.0` release but is not yet published; registry installation is unverified. Given an actual locally packed addon tarball, install it in your consumer project (replace the illustrative path):
 
 ```sh
 npm install --save-dev /absolute/path/to/governator-storybook-addon-0.1.0.tgz

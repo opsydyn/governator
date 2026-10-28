@@ -6,9 +6,9 @@ import { mkdtemp, mkdir, readFile, readdir, rm, symlink, writeFile } from "node:
 
 for (const name of ["cli", "mcp"]) {
   describe(`${name} consumer distribution`, () => {
-    test("keeps publication disabled and declares a conventional Bun runtime boundary", async () => {
+    test("declares a public release candidate and conventional Bun runtime boundary", async () => {
       const manifest = JSON.parse(await readFile(`packages/${name}/package.json`, "utf8"));
-      expect(manifest.private).toBe(true);
+      expect(manifest.private).toBe(false);
       expect(manifest.version).toBe("0.1.0");
       expect(manifest.engines.bun).toBe(">=1.4.2");
       expect(Object.keys(manifest.dependencies)).not.toContain("effect");
@@ -98,7 +98,7 @@ test("packed manifests, exports and Bun bins retain the distribution contract", 
       await extract({ file: `${root}/governator-${name}-0.1.0.tgz`, cwd: unpacked });
       const pkg = `${unpacked}/package`;
       const manifest = JSON.parse(await readFile(`${pkg}/package.json`, "utf8"));
-      expect(manifest.private).toBe(true);
+      expect(manifest.private).toBe(false);
       expect(manifest.engines.bun).toBe(">=1.4.2");
       expect(
         Object.keys(manifest.dependencies).some(

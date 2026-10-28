@@ -3,7 +3,7 @@ title: Connect the Storybook addon
 description: Map stories to component IDs and serve a governance report.
 ---
 
-Use an existing React/Vite Storybook project. The qualified development reference is Storybook **10.6.4**; the declared peer is exactly `10.6.4`. Other renderers and versions require separate qualification. The addon package is private `0.1.0`; obtain an actual local tarball and its dependencies before attempting consumer installation. Registry availability is not established.
+Use an existing React/Vite Storybook project. The qualified development reference is Storybook **10.6.4**; the declared peer is exactly `10.6.4`. Other renderers and versions require separate qualification. The addon is an unpublished `0.1.0` release candidate; obtain an actual local tarball and its dependencies before attempting consumer installation. Registry availability is not established.
 
 In the source checkout the demo is already wired. For a configured consumer, add the package name to the existing `.storybook/main.ts` addon list:
 

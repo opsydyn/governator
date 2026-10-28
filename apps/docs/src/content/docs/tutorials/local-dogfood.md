@@ -7,7 +7,7 @@ This tutorial follows the source checkout's React/Storybook example from tests t
 
 ## Prepare the checkout
 
-Use a full local Git checkout of this repository, Bun **1.4.2**, and the pinned Moon **2.6.4** supplied by the workspace. TypeScript **5.9.3** and Vitest **4.1.12** are pinned dependencies. Run every command from the repository root. Packages are private previews; this is a source-checkout workflow, with no registry installation prerequisite or claim.
+Use a full local Git checkout of this repository, Bun **1.4.2**, and the pinned Moon **2.6.4** supplied by the workspace. TypeScript **5.9.3** and Vitest **4.1.12** are pinned dependencies. Run every command from the repository root. This is a source-checkout workflow; registry installation remains unverified.
 
 The producer requires a clean, committed tree, tracked governance inputs, no submodules or clean/process Git filters, and no assume-unchanged or skip-worktree index flags. Finish and commit your own changes before starting. Generated `artifacts/` is ignored. Installed dependencies and test/config code execute with your local operator trust.
 

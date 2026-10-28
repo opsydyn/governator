@@ -1,6 +1,6 @@
-# Governator private MCP adapter
+# Governator MCP adapter
 
-Bun stdio application for fourteen immutable governance queries. Private `0.1.0` preview; registry installation is unavailable. Requires Bun **>=1.4.2** and a source-bound snapshot exported by the `@governator/cli` package. Node runtime compatibility is not claimed.
+Bun stdio application for fourteen immutable governance queries. Unpublished `0.1.0` release candidate; registry installation is unverified. Requires Bun **>=1.4.2** and a source-bound snapshot exported by the `@governator/cli` package. Node runtime compatibility is not claimed.
 
 ## Consumer quick start
 
