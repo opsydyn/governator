@@ -102,6 +102,24 @@ export async function inspectArchiveForRehearsal(
     data.name === expectedName && data.version === "0.1.0" && data.private !== true,
     `Wrong packed identity for ${expectedName}`,
   );
+  if (data.publishConfig !== undefined) {
+    ensure(
+      typeof data.publishConfig === "object" &&
+        data.publishConfig !== null &&
+        !Array.isArray(data.publishConfig),
+      "Unsafe publishConfig",
+    );
+    ensure(
+      Object.keys(data.publishConfig).every((key) => key === "access" || key === "provenance"),
+      "Unsafe publishConfig options",
+    );
+    ensure(
+      (data.publishConfig.access === undefined || data.publishConfig.access === "public") &&
+        (data.publishConfig.provenance === undefined ||
+          typeof data.publishConfig.provenance === "boolean"),
+      "Unsafe publishConfig values",
+    );
+  }
   for (const field of ["dependencies", "optionalDependencies", "peerDependencies"]) {
     for (const value of Object.values(data[field] ?? {}))
       ensure(

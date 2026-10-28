@@ -11,6 +11,7 @@
     "packages/protocol/src/generated-versioned.ts",
     "scripts/mcp-readonly-preload.ts",
     "scripts/rehearse-npm-archives.ts",
+    "scripts/qualify-npm-transport.ts",
     "scripts/rehearse-publish-custody.mjs",
     "scripts/snapshot-demo-baseline.ts",
     "scripts/snapshot-release-baseline.ts",
