@@ -2,9 +2,9 @@
 
 ![Governator design system governance: illustrated control room, component status and release checks.](apps/docs/public/brand/governator-repo-banner.png)
 
-_Illustration only; the version and status panels are not live release results._
+[![Governance CI](https://github.com/opsydyn/governator/actions/workflows/check.yml/badge.svg?branch=main)](https://github.com/opsydyn/governator/actions/workflows/check.yml)
 
-[![Governance CI](https://github.com/opsydyn/governator/actions/workflows/check.yml/badge.svg?branch=main)](https://github.com/opsydyn/governator/actions/workflows/check.yml) [View live release status](https://opsydyn.github.io/governator/status/)
+[Documentation](https://opsydyn.github.io/governator/) · [Storybook demo](https://opsydyn.github.io/governator/storybook/) · [Release status](https://opsydyn.github.io/governator/status/)
 
 [![Storybook addon on npm](https://img.shields.io/npm/v/%40governator%2Fstorybook-addon?label=addon)](https://www.npmjs.com/package/@governator/storybook-addon) [![CLI on npm](https://img.shields.io/npm/v/%40governator%2Fcli?label=CLI)](https://www.npmjs.com/package/@governator/cli) [![MCP on npm](https://img.shields.io/npm/v/%40governator%2Fmcp?label=MCP)](https://www.npmjs.com/package/@governator/mcp)
 
