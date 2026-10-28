@@ -1,0 +1,177 @@
+name: Non-publishing release qualification
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+      artifact-digest: ${{ steps.upload.outputs.artifact-digest }}
+      candidate-digest: ${{ steps.capture.outputs.digest }}
+    env:
+      GIT_CONFIG_NOSYSTEM: "1"
+    steps:
+      - name: Isolate Git configuration
+        run: |
+          install -m 600 /dev/null "$RUNNER_TEMP/governator-gitconfig"
+          echo "GIT_CONFIG_GLOBAL=$RUNNER_TEMP/governator-gitconfig" >> "$GITHUB_ENV"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: "1.4.2"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24.15.0"
+      - run: bun install --frozen-lockfile
+      - run: bunx moon run --force cli:build mcp:build storybook-addon:build
+      - name: Pack once and capture exact candidate
+        id: capture
+        run: |
+          mkdir -m 700 "$RUNNER_TEMP/candidate"
+          npm pack ./packages/cli ./packages/mcp ./packages/storybook-addon --ignore-scripts --pack-destination "$RUNNER_TEMP/candidate" --json > "$RUNNER_TEMP/pack.json"
+          bun scripts/rehearse-single-maintainer.ts capture "$RUNNER_TEMP/candidate" > "$RUNNER_TEMP/capture.json"
+          digest=$(node -p 'JSON.parse(require("fs").readFileSync(process.argv[1])).reviewDigest' "$RUNNER_TEMP/capture.json")
+          [[ "$digest" =~ ^[a-f0-9]{64}$ ]]
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          (cd "$RUNNER_TEMP/candidate" && sha256sum governator-cli-0.1.0.tgz governator-mcp-0.1.0.tgz governator-storybook-addon-0.1.0.tgz > SHA256SUMS)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: upload
+        with:
+          name: governator-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/candidate/
+          if-no-files-found: error
+          retention-days: 30
+
+  attest:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs: build
+    outputs:
+      bundle-id: ${{ steps.bundle-upload.outputs.artifact-id }}
+    environment: release-qualification
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      actions: read
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
+          merge-multiple: true
+          path: candidate
+      - name: Verify transferred archives
+        env:
+          EXPECTED_COMMIT: ${{ github.sha }}
+          EXPECTED_DIGEST: ${{ needs.build.outputs.candidate-digest }}
+        run: |
+          cd candidate
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
+          const allowed = ['SHA256SUMS', 'candidate.json', 'governator-cli-0.1.0.tgz', 'governator-mcp-0.1.0.tgz', 'governator-storybook-addon-0.1.0.tgz'];
+          if (fs.readdirSync('.').sort().join('\n') !== allowed.sort().join('\n')) throw Error('Unexpected artifact contents');
+          const c = JSON.parse(fs.readFileSync('candidate.json'));
+          const names = ['@governator/cli', '@governator/mcp', '@governator/storybook-addon'];
+          if (c.schemaVersion !== 1 || c.mode !== 'local-rehearsal' || c.repository !== 'https://github.com/opsydyn/governator' || c.sourceCommit !== process.env.EXPECTED_COMMIT || !Array.isArray(c.packages) || c.packages.length !== 3) throw Error('Candidate mismatch');
+          const packages = c.packages.map((p, i) => {
+            if (p.name !== names[i] || p.version !== '0.1.0') throw Error('Wrong identity');
+            const path = `governator-${p.name.split('/')[1]}-0.1.0.tgz`;
+            const stat = fs.lstatSync(path);
+            if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== p.size || stat.size > 16 * 1024 * 1024) throw Error('Invalid file');
+            const hash = crypto.createHash('sha256').update(fs.readFileSync(path)).digest('hex');
+            if (hash !== p.sha256) throw Error('Changed archive');
+            return { name:p.name, version:p.version, size:p.size, sha256:p.sha256 };
+          });
+          const canonical = { schemaVersion:c.schemaVersion, mode:c.mode, repository:c.repository, sourceCommit:c.sourceCommit, packages };
+          if (crypto.createHash('sha256').update(JSON.stringify(canonical)).digest('hex') !== process.env.EXPECTED_DIGEST) throw Error('Changed candidate');
+          console.log('Transferred candidate and archive hashes verified.');
+          NODE
+      - name: Attest retained archives
+        id: provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: |
+            candidate/governator-cli-0.1.0.tgz
+            candidate/governator-mcp-0.1.0.tgz
+            candidate/governator-storybook-addon-0.1.0.tgz
+      - name: Preserve attestation bundle
+        env:
+          BUNDLE_PATH: ${{ steps.provenance.outputs.bundle-path }}
+        run: |
+          mkdir -m 700 "$RUNNER_TEMP/attestation"
+          test -f "$BUNDLE_PATH"
+          cp -- "$BUNDLE_PATH" "$RUNNER_TEMP/attestation/attestation.jsonl"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: bundle-upload
+        with:
+          name: governator-attestation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/attestation/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Record custody reference
+        env:
+          ARTIFACT_ID: ${{ needs.build.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ needs.build.outputs.artifact-digest }}
+          CANDIDATE_DIGEST: ${{ needs.build.outputs.candidate-digest }}
+        run: |
+          printf 'Artifact ID: %s\nArtifact digest: %s\nCandidate digest: %s\n' "$ARTIFACT_ID" "$ARTIFACT_DIGEST" "$CANDIDATE_DIGEST" >> "$GITHUB_STEP_SUMMARY"
+          echo 'Attestation covers bytes checked in this workflow; it is not npm publication provenance or human approval.' >> "$GITHUB_STEP_SUMMARY"
+
+  verify:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs: [build, attest]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      attestations: read
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
+          merge-multiple: true
+          path: candidate
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          artifact-ids: ${{ needs.attest.outputs.bundle-id }}
+          merge-multiple: true
+          path: bundle
+      - name: Verify attestation signatures and identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for archive in candidate/governator-cli-0.1.0.tgz candidate/governator-mcp-0.1.0.tgz candidate/governator-storybook-addon-0.1.0.tgz; do
+            gh attestation verify "$archive" --bundle bundle/attestation.jsonl --repo "$GITHUB_REPOSITORY" --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release-qualification.yml" --source-ref refs/heads/main --source-digest "$GITHUB_SHA"
+          done
+          echo 'Verified archive attestations for this repository, workflow, branch and source commit.' >> "$GITHUB_STEP_SUMMARY"
+
+  authentication:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    environment: release-qualification
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24.15.0"
+      - name: Check token authentication without publishing
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          [[ "$NODE_AUTH_TOKEN" =~ ^[A-Za-z0-9_.-]+$ ]]
+          umask 077
+          config="$RUNNER_TEMP/governator-npmrc"
+          trap 'rm -f "$config"' EXIT
+          printf '//registry.npmjs.org/:_authToken=%s\n' "$NODE_AUTH_TOKEN" > "$config"
+          npm_config_userconfig="$config" npm_config_globalconfig=/dev/null npm_config_registry=https://registry.npmjs.org/ npm whoami --registry=https://registry.npmjs.org/ > /dev/null 2>&1
+          echo 'npm token authenticated. Package write permissions and provenance are not established.' >> "$GITHUB_STEP_SUMMARY"

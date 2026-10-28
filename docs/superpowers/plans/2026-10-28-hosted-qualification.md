@@ -1,0 +1,5 @@
+# Hosted non-publishing release qualification
+
+Build and pack the three packages once on a clean main revision in a secret-free job. Transfer the candidate by immutable GitHub artifact ID to a separate environment-restricted job, verify the recorded commit, digest and archive hashes, then attest the retained bytes. Use another isolated environment-restricted job to test only npm token authentication. Pin all actions. Do not enable the release workflow, publish, create tags, or expose secrets to build scripts. Require local tests and independent review before integrating and dispatching from main.
+
+GitHub artifact retention and IDs provide versioned custody during the retention window, not permanent or independently immutable storage. The attestation proves the attestation job handled these bytes, not that a human approved them, that npm accepted them, or that source-to-build reproducibility and same-user runner isolation are proven. A read-only identity check cannot establish publish scope or provenance.
