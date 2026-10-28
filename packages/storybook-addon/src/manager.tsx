@@ -15,6 +15,7 @@ import { useTheme } from "storybook/theming";
 import {
   loadReport,
   publishReportObservation,
+  subscribeReportObservations,
   reportExpiry,
   revalidateReport,
   watchReportSource,
@@ -26,6 +27,7 @@ import type { TagDraft } from "./tag-editor-ui.tsx";
 import { Discovery } from "./discovery.tsx";
 import { GovernanceSidebarFilter } from "./sidebar-toolbar.tsx";
 import { brandCss } from "./brand.ts";
+import { governatorLogo } from "./logo.ts";
 
 // Storybook may unmount the panel while the manager stays open.
 const tagDrafts = new Map<string, TagDraft>();
@@ -56,7 +58,7 @@ function useFreshness(
   }, [state, monitorSource]);
 }
 
-const css = `.gn-panel{font:13px/1.5 ui-sans-serif,system-ui,sans-serif;padding:22px 26px;min-height:250px}.gn-panel *{box-sizing:border-box}.gn-panel h2{font-size:20px;letter-spacing:-.4px;margin:0}.gn-panel h3{font-size:13px;margin:0 0 9px}.gn-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.gn-small{font-size:11px;opacity:.72}.gn-chips{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:10px 0}.gn-chip{border:1px solid currentColor;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:650}.gn-card{padding:15px 17px;margin-bottom:14px}.gn-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.gn-table{border-collapse:collapse;width:100%;font-size:12px}.gn-table th,.gn-table td{text-align:left;padding:10px 9px;border-bottom:1px solid color-mix(in srgb,currentColor 14%,transparent);vertical-align:top}.gn-table th{font-size:10px;text-transform:uppercase;letter-spacing:.7px;opacity:.7}.gn-table td:last-child{max-width:430px}.gn-panel code{font-size:11px}.gn-panel ul{padding-left:18px;margin:6px 0}.gn-panel button{cursor:pointer}.gn-note{border-left:3px solid #d79729;padding-left:12px}.gn-table-wrap{overflow-x:auto}@media(max-width:700px){.gn-split{grid-template-columns:1fr}.gn-panel{padding:16px}}`;
+const css = `.gn-panel{font:13px/1.5 ui-sans-serif,system-ui,sans-serif;padding:22px 26px;min-height:250px}.gn-panel *{box-sizing:border-box}.gn-panel h2{font-size:20px;letter-spacing:-.4px;margin:0}.gn-panel h3{font-size:13px;margin:0 0 9px}.gn-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.gn-small{font-size:12px;opacity:.9}.gn-chips{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:10px 0}.gn-chip{border:1px solid currentColor;border-radius:5px;padding:3px 8px;font-size:12px;font-weight:650}.gn-card{padding:15px 17px;margin-bottom:14px}.gn-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.gn-table{border-collapse:collapse;width:100%;font-size:12px}.gn-table th,.gn-table td{text-align:left;padding:10px 9px;border-bottom:1px solid color-mix(in srgb,currentColor 14%,transparent);vertical-align:top}.gn-table th{font-size:10px;text-transform:uppercase;letter-spacing:.7px;opacity:.7}.gn-table td:last-child{max-width:430px}.gn-panel code{font-size:11px}.gn-panel ul{padding-left:18px;margin:6px 0}.gn-panel button{cursor:pointer}.gn-note{border-left:3px solid #d79729;padding-left:12px}.gn-table-wrap{overflow-x:auto}@media(max-width:700px){.gn-split{grid-template-columns:1fr}.gn-panel{padding:16px}}`;
 function sourceHref(source: string | undefined): string | undefined {
   if (!source || !URL.canParse(source)) return undefined;
   const url = new URL(source);
@@ -272,9 +274,7 @@ function Panel() {
     >
       <style>{css + brandCss}</style>
       <div className="gn-brand" aria-label="Governator design system governance">
-        <span className="gn-brand-mark" aria-hidden="true">
-          G
-        </span>
+        <img className="gn-brand-mark" src={governatorLogo} data-governator-logo alt="" />
         <span>
           <strong>GOVERNATOR</strong>
           <small>DESIGN SYSTEM GOVERNANCE</small>
@@ -556,6 +556,7 @@ function Panel() {
   );
 }
 const sidebarReports = new Map<string, { at: number; promise: Promise<ReportState> }>();
+const sidebarLoadingObservations = new WeakSet<object>();
 function sidebarReport(url: string, verifySource: boolean): Promise<ReportState> {
   const key = `${url}|${verifySource}`;
   const cached = sidebarReports.get(key);
@@ -574,7 +575,6 @@ function sidebarReport(url: string, verifySource: boolean): Promise<ReportState>
   return promise;
 }
 function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: React.ReactNode }) {
-  const theme = useTheme();
   const id = item.type === "component" ? item.children[0] : item.id;
   const params: unknown = id ? api.getParameters(id, "governance") : undefined;
   const componentId =
@@ -621,9 +621,30 @@ function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: 
       setState({ status: "error", message: "Registry changed; regenerate the report." });
     };
     window.addEventListener("governator:registry-changed", invalidate);
+    const unsubscribe = subscribeReportObservations((observedUrl, observed, verified) => {
+      if (!active || observedUrl !== url || verified !== verifySource) return;
+      generation++;
+      const next = revalidateReport(observed);
+      if (url) {
+        if (next.status === "loading") {
+          if (!sidebarLoadingObservations.has(observed)) {
+            sidebarLoadingObservations.add(observed);
+            sidebarReports.delete(`${url}|${verifySource}`);
+          }
+        } else
+          sidebarReports.set(`${url}|${verifySource}`, {
+            at: Date.now(),
+            promise: Promise.resolve(next),
+          });
+      }
+      setStateKey({ url, verified: verifySource });
+      setState(next);
+      if (next.status === "loading") update();
+    });
     const interval = setInterval(update, 60_000);
     return () => {
       active = false;
+      unsubscribe();
       clearInterval(interval);
       window.removeEventListener("governator:registry-changed", invalidate);
     };
@@ -639,7 +660,18 @@ function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: 
   const title = component
     ? `Report snapshot. Lifecycle: ${component.lifecycle}; readiness gate: ${component.gate}; release gate: ${currentState.status === "ready" ? (currentState.report.release?.gate ?? "unknown") : "unknown"}`
     : "Governance unverified: identity or current report unavailable";
-  const sidebarAccent = theme.base === "dark" ? "#ff9fac" : "#98001d";
+  const gateColors =
+    component?.gate === "ready"
+      ? ["#174d32", "#e3ffeb"]
+      : component?.gate === "blocked"
+        ? ["#751e2d", "#fff2f2"]
+        : ["#654300", "#fff4d5"];
+  const gateLabel =
+    component?.gate === "ready"
+      ? "Ready"
+      : component?.gate === "blocked"
+        ? "Blocked"
+        : "Missing evidence";
   return (
     <span style={{ display: "flex", gap: 6, alignItems: "center", minWidth: 0 }}>
       <span>{label}</span>
@@ -647,19 +679,38 @@ function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: 
         title={title}
         aria-label={title}
         style={{
-          fontSize: 10,
-          fontFamily: "ui-monospace, monospace",
-          color: "inherit",
-          border: "1px solid currentColor",
-          borderLeft: `3px solid ${sidebarAccent}`,
-          borderRadius: 2,
-          padding: "1px 3px",
+          fontSize: 11,
+          fontFamily: "ui-sans-serif, system-ui, sans-serif",
+          lineHeight: 1.4,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 4,
           whiteSpace: "nowrap",
         }}
       >
-        {component
-          ? `L ${component.lifecycle} · G ${component.gate === "insufficient_evidence" ? "missing" : component.gate}`
-          : "?"}
+        {component ? (
+          <>
+            <span style={{ border: "1px solid currentColor", borderRadius: 3, padding: "1px 4px" }}>
+              {component.lifecycle.charAt(0).toUpperCase() + component.lifecycle.slice(1)}
+            </span>
+            <span
+              data-governator-gate={component.gate}
+              style={{
+                backgroundColor: gateColors[0],
+                color: gateColors[1],
+                borderRadius: 3,
+                padding: "1px 5px",
+                fontWeight: 700,
+              }}
+            >
+              {gateLabel}
+            </span>
+          </>
+        ) : (
+          <span style={{ border: "1px solid currentColor", borderRadius: 3, padding: "1px 4px" }}>
+            Unverified
+          </span>
+        )}
       </small>
     </span>
   );

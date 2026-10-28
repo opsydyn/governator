@@ -5,7 +5,10 @@ import { createRoot } from "react-dom/client";
 import { expect, test, vi } from "vitest";
 import { evaluate } from "../packages/core/src/index.ts";
 import { at, evaluation } from "./fixtures.ts";
-import { publishReportObservation } from "../packages/storybook-addon/src/report.ts";
+import {
+  publishReportObservation,
+  subscribeReportObservations,
+} from "../packages/storybook-addon/src/report.ts";
 
 const sb = vi.hoisted(() => ({
   index: {
@@ -756,6 +759,143 @@ test("a verified-mode static snapshot observation can enable its toolbar", async
   await act(async () => root.unmount());
   el.remove();
   sb.params = { reportUrl: "/report.json" };
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+
+test("explains a missing story map and can retry after it becomes available", async () => {
+  stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.useFakeTimers();
+  vi.setSystemTime(Date.parse(at));
+  sb.params = { reportUrl: "/report.json" };
+  sb.refs = {};
+  let available = false;
+  const mapping = {
+    version: 1,
+    stories: [
+      {
+        id: "button--one",
+        componentId: "ui.button",
+        importPath: "./Button.stories.tsx",
+        exportName: "One",
+      },
+    ],
+  };
+  stubStorybookGlobal(
+    "fetch",
+    vi.fn(async (url: string | URL) =>
+      String(url).includes("governator-story-map") && !available
+        ? new Response("missing", { status: 404 })
+        : new Response(
+            JSON.stringify(
+              String(url).includes("governator-story-map") ? mapping : evaluate(evaluation()),
+            ),
+          ),
+    ),
+  );
+  const el = document.createElement("div");
+  document.body.append(el);
+  const root = createRoot(el);
+  await act(async () => {
+    root.render(React.createElement(GovernanceSidebarFilter));
+    for (let i = 0; i < 20; i++) await Promise.resolve();
+  });
+  const select = el.querySelector<HTMLSelectElement>(
+    'select[aria-label="Filter sidebar by readiness"]',
+  )!;
+  expect(select.disabled).toBe(true);
+  expect(el.textContent).toMatch(/story mapping.*unavailable/i);
+  const retry = el.querySelector<HTMLButtonElement>('button[aria-label="Retry readiness filter"]')!;
+  expect(retry).not.toBeNull();
+  available = true;
+  await act(async () => {
+    retry.click();
+    for (let i = 0; i < 20; i++) await Promise.resolve();
+  });
+  expect(select.disabled).toBe(false);
+  await act(async () => {
+    select.value = "blocked";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+  });
+  expect(sb.filters["governator/readiness"]!(sb.index["button--one"])).toBe(false);
+  await act(async () => root.unmount());
+  el.remove();
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+
+test("explains a failed configured report instead of asking to select a story", async () => {
+  stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  sb.params = { reportUrl: "/missing-report.json" };
+  sb.refs = {};
+  stubStorybookGlobal(
+    "fetch",
+    vi.fn(async () => new Response("missing", { status: 404 })),
+  );
+  const el = document.createElement("div");
+  document.body.append(el);
+  const root = createRoot(el);
+  await act(async () => {
+    root.render(React.createElement(GovernanceSidebarFilter));
+    for (let i = 0; i < 12; i++) await Promise.resolve();
+  });
+  expect(el.textContent).toContain("governance report unavailable (HTTP 404)");
+  await act(async () => root.unmount());
+  el.remove();
+  sb.params = { reportUrl: "/report.json" };
+  vi.unstubAllGlobals();
+});
+
+test("retry publishes the refreshed report for sidebar labels", async () => {
+  stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.useFakeTimers();
+  vi.setSystemTime(Date.parse(at));
+  sb.params = { reportUrl: "/report.json" };
+  sb.refs = {};
+  let available = false;
+  const events: string[] = [];
+  const unsubscribe = subscribeReportObservations((url, state) => {
+    if (url === "/report.json") events.push(state.status);
+  });
+  const mapping = {
+    version: 1,
+    stories: [
+      {
+        id: "button--one",
+        componentId: "ui.button",
+        importPath: "./Button.stories.tsx",
+        exportName: "One",
+      },
+    ],
+  };
+  stubStorybookGlobal(
+    "fetch",
+    vi.fn(async (url: string | URL) =>
+      String(url).includes("governator-story-map")
+        ? new Response(JSON.stringify(mapping))
+        : available
+          ? new Response(JSON.stringify(evaluate(evaluation())))
+          : new Response("missing", { status: 404 }),
+    ),
+  );
+  const el = document.createElement("div");
+  document.body.append(el);
+  const root = createRoot(el);
+  await act(async () => {
+    root.render(React.createElement(GovernanceSidebarFilter));
+    for (let i = 0; i < 20; i++) await Promise.resolve();
+  });
+  available = true;
+  events.length = 0;
+  await act(async () => {
+    el.querySelector<HTMLButtonElement>('button[aria-label="Retry readiness filter"]')!.click();
+    for (let i = 0; i < 20; i++) await Promise.resolve();
+  });
+  expect(events).toContain("ready");
+  await act(async () => root.unmount());
+  el.remove();
+  unsubscribe();
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });

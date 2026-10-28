@@ -5,6 +5,7 @@ import { STORY_INDEX_INVALIDATED } from "storybook/internal/core-events";
 import { useTheme } from "storybook/theming";
 import {
   loadReport,
+  publishReportObservation,
   reportExpiry,
   revalidateReport,
   subscribeReportObservations,
@@ -36,6 +37,7 @@ export function GovernanceSidebarFilter() {
   const [map, setMap] = useState<{ signature: string; value: unknown }>();
   const [epoch, setEpoch] = useState(0);
   const [retry, setRetry] = useState(0);
+  const [mapRetry, setMapRetry] = useState(0);
   const [error, setError] = useState(false);
   const signature = storyIndexSignature(index);
   const latestIndex = useRef(index);
@@ -101,7 +103,7 @@ export function GovernanceSidebarFilter() {
         },
       );
     return () => controller.abort();
-  }, [signature, epoch]);
+  }, [signature, epoch, mapRetry]);
   useEffect(() => {
     const controller = new AbortController();
     const request = ++reportGeneration.current;
@@ -113,12 +115,11 @@ export function GovernanceSidebarFilter() {
     });
     const timer = setTimeout(() => {
       controller.abort();
-      if (reportGeneration.current === request)
-        setReportState({
-          url,
-          verified: verifySource,
-          state: { status: "error", message: "Report request timed out." },
-        });
+      if (reportGeneration.current === request) {
+        const state = { status: "error" as const, message: "Report request timed out." };
+        setReportState({ url, verified: verifySource, state });
+        publishReportObservation(url, state, verifySource);
+      }
     }, 10_000);
     void loadReport(
       url,
@@ -128,8 +129,11 @@ export function GovernanceSidebarFilter() {
       controller.signal,
       verifySource,
     ).then((state) => {
-      if (!controller.signal.aborted && reportGeneration.current === request)
-        setReportState({ url, verified: verifySource, state: revalidateReport(state) });
+      if (!controller.signal.aborted && reportGeneration.current === request) {
+        const next = revalidateReport(state);
+        setReportState({ url, verified: verifySource, state: next });
+        publishReportObservation(url, next, verifySource);
+      }
       clearTimeout(timer);
     });
     return () => {
@@ -211,12 +215,14 @@ export function GovernanceSidebarFilter() {
     : error
       ? "Sidebar filtering is unavailable."
       : !report
-        ? "Select a story with a current governance report."
+        ? current && "message" in current
+          ? current.message
+          : "Select a story with a current governance report."
         : !mapped
-          ? "No verified local story mapping is available."
+          ? "Story mapping unavailable. Restart Storybook, then retry."
           : "Filters against the selected report. Unmapped stories remain visible.";
   return (
-    <label
+    <div
       title={reason}
       style={{
         display: "inline-flex",
@@ -249,6 +255,26 @@ export function GovernanceSidebarFilter() {
         <option value="insufficient_evidence">Missing evidence</option>
         <option value="ready">Ready</option>
       </select>
-    </label>
+      {!available && (
+        <>
+          <span role="status" style={{ maxWidth: 210, whiteSpace: "normal", lineHeight: 1.3 }}>
+            {reason}
+          </span>
+          {!composed && (
+            <button
+              type="button"
+              aria-label="Retry readiness filter"
+              onClick={() => {
+                setError(false);
+                setMapRetry((value) => value + 1);
+                setRetry((value) => value + 1);
+              }}
+            >
+              Retry
+            </button>
+          )}
+        </>
+      )}
+    </div>
   );
 }

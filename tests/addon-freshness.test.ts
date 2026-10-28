@@ -5,6 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { evaluate } from "../packages/core/src/index.ts";
 import { at, evaluation } from "./fixtures.ts";
+import { publishReportObservation } from "../packages/storybook-addon/src/report.ts";
 
 const storybook = vi.hoisted(() => ({
   params: { componentId: "ui.button", reportUrl: "/one.json" },
@@ -108,14 +109,14 @@ describe("mounted freshness", () => {
   test("sidebar revalidates a cached observation before showing it", async () => {
     await act(async () => root.render(renderLabel()));
     await flush();
-    expect(container.textContent).toContain("L ");
+    expect(container.textContent).toContain("Candidate");
     expect(fetch).toHaveBeenCalledTimes(2);
     await act(async () => root.render(null));
     vi.setSystemTime(deadline + 1);
     await act(async () => root.render(renderLabel()));
     await flush();
-    expect(container.textContent).toContain("?");
-    expect(container.textContent).not.toContain("L ");
+    expect(container.textContent).toContain("Unverified");
+    expect(container.textContent).not.toContain("Candidate");
     expect(fetch).toHaveBeenCalledTimes(2);
   });
   test.each(["visibilitychange", "focus"])(
@@ -132,7 +133,7 @@ describe("mounted freshness", () => {
         (event === "focus" ? window : document).dispatchEvent(new Event(event)),
       );
       expect(container.textContent).not.toContain("Gate:");
-      expect(container.textContent).toContain("?");
+      expect(container.textContent).toContain("Unverified");
     },
   );
   test("an older response cannot replace the changed URL", async () => {
@@ -193,7 +194,7 @@ describe("mounted freshness", () => {
     await act(async () => vi.advanceTimersByTime(11));
     expect(container.textContent).not.toContain("Gate:");
     expect(container.textContent).toContain("release candidate snapshot");
-    expect(container.textContent).toContain("?");
+    expect(container.textContent).toContain("Unverified");
   });
   test("a timed out request cannot revive the panel when a fetch ignores abort", async () => {
     let finish!: (response: Response) => void;
@@ -225,11 +226,11 @@ describe("mounted freshness", () => {
     );
     await act(async () => root.render(renderLabel()));
     await flush();
-    expect(container.textContent).toContain("L ");
+    expect(container.textContent).toContain("Candidate");
     storybook.params = { ...storybook.params, reportUrl: caseUrl("pending") };
     await act(async () => root.render(renderLabel()));
-    expect(container.textContent).not.toContain("L ");
-    expect(container.textContent).toContain("?");
+    expect(container.textContent).not.toContain("Candidate");
+    expect(container.textContent).toContain("Unverified");
   });
 
   test("a superseded sidebar poll cannot replace the newer observation", async () => {
@@ -250,9 +251,9 @@ describe("mounted freshness", () => {
     await act(async () => root.render(renderLabel()));
     await act(async () => vi.advanceTimersByTime(60_000));
     await flush();
-    expect(container.textContent).toContain("L ");
+    expect(container.textContent).toContain("Candidate");
     await act(async () => finish(new Response("failure", { status: 500 })));
-    expect(container.textContent).toContain("L ");
+    expect(container.textContent).toContain("Candidate");
   });
   test("reload ignores the older request after a newer response wins", async () => {
     let finish!: (response: Response) => void;
@@ -303,8 +304,8 @@ test("registry changes invalidate panel decisions and sidebar markers immediatel
   await act(async () => root.render(renderLabel()));
   await flush();
   await act(async () => window.dispatchEvent(new Event("governator:registry-changed")));
-  expect(container.textContent).toContain("?");
-  expect(container.textContent).not.toContain("L stable");
+  expect(container.textContent).toContain("Unverified");
+  expect(container.textContent).not.toContain("Stable");
 });
 
 test("panel checks a locally verified report again when the window regains focus", async () => {
@@ -331,4 +332,66 @@ test("panel checks a locally verified report again when the window regains focus
   });
   expect(container.textContent).not.toContain("Gate:");
   expect(container.textContent).toMatch(/registry changed/i);
+});
+
+test("sidebar uses readable, colour-coded readiness and the panel uses the supplied monogram", async () => {
+  await act(async () =>
+    root.render(React.createElement(React.Fragment, null, renderPanel(), renderLabel())),
+  );
+  await flush();
+  const badge = container.querySelector<HTMLElement>('[data-governator-gate="ready"]');
+  expect(badge?.textContent).toBe("Ready");
+  expect(badge?.style.backgroundColor).toBeTruthy();
+  expect(container.textContent).toContain("Candidate");
+  const logo = container.querySelector<HTMLImageElement>("img[data-governator-logo]");
+  expect(logo?.src).toMatch(/^data:image\/png;base64,/);
+  expect(logo?.getAttribute("alt")).toBe("");
+});
+
+test("sidebar follows a newly refreshed report instead of keeping a cached error", async () => {
+  stubStorybookGlobal(
+    "fetch",
+    vi.fn(async () => new Response("missing", { status: 404 })),
+  );
+  await act(async () => root.render(renderLabel()));
+  await flush();
+  expect(container.textContent).toContain("Unverified");
+  await act(async () =>
+    publishReportObservation(storybook.params.reportUrl, { status: "ready", report: snapshot() }),
+  );
+  expect(container.textContent).toContain("Candidate");
+});
+
+test("a transient loading observation triggers a fresh sidebar request", async () => {
+  let available = false;
+  stubStorybookGlobal(
+    "fetch",
+    vi.fn(async () => (available ? response() : new Response("missing", { status: 404 }))),
+  );
+  await act(async () => root.render(renderLabel()));
+  await flush();
+  expect(container.textContent).toContain("Unverified");
+  available = true;
+  await act(async () => {
+    publishReportObservation(storybook.params.reportUrl, { status: "loading", message: "Loading" });
+    for (let i = 0; i < 12; i++) await Promise.resolve();
+  });
+  expect(container.textContent).toContain("Candidate");
+});
+
+test("a loading observation shares one report request across sidebar labels", async () => {
+  const fetcher = vi.fn(async () => response());
+  stubStorybookGlobal("fetch", fetcher);
+  await act(async () =>
+    root.render(
+      React.createElement(React.Fragment, null, renderLabel(), renderLabel(), renderLabel()),
+    ),
+  );
+  await flush();
+  fetcher.mockClear();
+  await act(async () => {
+    publishReportObservation(storybook.params.reportUrl, { status: "loading", message: "Loading" });
+    for (let i = 0; i < 16; i++) await Promise.resolve();
+  });
+  expect(fetcher).toHaveBeenCalledTimes(1);
 });
