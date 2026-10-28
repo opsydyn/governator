@@ -19,6 +19,8 @@ test("addon allows only Storybook peers and manager-provided React", () => {
     'import("@governator/core")',
     'require("node:path")',
     'import "./tag-storage.ts"',
+    'import "./registry-editor.ts"',
+    'import "./registry-source.ts"',
   ])
     expect(inspectAddon(manifest, [source])).not.toEqual([]);
 });
@@ -40,4 +42,15 @@ test("local editor only imports its declared server primitives and Storybook par
   ).toEqual([]);
   expect(inspectEditor(['import secret from "arbitrary-package";'])).not.toEqual([]);
   expect(inspectEditor(['import("node:child_process")'])).not.toEqual([]);
+});
+
+test("Node editor permits its YAML and validation primitives while excluding browser imports", () => {
+  expect(
+    inspectEditor([
+      'import { parseDocument } from "yaml";',
+      'import { isDeepStrictEqual } from "node:util";',
+      'import { createRequire } from "node:module";',
+      'import { execFile } from "node:child_process";',
+    ]),
+  ).toEqual([]);
 });

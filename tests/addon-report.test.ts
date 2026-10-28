@@ -25,6 +25,8 @@ const release = () => ({
 });
 afterEach(() => vi.useRealTimers());
 function fetchFixture(_url: string, options: RequestInit): Promise<Response> {
+  if (_url.includes("/__governator/registry-source"))
+    return Promise.resolve(new Response("", { status: 404 }));
   expect(options.credentials).toBe("omit");
   expect(options.redirect).toBe("error");
   return Promise.resolve(new Response(JSON.stringify(report())));

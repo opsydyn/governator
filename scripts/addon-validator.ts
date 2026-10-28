@@ -1,17 +1,11 @@
-import { Ajv2020 } from "ajv/dist/2020.js";
-import standaloneCode from "ajv/dist/standalone/index.js";
-import { deduplicateSchemas } from "./schema-deduplicate.ts";
-// The addon exposes a generic validation failure, so detailed Ajv messages are unused.
-const ajv = new Ajv2020({
-  strict: false,
-  messages: false,
-  inlineRefs: false,
-  code: { source: true, esm: true },
-});
+import { assertSupportedReportSchema } from "./report-schema-subset.ts";
 const schema = await Bun.file("packages/protocol/governance-report-versioned.schema.json").json();
-const validate = ajv.compile(deduplicateSchemas(schema));
+assertSupportedReportSchema(schema);
 const outputs = new Map([
-  ["packages/storybook-addon/src/generated-validator.mjs", standaloneCode(ajv, validate)],
+  [
+    "packages/storybook-addon/src/generated-validator.mjs",
+    `import { validateSchema } from "./schema-validator.ts";\nconst schema = ${JSON.stringify(schema)};\nexport default (value) => validateSchema(schema, value);\n`,
+  ],
   [
     "packages/storybook-addon/src/generated-validator.d.mts",
     `import type { GovernanceReport } from "@governator/protocol";\ndeclare function validate(data: unknown): data is GovernanceReport;\nexport default validate;\n`,

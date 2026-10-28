@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import type { StorybookConfig } from "@storybook/react-vite";
 import { tagEditor } from "@governator/storybook-addon/tag-editor";
 const config: StorybookConfig = {
@@ -6,6 +7,14 @@ const config: StorybookConfig = {
   addons: ["@storybook/addon-docs", "@governator/storybook-addon"],
   staticDirs: ["../public"],
   core: { disableTelemetry: true },
-  viteFinal: async (config) => ({ ...config, plugins: [...(config.plugins ?? []), tagEditor()] }),
+  viteFinal: async (config) => ({
+    ...config,
+    plugins: [
+      ...(config.plugins ?? []),
+      tagEditor({
+        registry: { root: resolve(process.cwd(), "../.."), path: "governance/components.yaml" },
+      }),
+    ],
+  }),
 };
 export default config;

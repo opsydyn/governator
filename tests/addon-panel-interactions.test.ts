@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import { stubStorybookGlobal } from "./storybook-static-fetch.ts";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -99,8 +100,8 @@ const switchComponent = async (componentId: string) => {
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(Date.parse(at));
-  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-  vi.stubGlobal(
+  stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  stubStorybookGlobal(
     "fetch",
     vi.fn(async () => response()),
   );
@@ -125,7 +126,7 @@ describe("panel interactions", () => {
   test("offers descriptive tags even when governance identity is not configured", async () => {
     storybook.params = { componentId: "", reportUrl: "" };
     storybook.storyId = "button--primary";
-    vi.stubGlobal(
+    stubStorybookGlobal(
       "fetch",
       vi.fn(async (url: string | URL) =>
         String(url).includes("index.json")
@@ -146,7 +147,7 @@ describe("panel interactions", () => {
     const retry = deferred<Response>();
     const recovery = deferred<Response>();
     let calls = 0;
-    vi.stubGlobal(
+    stubStorybookGlobal(
       "fetch",
       vi.fn(() =>
         ++calls === 1
@@ -212,7 +213,7 @@ describe("panel interactions", () => {
         remediation: ["Declare a major migration"],
         publishable: false,
       };
-      vi.stubGlobal(
+      stubStorybookGlobal(
         "fetch",
         vi.fn(async () => new Response(JSON.stringify({ ...report(), release: candidate }))),
       );
@@ -230,7 +231,7 @@ describe("panel interactions", () => {
 
   test("an asynchronous report change does not reclaim focus after the user moves outside", async () => {
     const pending = deferred<Response>();
-    vi.stubGlobal(
+    stubStorybookGlobal(
       "fetch",
       vi.fn().mockResolvedValueOnce(response()).mockReturnValueOnce(pending.promise),
     );
@@ -261,7 +262,7 @@ describe("panel interactions", () => {
   test("unmapped components can reload and show a newly available decision", async () => {
     const initial = evaluate(evaluation());
     let calls = 0;
-    vi.stubGlobal(
+    stubStorybookGlobal(
       "fetch",
       vi.fn(async () => new Response(JSON.stringify(++calls === 1 ? initial : report()))),
     );
@@ -385,7 +386,7 @@ test.each([
   input.evidence[0]!.observedAt = "2026-10-26T11:58:30.000Z";
   if (sourceUrl) Object.assign(input.evidence[0]!, { sourceUrl });
   const snapshot = evaluate(input, 2);
-  vi.stubGlobal(
+  stubStorybookGlobal(
     "fetch",
     vi.fn(async () => new Response(JSON.stringify(snapshot))),
   );
@@ -416,7 +417,7 @@ test.each([
 test("v2 evidence disappears on report expiry and reload recovers a current snapshot", async () => {
   const input = evaluation();
   const snapshot = evaluate(input, 2);
-  vi.stubGlobal(
+  stubStorybookGlobal(
     "fetch",
     vi.fn(async () => new Response(JSON.stringify(snapshot))),
   );
@@ -427,7 +428,7 @@ test("v2 evidence disappears on report expiry and reload recovers a current snap
   expect(container.textContent).toContain("older than 24 hours");
   expect(container.textContent).not.toContain("Producer (reported): vitest");
   const fresh = { ...snapshot, evaluatedAt: new Date().toISOString() };
-  vi.stubGlobal(
+  stubStorybookGlobal(
     "fetch",
     vi.fn(async () => new Response(JSON.stringify(fresh))),
   );
@@ -435,4 +436,44 @@ test("v2 evidence disappears on report expiry and reload recovers a current snap
   await flush();
   expect(container.textContent).toContain("Producer (reported): vitest");
   expect(document.activeElement).toBe(button("Reload report"));
+});
+
+test("shows the registry editor when enabled for the selected story", async () => {
+  storybook.params = {
+    componentId: "ui.button",
+    reportUrl: "",
+    registryEditor: true,
+  } as typeof storybook.params;
+  storybook.storyId = "button--primary";
+  stubStorybookGlobal(
+    "fetch",
+    vi.fn(async (url: string | URL) =>
+      String(url).includes("registry-editor")
+        ? new Response(
+            JSON.stringify({
+              revision: "rev",
+              component: {
+                id: "ui.button",
+                name: "Button",
+                package: "ui",
+                owners: ["team"],
+                lifecycle: "candidate",
+                source: "src/Button.tsx",
+                stories: ["src/Button.stories.tsx"],
+                contractVersion: "1.0.0-rc.1",
+                exportPath: "ui",
+              },
+            }),
+          )
+        : new Response("missing", { status: 404 }),
+    ),
+  );
+  await act(async () => {
+    root.render(render());
+    for (let i = 0; i < 15; i++) await Promise.resolve();
+  });
+  expect(container.textContent).toContain("Declared governance metadata");
+  expect(container.querySelector<HTMLInputElement>('input[aria-label="Name"]')?.value).toBe(
+    "Button",
+  );
 });

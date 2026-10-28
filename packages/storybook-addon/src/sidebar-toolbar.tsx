@@ -8,6 +8,7 @@ import {
   reportExpiry,
   revalidateReport,
   subscribeReportObservations,
+  watchReportSource,
 } from "./report.ts";
 import type { ReportState } from "./report.ts";
 import { loadStoryMap, storiesByComponent } from "./story-navigation.ts";
@@ -22,11 +23,16 @@ import type { ReadinessFilter } from "./sidebar-filter.ts";
 export function GovernanceSidebarFilter() {
   const api = useStorybookApi();
   const { index, refs } = useStorybookState();
-  const params = useParameter<{ reportUrl?: unknown }>("governance", {});
+  const params = useParameter<{ reportUrl?: unknown; registryEditor?: unknown }>("governance", {});
   const theme = useTheme();
   const url = typeof params.reportUrl === "string" ? params.reportUrl : undefined;
+  const verifySource = params.registryEditor === true;
   const [mode, setMode] = useState<ReadinessFilter>("all");
-  const [reportState, setReportState] = useState<{ url: string | undefined; state: ReportState }>();
+  const [reportState, setReportState] = useState<{
+    url: string | undefined;
+    verified: boolean;
+    state: ReportState;
+  }>();
   const [map, setMap] = useState<{ signature: string; value: unknown }>();
   const [epoch, setEpoch] = useState(0);
   const [retry, setRetry] = useState(0);
@@ -46,16 +52,34 @@ export function GovernanceSidebarFilter() {
   );
   const safety = useRef({ enabled: false, deadline: 0 });
 
+  useEffect(() => {
+    const invalidate = () => {
+      reportGeneration.current++;
+      safety.current.enabled = false;
+      setReportState({
+        url,
+        verified: verifySource,
+        state: { status: "error", message: "Registry changed; regenerate the report." },
+      });
+    };
+    window.addEventListener("governator:registry-changed", invalidate);
+    return () => window.removeEventListener("governator:registry-changed", invalidate);
+  }, [url, verifySource]);
+
   useEffect(
     () =>
-      subscribeReportObservations((observedUrl, state) => {
-        if (observedUrl === url) {
+      subscribeReportObservations((observedUrl, state, verified) => {
+        if (
+          observedUrl === url &&
+          verified === verifySource &&
+          (!verifySource || state.status !== "ready" || state.source === "local-match")
+        ) {
           reportGeneration.current++;
           if (state.status !== "ready") safety.current.enabled = false;
-          setReportState({ url, state: revalidateReport(state) });
+          setReportState({ url, verified: verifySource, state: revalidateReport(state) });
         }
       }),
-    [url],
+    [url, verifySource],
   );
 
   useEffect(
@@ -86,22 +110,37 @@ export function GovernanceSidebarFilter() {
     const controller = new AbortController();
     const request = ++reportGeneration.current;
     setMode("all");
-    setReportState({ url, state: { status: "loading", message: "Loading governance report." } });
+    setReportState({
+      url,
+      verified: verifySource,
+      state: { status: "loading", message: "Loading governance report." },
+    });
     const timer = setTimeout(() => {
       controller.abort();
       if (reportGeneration.current === request)
-        setReportState({ url, state: { status: "error", message: "Report request timed out." } });
+        setReportState({
+          url,
+          verified: verifySource,
+          state: { status: "error", message: "Report request timed out." },
+        });
     }, 10_000);
-    void loadReport(url, window.location.href, Date.now, fetch, controller.signal).then((state) => {
+    void loadReport(
+      url,
+      window.location.href,
+      Date.now,
+      fetch,
+      controller.signal,
+      verifySource,
+    ).then((state) => {
       if (!controller.signal.aborted && reportGeneration.current === request)
-        setReportState({ url, state: revalidateReport(state) });
+        setReportState({ url, verified: verifySource, state: revalidateReport(state) });
       clearTimeout(timer);
     });
     return () => {
       controller.abort();
       clearTimeout(timer);
     };
-  }, [url, retry]);
+  }, [url, retry, verifySource]);
   useEffect(() => {
     if (reportState?.state.status !== "error") return;
     const refresh = () => setRetry((value) => value + 1);
@@ -111,9 +150,11 @@ export function GovernanceSidebarFilter() {
   useEffect(() => {
     if (reportState?.state.status !== "ready") return;
     const check = () =>
-      setReportState((current) =>
-        current ? { ...current, state: revalidateReport(current.state) } : current,
-      );
+      setReportState((current) => {
+        if (!current) return current;
+        const state = revalidateReport(current.state);
+        return state === current.state ? current : { ...current, state };
+      });
     const timer = setTimeout(
       check,
       Math.min(Math.max(0, reportExpiry(reportState.state.report) - Date.now()), 2_147_483_647),
@@ -126,8 +167,17 @@ export function GovernanceSidebarFilter() {
       document.removeEventListener("visibilitychange", check);
     };
   }, [reportState]);
+  useEffect(() => {
+    if (reportState?.state.status !== "ready" || reportState.state.source !== "local-match") return;
+    return watchReportSource(reportState.state, () => {
+      safety.current.enabled = false;
+      window.dispatchEvent(new Event("governator:registry-changed"));
+    });
+  }, [reportState, verifySource]);
   const current =
-    reportState && reportState.url === url ? revalidateReport(reportState.state) : undefined;
+    reportState && reportState.url === url && reportState.verified === verifySource
+      ? revalidateReport(reportState.state)
+      : undefined;
   const report = current?.status === "ready" ? current.report : undefined;
   const mapped =
     map?.signature === signature &&

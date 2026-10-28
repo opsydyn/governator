@@ -11,7 +11,6 @@ export default defineConfig({
   outDir: "dist",
   deps: {
     neverBundle: [/^storybook(?:\/|$)/, /^react(?:\/|$)/],
-    alwaysBundle: [/^ajv(?:\/|$)/],
-    onlyBundle: [/^ajv(?:\/|$)/],
+    onlyBundle: [],
   },
 });

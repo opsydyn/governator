@@ -101,7 +101,10 @@ export default defineConfig({
     },
     {
       // Native React UI and browser serialization stay independent of the private Effect engine.
-      files: ["packages/storybook-addon/src/tag-editor-ui.tsx"],
+      files: [
+        "packages/storybook-addon/src/tag-editor-ui.tsx",
+        "packages/storybook-addon/src/registry-editor-ui.tsx",
+      ],
       rules: {
         "linteffect/no-react-state": "off",
         "linteffect/no-try-catch": "off",
@@ -115,6 +118,8 @@ export default defineConfig({
         "packages/storybook-addon/src/tag-{csf,storage,editor-server}.ts",
         "packages/storybook-addon/src/story-index.ts",
         "packages/storybook-addon/src/preset.ts",
+        "packages/storybook-addon/src/registry-editor.ts",
+        "packages/storybook-addon/src/registry-source.ts",
       ],
       rules: {
         "linteffect/no-node-platform-in-shared-code": "off",
@@ -128,6 +133,7 @@ export default defineConfig({
       // The rendered UI test uses a small deterministic fetch stub.
       files: [
         "tests/storybook-tag-editor-ui.test.ts",
+        "tests/storybook-registry-editor-ui.test.ts",
         "tests/storybook-map-integration.test.ts",
         "tests/addon-validator-equivalence.test.ts",
       ],
@@ -143,6 +149,7 @@ export default defineConfig({
       files: [
         "scripts/protocol.ts",
         "scripts/schema-deduplicate.ts",
+        "scripts/addon-validator.ts",
         "scripts/dogfood-report.ts",
         "scripts/snapshot-demo-baseline.ts",
         "scripts/snapshot-release-baseline.ts",

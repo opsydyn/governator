@@ -36,6 +36,34 @@ Omit `reportUrl` for the no-report onboarding panel. To supply a report, generat
 
 Set `parameters.governance.componentId` on each component's stories. Optionally set `parameters.governance.reportUrl` to a same-origin JSON report path. Without a report the panel shows onboarding; Storybook still works. Reports older than 24 hours, malformed reports, unsupported schemas and unknown IDs never show a ready gate. Fetch uses no credentials and rejects redirects.
 
+## Edit declared governance metadata locally
+
+The same opt-in development plugin can edit a component's record in the canonical registry. Configure the repository root explicitly, relative to the directory where Storybook starts, and set the global parameter only for Vite development builds:
+
+```ts
+// .storybook/main.ts: add the plugin to your existing viteFinal.
+import { resolve } from "node:path";
+import { tagEditor } from "@governator/storybook-addon/tag-editor";
+
+tagEditor({
+  registry: {
+    root: resolve(process.cwd(), "../.."), // Change this for your Storybook's working directory.
+    path: "governance/components.yaml", // Relative to the repository root.
+  },
+});
+```
+
+```ts
+// .storybook/preview.ts: merge into your existing parameters.
+export default {
+  parameters: { governance: { registryEditor: import.meta.env.DEV } },
+};
+```
+
+Select a mapped story and use **Declared governance metadata** in its Governance panel. The editor changes the matching registry record; it does not change the stable component ID, evaluate a transition, generate evidence or grant approval. It validates the complete registry and its paths, preserves supported YAML, and rejects aliases, duplicate keys, unsafe paths and unsupported edits. A revision conflict leaves the draft unsaved until you discard and reload. Drafts survive story switches in the current browser session, but not page reloads; independent writers do not share a lock. Review and commit the resulting registry diff normally.
+
+After an edit, report-based status is unverified until the registry is committed and a report for that commit is regenerated and reloaded. With the editor enabled, the local adapter checks the report commit against Git HEAD and compares registry working-tree and index bytes to that commit; it rechecks on focus and periodically. A mismatch or unavailable check clears readiness filtering and current-status displays. This compares the registry only; it does not authenticate the report producer or prove that other report inputs are unchanged. Static and non-opted-in Storybooks show report snapshots without a live registry match. The writer is loopback-only, requires same-origin JSON writes and is not a hosted service.
+
 ## Edit descriptive tags locally
 
 The optional editor is supported for local React/Vite Storybook 10.6.4. Enable the development-only Vite plugin in `.storybook/main.ts`:

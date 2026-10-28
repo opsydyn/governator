@@ -23,6 +23,9 @@
     "build": "bun --bun tsdown && bun --bun tsdown --config tsdown.tag-editor.config.ts",
     "prepack": "bun run build"
   },
+  "devDependencies": {
+    "yaml": "2.9.1"
+  },
   "peerDependencies": {
     "storybook": "10.6.4"
   },

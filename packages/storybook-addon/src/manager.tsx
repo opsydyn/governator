@@ -12,9 +12,16 @@ import { loadStoryMap, storiesByComponent } from "./story-navigation.ts";
 import { STORY_INDEX_INVALIDATED } from "storybook/internal/core-events";
 import { AddonPanel } from "storybook/internal/components";
 import { useTheme } from "storybook/theming";
-import { loadReport, publishReportObservation, reportExpiry, revalidateReport } from "./report.ts";
+import {
+  loadReport,
+  publishReportObservation,
+  reportExpiry,
+  revalidateReport,
+  watchReportSource,
+} from "./report.ts";
 import type { ReportState } from "./report.ts";
 import { TagEditor } from "./tag-editor-ui.tsx";
+import { RegistryEditor } from "./registry-editor-ui.tsx";
 import type { TagDraft } from "./tag-editor-ui.tsx";
 import { Discovery } from "./discovery.tsx";
 import { GovernanceSidebarFilter } from "./sidebar-toolbar.tsx";
@@ -26,6 +33,7 @@ const tagDrafts = new Map<string, TagDraft>();
 function useFreshness(
   state: ReportState,
   setState: React.Dispatch<React.SetStateAction<ReportState>>,
+  monitorSource = false,
 ) {
   useEffect(() => {
     if (state.status !== "ready") return;
@@ -40,6 +48,12 @@ function useFreshness(
       document.removeEventListener("visibilitychange", revalidate);
     };
   }, [state, setState]);
+  useEffect(() => {
+    if (!monitorSource || state.status !== "ready" || state.source !== "local-match") return;
+    return watchReportSource(state, () =>
+      window.dispatchEvent(new Event("governator:registry-changed")),
+    );
+  }, [state, monitorSource]);
 }
 
 const css = `.gn-panel{font:13px/1.5 ui-sans-serif,system-ui,sans-serif;padding:22px 26px;min-height:250px}.gn-panel *{box-sizing:border-box}.gn-panel h2{font-size:20px;letter-spacing:-.4px;margin:0}.gn-panel h3{font-size:13px;margin:0 0 9px}.gn-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.gn-small{font-size:11px;opacity:.72}.gn-chips{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:10px 0}.gn-chip{border:1px solid currentColor;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:650}.gn-card{padding:15px 17px;margin-bottom:14px}.gn-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.gn-table{border-collapse:collapse;width:100%;font-size:12px}.gn-table th,.gn-table td{text-align:left;padding:10px 9px;border-bottom:1px solid color-mix(in srgb,currentColor 14%,transparent);vertical-align:top}.gn-table th{font-size:10px;text-transform:uppercase;letter-spacing:.7px;opacity:.7}.gn-table td:last-child{max-width:430px}.gn-panel code{font-size:11px}.gn-panel ul{padding-left:18px;margin:6px 0}.gn-panel button{cursor:pointer}.gn-note{border-left:3px solid #d79729;padding-left:12px}.gn-table-wrap{overflow-x:auto}@media(max-width:700px){.gn-split{grid-template-columns:1fr}.gn-panel{padding:16px}}`;
@@ -118,8 +132,12 @@ function Panel() {
   const { storyId, index } = useStorybookState();
   const api = useStorybookApi();
   const tagEditsPending = useRef(false);
+  const registryEditsPending = useRef(false);
   const setTagEditsPending = useCallback((dirty: boolean) => {
     tagEditsPending.current = dirty;
+  }, []);
+  const setRegistryEditsPending = useCallback((dirty: boolean) => {
+    registryEditsPending.current = dirty;
   }, []);
   const mappingGeneration = useRef(0);
   const [storyMap, setStoryMap] = useState<{ index: typeof index; value: unknown }>();
@@ -148,24 +166,46 @@ function Panel() {
       );
     return () => controller.abort();
   }, [index]);
-  const params = useParameter<{ componentId?: unknown; reportUrl?: unknown }>("governance", {});
+  const params = useParameter<{
+    componentId?: unknown;
+    reportUrl?: unknown;
+    registryEditor?: unknown;
+  }>("governance", {});
   const componentId = typeof params.componentId === "string" ? params.componentId : undefined;
+  const verifySource = params.registryEditor === true;
   const reportUrl = typeof params.reportUrl === "string" ? params.reportUrl : undefined;
   const [state, setState] = useState<ReportState>({
     status: "loading",
     message: "Loading governance snapshot…",
   });
   const [refresh, setRefresh] = useState(0);
-  const [stateKey, setStateKey] = useState({ url: params.reportUrl, refresh });
-  useFreshness(state, setState);
+  const [stateKey, setStateKey] = useState({
+    url: params.reportUrl,
+    refresh,
+    verified: verifySource,
+  });
+  useFreshness(state, setState, true);
   const currentState: ReportState =
-    stateKey.url === params.reportUrl && stateKey.refresh === refresh
+    stateKey.url === params.reportUrl &&
+    stateKey.refresh === refresh &&
+    stateKey.verified === verifySource
       ? revalidateReport(state)
       : { status: "loading", message: "Loading governance snapshot…" };
   useEffect(() => {
     let active = true;
-    setStateKey({ url: params.reportUrl, refresh });
+    setStateKey({ url: params.reportUrl, refresh, verified: verifySource });
     const controller = new AbortController();
+    const invalidate = () => {
+      active = false;
+      controller.abort();
+      const changed: ReportState = {
+        status: "error",
+        message: "Registry changed; commit it and regenerate the report.",
+      };
+      setState(changed);
+      publishReportObservation(reportUrl, changed, verifySource);
+    };
+    window.addEventListener("governator:registry-changed", invalidate);
     const timeout = setTimeout(() => {
       controller.abort();
       if (active) {
@@ -174,33 +214,42 @@ function Panel() {
           message: "Unverified — governance report request timed out. Reload the report.",
         };
         setState(timedOut);
-        publishReportObservation(reportUrl, timedOut);
+        publishReportObservation(reportUrl, timedOut, verifySource);
       }
     }, 10_000);
     if (params.reportUrl !== undefined && typeof params.reportUrl !== "string") {
       setState({ status: "error", message: "Governance reportUrl must be a string." });
       clearTimeout(timeout);
-      return () => controller.abort();
+      return () => {
+        controller.abort();
+        window.removeEventListener("governator:registry-changed", invalidate);
+      };
     }
     const loading: ReportState = { status: "loading", message: "Loading governance snapshot…" };
     setState(loading);
-    publishReportObservation(reportUrl, loading);
-    void loadReport(reportUrl, window.location.href, Date.now, fetch, controller.signal).then(
-      (result) => {
-        if (active && !controller.signal.aborted) {
-          const next = revalidateReport(result);
-          setState(next);
-          publishReportObservation(reportUrl, next);
-        }
-        clearTimeout(timeout);
-      },
-    );
+    publishReportObservation(reportUrl, loading, verifySource);
+    void loadReport(
+      reportUrl,
+      window.location.href,
+      Date.now,
+      fetch,
+      controller.signal,
+      verifySource,
+    ).then((result) => {
+      if (active && !controller.signal.aborted) {
+        const next = revalidateReport(result);
+        setState(next);
+        publishReportObservation(reportUrl, next, verifySource);
+      }
+      clearTimeout(timeout);
+    });
     return () => {
       active = false;
       clearTimeout(timeout);
       controller.abort();
+      window.removeEventListener("governator:registry-changed", invalidate);
     };
-  }, [reportUrl, refresh, params.reportUrl]);
+  }, [reportUrl, refresh, params.reportUrl, verifySource]);
   const color = (gate: string) =>
     gate === "ready"
       ? theme.base === "dark"
@@ -264,7 +313,7 @@ function Panel() {
         {currentState.status !== "ready"
           ? currentState.message
           : component
-            ? "Governance report loaded."
+            ? "Governance report snapshot loaded."
             : componentId
               ? `No registry decision for ${componentId}.`
               : "Link this story with parameters.governance.componentId."}
@@ -277,7 +326,8 @@ function Panel() {
             storyMap && storyMap.index === index ? storyMap.value : undefined,
           )}
           selectStory={(id) => {
-            if (id !== storyId && tagEditsPending.current) return false;
+            if (id !== storyId && (tagEditsPending.current || registryEditsPending.current))
+              return false;
             api.selectStory(id);
             return true;
           }}
@@ -289,6 +339,14 @@ function Panel() {
           storyId={storyId}
           onDirtyChange={setTagEditsPending}
           drafts={tagDrafts}
+        />
+      )}
+      {verifySource && storyId && componentId && (
+        <RegistryEditor
+          key={`${storyId}:${componentId}`}
+          storyId={storyId}
+          componentId={componentId}
+          onDirtyChange={setRegistryEditsPending}
         />
       )}
       {!report ? (
@@ -498,15 +556,21 @@ function Panel() {
   );
 }
 const sidebarReports = new Map<string, { at: number; promise: Promise<ReportState> }>();
-function sidebarReport(url: string): Promise<ReportState> {
-  const cached = sidebarReports.get(url);
+function sidebarReport(url: string, verifySource: boolean): Promise<ReportState> {
+  const key = `${url}|${verifySource}`;
+  const cached = sidebarReports.get(key);
   if (cached && Date.now() - cached.at < 30_000) return cached.promise;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10_000);
-  const promise = loadReport(url, window.location.href, Date.now, fetch, controller.signal).finally(
-    () => clearTimeout(timeout),
-  );
-  sidebarReports.set(url, { at: Date.now(), promise });
+  const promise = loadReport(
+    url,
+    window.location.href,
+    Date.now,
+    fetch,
+    controller.signal,
+    verifySource,
+  ).finally(() => clearTimeout(timeout));
+  sidebarReports.set(key, { at: Date.now(), promise });
   return promise;
 }
 function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: React.ReactNode }) {
@@ -527,8 +591,14 @@ function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: 
     typeof params.reportUrl === "string"
       ? params.reportUrl
       : undefined;
+  const verifySource = !!(
+    params &&
+    typeof params === "object" &&
+    "registryEditor" in params &&
+    params.registryEditor === true
+  );
   const [state, setState] = useState<ReportState>({ status: "empty", message: "Unverified" });
-  const [stateUrl, setStateUrl] = useState(url);
+  const [stateKey, setStateKey] = useState({ url, verified: verifySource });
   useFreshness(state, setState);
   useEffect(() => {
     let active = true;
@@ -536,23 +606,30 @@ function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: 
     const update = () => {
       const request = ++generation;
       if (url)
-        void sidebarReport(url).then((value) => {
+        void sidebarReport(url, verifySource).then((value) => {
           if (active && request === generation) {
-            setStateUrl(url);
+            setStateKey({ url, verified: verifySource });
             setState(revalidateReport(value));
           }
         });
       else setState({ status: "empty", message: "Unverified" });
     };
     update();
+    const invalidate = () => {
+      generation++;
+      sidebarReports.clear();
+      setState({ status: "error", message: "Registry changed; regenerate the report." });
+    };
+    window.addEventListener("governator:registry-changed", invalidate);
     const interval = setInterval(update, 60_000);
     return () => {
       active = false;
       clearInterval(interval);
+      window.removeEventListener("governator:registry-changed", invalidate);
     };
-  }, [url, componentId]);
+  }, [url, componentId, verifySource]);
   const currentState =
-    stateUrl === url
+    stateKey.url === url && stateKey.verified === verifySource
       ? revalidateReport(state)
       : { status: "empty" as const, message: "Unverified" };
   const component =
@@ -560,7 +637,7 @@ function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: 
       ? currentState.report.decisions.find((c) => c.componentId === componentId)
       : undefined;
   const title = component
-    ? `Lifecycle: ${component.lifecycle}; readiness gate: ${component.gate}; release gate: ${currentState.status === "ready" ? (currentState.report.release?.gate ?? "unknown") : "unknown"}`
+    ? `Report snapshot. Lifecycle: ${component.lifecycle}; readiness gate: ${component.gate}; release gate: ${currentState.status === "ready" ? (currentState.report.release?.gate ?? "unknown") : "unknown"}`
     : "Governance unverified: identity or current report unavailable";
   const sidebarAccent = theme.base === "dark" ? "#ff9fac" : "#98001d";
   return (

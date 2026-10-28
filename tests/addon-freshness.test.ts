@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import { stubStorybookGlobal } from "./storybook-static-fetch.ts";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -63,8 +64,8 @@ beforeEach(() => {
   vi.setSystemTime(deadline - 10);
   testIndex++;
   storybook.params = { componentId: "ui.button", reportUrl: caseUrl("one") };
-  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-  vi.stubGlobal(
+  stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  stubStorybookGlobal(
     "fetch",
     vi.fn(async () => response()),
   );
@@ -108,14 +109,14 @@ describe("mounted freshness", () => {
     await act(async () => root.render(renderLabel()));
     await flush();
     expect(container.textContent).toContain("L ");
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledTimes(2);
     await act(async () => root.render(null));
     vi.setSystemTime(deadline + 1);
     await act(async () => root.render(renderLabel()));
     await flush();
     expect(container.textContent).toContain("?");
     expect(container.textContent).not.toContain("L ");
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
   test.each(["visibilitychange", "focus"])(
     "%s revalidates after timers are suspended",
@@ -125,7 +126,7 @@ describe("mounted freshness", () => {
       );
       await flush();
       expect(container.textContent).toContain("Gate:");
-      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(fetch).toHaveBeenCalledTimes(4);
       vi.setSystemTime(deadline + 1);
       await act(async () =>
         (event === "focus" ? window : document).dispatchEvent(new Event(event)),
@@ -137,7 +138,7 @@ describe("mounted freshness", () => {
   test("an older response cannot replace the changed URL", async () => {
     let finish!: (response: Response) => void;
     const initialUrl = storybook.params.reportUrl;
-    vi.stubGlobal(
+    stubStorybookGlobal(
       "fetch",
       vi.fn((url: string) =>
         url.endsWith(initialUrl)
@@ -180,7 +181,7 @@ describe("mounted freshness", () => {
       },
     };
     storybook.params = { ...storybook.params, reportUrl: caseUrl("release") };
-    vi.stubGlobal(
+    stubStorybookGlobal(
       "fetch",
       vi.fn(async () => new Response(JSON.stringify(report))),
     );
@@ -196,7 +197,7 @@ describe("mounted freshness", () => {
   });
   test("a timed out request cannot revive the panel when a fetch ignores abort", async () => {
     let finish!: (response: Response) => void;
-    vi.stubGlobal(
+    stubStorybookGlobal(
       "fetch",
       vi.fn(
         () =>
@@ -214,7 +215,7 @@ describe("mounted freshness", () => {
 
   test("sidebar clears the old URL while its replacement is pending", async () => {
     storybook.params = { ...storybook.params, reportUrl: caseUrl("initial") };
-    vi.stubGlobal(
+    stubStorybookGlobal(
       "fetch",
       vi.fn((url: string) =>
         url.endsWith("initial.json")
@@ -236,7 +237,7 @@ describe("mounted freshness", () => {
     storybook.params = { ...storybook.params, reportUrl: caseUrl("poll") };
     let finish!: (response: Response) => void;
     let calls = 0;
-    vi.stubGlobal(
+    stubStorybookGlobal(
       "fetch",
       vi.fn(() =>
         ++calls === 1
@@ -256,7 +257,7 @@ describe("mounted freshness", () => {
   test("reload ignores the older request after a newer response wins", async () => {
     let finish!: (response: Response) => void;
     let calls = 0;
-    vi.stubGlobal(
+    stubStorybookGlobal(
       "fetch",
       vi.fn(() =>
         ++calls === 1
@@ -283,11 +284,51 @@ describe("mounted freshness", () => {
       finish = resolve;
     });
     const fetcher = vi.fn((_url: string, _options: RequestInit) => pending);
-    vi.stubGlobal("fetch", fetcher);
+    stubStorybookGlobal("fetch", fetcher);
     await act(async () => root.render(renderPanel()));
     await act(async () => root.render(null));
     expect(fetcher.mock.calls[0]?.[1].signal?.aborted).toBe(true);
     await act(async () => finish(response()));
     expect(container.textContent).toBe("");
   });
+});
+
+test("registry changes invalidate panel decisions and sidebar markers immediately", async () => {
+  await act(async () => root.render(renderPanel()));
+  await flush();
+  expect(container.textContent).toContain("Gate:");
+  await act(async () => window.dispatchEvent(new Event("governator:registry-changed")));
+  expect(container.textContent).not.toContain("Gate:");
+  expect(container.textContent).toMatch(/registry changed/i);
+  await act(async () => root.render(renderLabel()));
+  await flush();
+  await act(async () => window.dispatchEvent(new Event("governator:registry-changed")));
+  expect(container.textContent).toContain("?");
+  expect(container.textContent).not.toContain("L stable");
+});
+
+test("panel checks a locally verified report again when the window regains focus", async () => {
+  let matches = true;
+  storybook.params = { ...storybook.params, registryEditor: true } as typeof storybook.params;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      async (url: string | URL) =>
+        new Response(
+          JSON.stringify(String(url).includes("registry-source") ? { matches } : snapshot()),
+        ),
+    ),
+  );
+  await act(async () => {
+    root.render(renderPanel());
+    for (let i = 0; i < 20; i++) await Promise.resolve();
+  });
+  expect(container.textContent).toContain("Gate:");
+  matches = false;
+  await act(async () => {
+    window.dispatchEvent(new Event("focus"));
+    for (let i = 0; i < 20; i++) await Promise.resolve();
+  });
+  expect(container.textContent).not.toContain("Gate:");
+  expect(container.textContent).toMatch(/registry changed/i);
 });

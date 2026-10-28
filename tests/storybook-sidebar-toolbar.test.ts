@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import { stubStorybookGlobal } from "./storybook-static-fetch.ts";
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, test, vi } from "vitest";
@@ -47,7 +48,7 @@ vi.mock("storybook/theming", () => ({
 import { GovernanceSidebarFilter } from "../packages/storybook-addon/src/sidebar-toolbar.tsx";
 
 test("applies the named filter, preserves unknown entries, and clears on report expiry", async () => {
-  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.useFakeTimers();
   vi.setSystemTime(Date.parse(at));
   const snapshot = evaluate(evaluation());
@@ -62,7 +63,7 @@ test("applies the named filter, preserves unknown entries, and clears on report 
       },
     ],
   };
-  vi.stubGlobal(
+  stubStorybookGlobal(
     "fetch",
     vi.fn(
       async (url: string | URL) =>
@@ -137,11 +138,11 @@ test("applies the named filter, preserves unknown entries, and clears on report 
 });
 
 test("no report keeps the sidebar unfiltered and the control unavailable", async () => {
-  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   sb.params = {};
   sb.filters = {};
   sb.set.mockClear();
-  vi.stubGlobal(
+  stubStorybookGlobal(
     "fetch",
     vi.fn(async () => new Response("missing", { status: 404 })),
   );
@@ -164,7 +165,7 @@ test("no report keeps the sidebar unfiltered and the control unavailable", async
 });
 
 test("clears a filter when the panel observes the selected report has become unavailable", async () => {
-  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.useFakeTimers();
   vi.setSystemTime(Date.parse(at));
   sb.params = { reportUrl: "/report.json" };
@@ -180,7 +181,7 @@ test("clears a filter when the panel observes the selected report has become una
       },
     ],
   };
-  vi.stubGlobal(
+  stubStorybookGlobal(
     "fetch",
     vi.fn(
       async (url: string | URL) =>
@@ -220,7 +221,7 @@ test("clears a filter when the panel observes the selected report has become una
 });
 
 test("an older toolbar response cannot override a newer unavailable panel observation", async () => {
-  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.useFakeTimers();
   vi.setSystemTime(Date.parse(at));
   sb.params = { reportUrl: "/report.json" };
@@ -240,7 +241,7 @@ test("an older toolbar response cannot override a newer unavailable panel observ
   const pending = new Promise<Response>((resolve) => {
     finish = resolve;
   });
-  vi.stubGlobal(
+  stubStorybookGlobal(
     "fetch",
     vi.fn(async (url: string | URL) =>
       String(url).includes("governator-story-map")
@@ -274,13 +275,13 @@ test("an older toolbar response cannot override a newer unavailable panel observ
 });
 
 test("a timed-out report can recover when the window regains focus", async () => {
-  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.useFakeTimers();
   vi.setSystemTime(Date.parse(at));
   sb.params = { reportUrl: "/report.json" };
   sb.refs = {};
   let reachable = false;
-  vi.stubGlobal(
+  stubStorybookGlobal(
     "fetch",
     vi.fn(async (url: string | URL) =>
       String(url).includes("governator-story-map")
@@ -325,6 +326,383 @@ test("a timed-out report can recover when the window regains focus", async () =>
   expect(select.disabled).toBe(false);
   await act(async () => root.unmount());
   el.remove();
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+
+test("enabled local source verification keeps a mismatched report from filtering", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.useFakeTimers();
+  vi.setSystemTime(Date.parse(at));
+  sb.params = { reportUrl: "/report.json", registryEditor: true } as typeof sb.params;
+  sb.refs = {};
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      async (url: string | URL) =>
+        new Response(
+          JSON.stringify(
+            String(url).includes("registry-source")
+              ? { matches: false }
+              : String(url).includes("governator-story-map")
+                ? {
+                    version: 1,
+                    stories: [
+                      {
+                        id: "button--one",
+                        componentId: "ui.button",
+                        importPath: "./Button.stories.tsx",
+                        exportName: "One",
+                      },
+                    ],
+                  }
+                : evaluate(evaluation()),
+          ),
+        ),
+    ),
+  );
+  const el = document.createElement("div");
+  document.body.append(el);
+  const root = createRoot(el);
+  await act(async () => {
+    root.render(React.createElement(GovernanceSidebarFilter));
+    for (let i = 0; i < 30; i++) await Promise.resolve();
+  });
+  expect(
+    el.querySelector<HTMLSelectElement>('select[aria-label="Filter sidebar by readiness"]')!
+      .disabled,
+  ).toBe(true);
+  expect(sb.filters["governator/readiness"]!(sb.index["button--one"])).toBe(true);
+  await act(async () => root.unmount());
+  el.remove();
+  sb.params = { reportUrl: "/report.json" };
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+
+test("registry edits immediately clear an active readiness filter", async () => {
+  stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.useFakeTimers();
+  vi.setSystemTime(Date.parse(at));
+  sb.params = { reportUrl: "/report.json" };
+  sb.refs = {};
+  stubStorybookGlobal(
+    "fetch",
+    vi.fn(
+      async (url: string | URL) =>
+        new Response(
+          JSON.stringify(
+            String(url).includes("governator-story-map")
+              ? {
+                  version: 1,
+                  stories: [
+                    {
+                      id: "button--one",
+                      componentId: "ui.button",
+                      importPath: "./Button.stories.tsx",
+                      exportName: "One",
+                    },
+                  ],
+                }
+              : evaluate(evaluation()),
+          ),
+        ),
+    ),
+  );
+  const el = document.createElement("div");
+  document.body.append(el);
+  const root = createRoot(el);
+  await act(async () => {
+    root.render(React.createElement(GovernanceSidebarFilter));
+    for (let i = 0; i < 15; i++) await Promise.resolve();
+  });
+  const select = el.querySelector<HTMLSelectElement>(
+    'select[aria-label="Filter sidebar by readiness"]',
+  )!;
+  await act(async () => {
+    select.value = "blocked";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+  });
+  expect(sb.filters["governator/readiness"]!(sb.index["button--one"])).toBe(false);
+  await act(async () => {
+    window.dispatchEvent(new Event("governator:registry-changed"));
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+  });
+  expect(select.disabled).toBe(true);
+  expect(sb.filters["governator/readiness"]!(sb.index["button--one"])).toBe(true);
+  await act(async () => root.unmount());
+  el.remove();
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+
+test("returning focus rechecks local source consistency and clears an outdated filter", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.useFakeTimers();
+  vi.setSystemTime(Date.parse(at));
+  sb.params = { reportUrl: "/report.json", registryEditor: true } as typeof sb.params;
+  sb.refs = {};
+  let matches = true;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      async (url: string | URL) =>
+        new Response(
+          JSON.stringify(
+            String(url).includes("registry-source")
+              ? { matches }
+              : String(url).includes("governator-story-map")
+                ? {
+                    version: 1,
+                    stories: [
+                      {
+                        id: "button--one",
+                        componentId: "ui.button",
+                        importPath: "./Button.stories.tsx",
+                        exportName: "One",
+                      },
+                    ],
+                  }
+                : evaluate(evaluation()),
+          ),
+        ),
+    ),
+  );
+  const el = document.createElement("div");
+  document.body.append(el);
+  const root = createRoot(el);
+  await act(async () => {
+    root.render(React.createElement(GovernanceSidebarFilter));
+    for (let i = 0; i < 30; i++) await Promise.resolve();
+  });
+  const select = el.querySelector<HTMLSelectElement>(
+    'select[aria-label="Filter sidebar by readiness"]',
+  )!;
+  await act(async () => {
+    select.value = "blocked";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+  });
+  expect(sb.filters["governator/readiness"]!(sb.index["button--one"])).toBe(false);
+  matches = false;
+  await act(async () => {
+    window.dispatchEvent(new Event("focus"));
+    for (let i = 0; i < 20; i++) await Promise.resolve();
+  });
+  expect(select.disabled).toBe(true);
+  expect(sb.filters["governator/readiness"]!(sb.index["button--one"])).toBe(true);
+  await act(async () => root.unmount());
+  el.remove();
+  sb.params = { reportUrl: "/report.json" };
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+
+test("a slow source check after focus still clears an outdated filter", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.useFakeTimers();
+  vi.setSystemTime(Date.parse(at));
+  sb.params = { reportUrl: "/report.json", registryEditor: true } as typeof sb.params;
+  sb.refs = {};
+  let slow = false;
+  let finish!: (response: Response) => void;
+  const pending = new Promise<Response>((resolve) => {
+    finish = resolve;
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string | URL) =>
+      String(url).includes("registry-source") && slow
+        ? pending
+        : new Response(
+            JSON.stringify(
+              String(url).includes("registry-source")
+                ? { matches: true }
+                : String(url).includes("governator-story-map")
+                  ? {
+                      version: 1,
+                      stories: [
+                        {
+                          id: "button--one",
+                          componentId: "ui.button",
+                          importPath: "./Button.stories.tsx",
+                          exportName: "One",
+                        },
+                      ],
+                    }
+                  : evaluate(evaluation()),
+            ),
+          ),
+    ),
+  );
+  const el = document.createElement("div");
+  document.body.append(el);
+  const root = createRoot(el);
+  await act(async () => {
+    root.render(React.createElement(GovernanceSidebarFilter));
+    for (let i = 0; i < 30; i++) await Promise.resolve();
+  });
+  const select = el.querySelector<HTMLSelectElement>(
+    'select[aria-label="Filter sidebar by readiness"]',
+  )!;
+  await act(async () => {
+    select.value = "blocked";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+  });
+  slow = true;
+  await act(async () => {
+    window.dispatchEvent(new Event("focus"));
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+  });
+  await act(async () => {
+    finish(new Response(JSON.stringify({ matches: false })));
+    for (let i = 0; i < 16; i++) await Promise.resolve();
+  });
+  expect(select.disabled).toBe(true);
+  expect(sb.filters["governator/readiness"]!(sb.index["button--one"])).toBe(true);
+  await act(async () => root.unmount());
+  el.remove();
+  sb.params = { reportUrl: "/report.json" };
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+
+test("switching the same report to verified mode does not reuse a snapshot observation", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.useFakeTimers();
+  vi.setSystemTime(Date.parse(at));
+  sb.params = { reportUrl: "/report.json" };
+  sb.refs = {};
+  let verifying = false;
+  let finish!: (response: Response) => void;
+  const pending = new Promise<Response>((resolve) => {
+    finish = resolve;
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string | URL) =>
+      String(url).includes("registry-source")
+        ? verifying
+          ? pending
+          : new Response("", { status: 404 })
+        : new Response(
+            JSON.stringify(
+              String(url).includes("governator-story-map")
+                ? {
+                    version: 1,
+                    stories: [
+                      {
+                        id: "button--one",
+                        componentId: "ui.button",
+                        importPath: "./Button.stories.tsx",
+                        exportName: "One",
+                      },
+                    ],
+                  }
+                : evaluate(evaluation()),
+            ),
+          ),
+    ),
+  );
+  const el = document.createElement("div");
+  document.body.append(el);
+  const root = createRoot(el);
+  await act(async () => {
+    root.render(React.createElement(GovernanceSidebarFilter));
+    for (let i = 0; i < 16; i++) await Promise.resolve();
+  });
+  const select = el.querySelector<HTMLSelectElement>(
+    'select[aria-label="Filter sidebar by readiness"]',
+  )!;
+  expect(select.disabled).toBe(false);
+  verifying = true;
+  sb.params = { reportUrl: "/report.json", registryEditor: true } as typeof sb.params;
+  await act(async () => {
+    root.render(React.createElement(GovernanceSidebarFilter));
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+  });
+  await act(async () => {
+    publishReportObservation("/report.json", {
+      status: "ready",
+      report: evaluate(evaluation()),
+      source: "snapshot",
+    });
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+  });
+  expect(select.disabled).toBe(true);
+  await act(async () => {
+    finish(new Response(JSON.stringify({ matches: false })));
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+  });
+  expect(select.disabled).toBe(true);
+  await act(async () => root.unmount());
+  el.remove();
+  sb.params = { reportUrl: "/report.json" };
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+
+test("a hung source recheck times out and clears an active filter", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.useFakeTimers();
+  vi.setSystemTime(Date.parse(at));
+  sb.params = { reportUrl: "/report.json", registryEditor: true } as typeof sb.params;
+  sb.refs = {};
+  let hang = false;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string | URL) =>
+      String(url).includes("registry-source") && hang
+        ? new Promise<Response>(() => {})
+        : new Response(
+            JSON.stringify(
+              String(url).includes("registry-source")
+                ? { matches: true }
+                : String(url).includes("governator-story-map")
+                  ? {
+                      version: 1,
+                      stories: [
+                        {
+                          id: "button--one",
+                          componentId: "ui.button",
+                          importPath: "./Button.stories.tsx",
+                          exportName: "One",
+                        },
+                      ],
+                    }
+                  : evaluate(evaluation()),
+            ),
+          ),
+    ),
+  );
+  const el = document.createElement("div");
+  document.body.append(el);
+  const root = createRoot(el);
+  await act(async () => {
+    root.render(React.createElement(GovernanceSidebarFilter));
+    for (let i = 0; i < 30; i++) await Promise.resolve();
+  });
+  const select = el.querySelector<HTMLSelectElement>(
+    'select[aria-label="Filter sidebar by readiness"]',
+  )!;
+  await act(async () => {
+    select.value = "blocked";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+  });
+  hang = true;
+  await act(async () => {
+    window.dispatchEvent(new Event("focus"));
+    vi.advanceTimersByTime(10_001);
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+  });
+  expect(select.disabled).toBe(true);
+  expect(sb.filters["governator/readiness"]!(sb.index["button--one"])).toBe(true);
+  await act(async () => root.unmount());
+  el.remove();
+  sb.params = { reportUrl: "/report.json" };
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });

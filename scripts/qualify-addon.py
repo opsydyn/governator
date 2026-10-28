@@ -176,7 +176,8 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
                 if manager == 'pnpm':
                     env['npm_config_store_dir'] = str(root / 'pnpm-store')
                 (root / 'empty-global').write_text('')
-                (root / '.storybook/main.ts').write_text("import {tagEditor} from '@governator/storybook-addon/tag-editor'; export default {framework:'@storybook/react-vite',stories:['../src/**/*.stories.tsx'],addons:['@governator/storybook-addon'],viteFinal:async(config)=>({...config,plugins:[...(config.plugins||[]),tagEditor()]}),core:{disableTelemetry:true}};\n")
+                (root / '.storybook/main.ts').write_text("import {tagEditor} from '@governator/storybook-addon/tag-editor'; export default {framework:'@storybook/react-vite',stories:['../src/**/*.stories.tsx'],addons:['@governator/storybook-addon'],viteFinal:async(config)=>({...config,plugins:[...(config.plugins||[]),tagEditor({registry:{root:process.cwd(),path:'governance/components.yaml'}})]}),core:{disableTelemetry:true}};\n")
+                (root / '.storybook/preview.ts').write_text("export default {parameters:{governance:{registryEditor:import.meta.env.DEV}}};\n")
                 (root / 'src/Button.stories.tsx').write_text("import React from 'react'; const Button=()=> <button>Independent consumer</button>; export default {title:'Button',component:Button,parameters:{governance:{componentId:'ui.button'}}}; export const Default={};\n")
                 pnpm = Path.home() / '.cache/node/corepack/v1/pnpm/11.9.0/bin/pnpm.cjs'
                 args = ([manager] if manager == 'npm' else ['node', str(pnpm)]) + ['install', '--ignore-scripts', '--registry', registry]

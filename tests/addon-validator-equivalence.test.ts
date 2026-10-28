@@ -1,6 +1,8 @@
 import { Ajv2020 } from "ajv/dist/2020.js";
 import { expect, test } from "vitest";
 import schema from "../packages/protocol/governance-report-versioned.schema.json";
+import { validateSchema } from "../packages/storybook-addon/src/schema-validator.ts";
+import { assertSupportedReportSchema } from "../scripts/report-schema-subset.ts";
 import { deduplicateSchemas } from "../scripts/schema-deduplicate.ts";
 import { evaluate } from "../packages/core/src/index.ts";
 import { at, evaluation } from "./fixtures.ts";
@@ -56,4 +58,53 @@ test("shared validator schemas preserve acceptance for valid and mutated reports
     walk(valid, valid);
   }
   for (const sample of samples) expect(shared(sample)).toBe(original(sample));
+});
+
+test("compact validator matches Ajv across report mutations and JSON schema edge values", async () => {
+  const original = new Ajv2020({ strict: false }).compile(schema);
+  const samples: unknown[] = [
+    null,
+    false,
+    1,
+    "",
+    [],
+    {},
+    { schemaVersion: 1 },
+    evaluate(evaluation()),
+    evaluate(evaluation(), 2),
+  ];
+  for (const base of [evaluate(evaluation()), evaluate(evaluation(), 2)]) {
+    const walk = (value: unknown, path: (string | number)[] = []) => {
+      if (!value || typeof value !== "object") return;
+      for (const key of Object.keys(value)) {
+        const next = [...path, Array.isArray(value) ? Number(key) : key];
+        for (const replacement of [undefined, null, false, 0, "", "💡", [], {}, "invalid"]) {
+          const copy: any = structuredClone(base);
+          let parent: any = copy;
+          for (const part of next.slice(0, -1)) parent = parent[part];
+          if (replacement === undefined) delete parent[next.at(-1)!];
+          else parent[next.at(-1)!] = replacement;
+          samples.push(copy);
+        }
+        walk((value as any)[key], next);
+      }
+    };
+    walk(base);
+  }
+  for (const sample of samples)
+    expect(validateSchema(schema, sample), JSON.stringify(sample)).toBe(original(sample));
+});
+
+test("compact-validator generation rejects unsupported schema keywords", async () => {
+  expect(() => assertSupportedReportSchema({ type: "string", maxLength: 2 })).toThrow();
+  expect(() =>
+    assertSupportedReportSchema({ type: "array", items: { type: "integer" } }),
+  ).toThrow();
+  expect(() => assertSupportedReportSchema(schema)).not.toThrow();
+});
+
+test("compact validator rejects unexpected names inherited from Object.prototype", async () => {
+  const report = { ...evaluate(evaluation()), constructor: {} };
+  expect(new Ajv2020({ strict: false }).compile(schema)(report)).toBe(false);
+  expect(validateSchema(schema, report)).toBe(false);
 });

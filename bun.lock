@@ -138,6 +138,9 @@
     "packages/storybook-addon": {
       "name": "@governator/storybook-addon",
       "version": "0.1.0",
+      "devDependencies": {
+        "yaml": "2.9.1",
+      },
       "peerDependencies": {
         "storybook": "10.6.4",
       },

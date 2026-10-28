@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import { stubStorybookGlobal } from "./storybook-static-fetch.ts";
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, test, vi } from "vitest";
@@ -64,7 +65,7 @@ vi.mock("storybook/theming", () => ({
 import "../packages/storybook-addon/src/manager.tsx";
 
 test("clears stale source links on Storybook index invalidation", async () => {
-  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.useFakeTimers();
   vi.setSystemTime(Date.parse(at));
   const mapping = {
@@ -78,7 +79,7 @@ test("clears stale source links on Storybook index invalidation", async () => {
       },
     ],
   };
-  vi.stubGlobal(
+  stubStorybookGlobal(
     "fetch",
     vi.fn(
       async (url: string | URL) =>
@@ -113,7 +114,7 @@ test("clears stale source links on Storybook index invalidation", async () => {
 });
 
 test("ignores an in-flight map after invalidation and loads the new index", async () => {
-  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.useFakeTimers();
   vi.setSystemTime(Date.parse(at));
   sb.storyId = undefined;
@@ -143,7 +144,7 @@ test("ignores an in-flight map after invalidation and loads the new index", asyn
     resolveMap = resolve;
   });
   let requests = 0;
-  vi.stubGlobal(
+  stubStorybookGlobal(
     "fetch",
     vi.fn(async (url: string | URL) => {
       if (String(url).includes("governator-story-map"))
@@ -182,7 +183,7 @@ test("ignores an in-flight map after invalidation and loads the new index", asyn
 });
 
 test("keeps a draft through sidebar story changes and blocks discovery until resolved", async () => {
-  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.useFakeTimers();
   vi.setSystemTime(Date.parse(at));
   sb.storyId = "button--primary";
@@ -215,7 +216,7 @@ test("keeps a draft through sidebar story changes and blocks discovery until res
       },
     ],
   };
-  vi.stubGlobal(
+  stubStorybookGlobal(
     "fetch",
     vi.fn(async (url: string | URL) => {
       const path = String(url);

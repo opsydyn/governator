@@ -34,7 +34,35 @@ On React/Vite Storybook, the addon builds a separate source mapping without addi
 
 Schema 2 displays reported evidence producer, provenance, observation time, age at evaluation and optional source. Schema 1 metadata is unknown. HTTP(S) sources without credentials can be links; relative and unsafe sources remain text. No evidence source is fetched. Only use reports from a producer you trust: validation cannot authenticate JSON.
 
-The addon has Storybook as its sole peer and no runtime engine, Effect, CLI or MCP dependency. See [report contracts](/reference/report-schemas/) for reader compatibility.
+The browser addon has Storybook as its sole peer and no runtime engine, Effect, CLI or MCP dependency. The optional Node-only writer bundles its registry validator. See [report contracts](/reference/report-schemas/) for reader compatibility.
+
+## Edit declared governance metadata locally
+
+The same opt-in development plugin can edit a component's record in the canonical registry. Configure the repository root explicitly, relative to the directory where Storybook starts, and set the global parameter only for Vite development builds:
+
+```ts
+// .storybook/main.ts: add the plugin to your existing viteFinal.
+import { resolve } from "node:path";
+import { tagEditor } from "@governator/storybook-addon/tag-editor";
+
+tagEditor({
+  registry: {
+    root: resolve(process.cwd(), "../.."), // Change this for your Storybook's working directory.
+    path: "governance/components.yaml", // Relative to the repository root.
+  },
+});
+```
+
+```ts
+// .storybook/preview.ts: merge into your existing parameters.
+export default {
+  parameters: { governance: { registryEditor: import.meta.env.DEV } },
+};
+```
+
+Select a mapped story and use **Declared governance metadata** in its Governance panel. The editor changes the matching registry record; it does not change the stable component ID, evaluate a transition, generate evidence or grant approval. It validates the complete registry and its paths, preserves supported YAML, and rejects aliases, duplicate keys, unsafe paths and unsupported edits. A revision conflict leaves the draft unsaved until you discard and reload. Drafts survive story switches in the current browser session, but not page reloads; independent writers do not share a lock. Review and commit the resulting registry diff normally.
+
+After an edit, report-based status is unverified until the registry is committed and a report for that commit is regenerated and reloaded. With the editor enabled, the local adapter checks the report commit against Git HEAD and compares registry working-tree and index bytes to that commit; it rechecks on focus and periodically. A mismatch or unavailable check clears readiness filtering and current-status displays. This compares the registry only; it does not authenticate the report producer or prove that other report inputs are unchanged. Static and non-opted-in Storybooks show report snapshots without a live registry match. The writer is loopback-only, requires same-origin JSON writes and is not a hosted service.
 
 ## Edit descriptive tags in local Storybook
 

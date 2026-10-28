@@ -54,6 +54,7 @@ export function viteFinal(config: ViteConfig, options: Options): ViteConfig {
   const plugin = {
     name: "governator-story-map",
     configureServer(server: Server) {
+      Object.assign(server, { [Symbol.for("governator.story-map")]: getMap });
       server.middlewares.use("/governator-story-map.json", (req, res, next) => {
         if (req.url && !["/", ""].includes(req.url.split("?")[0] ?? "")) return next();
         if (req.method !== "GET" && req.method !== "HEAD") {

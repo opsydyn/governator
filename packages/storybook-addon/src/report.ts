@@ -2,10 +2,10 @@ import { reportSemanticsValid } from "../../protocol/src/report-semantics.ts";
 import validate from "./generated-validator.mjs";
 import type { GovernanceReport } from "@governator/protocol";
 export type ReportState =
-  | { status: "ready"; report: GovernanceReport }
+  | { status: "ready"; report: GovernanceReport; source?: "snapshot" | "local-match" }
   | { status: "stale"; report: GovernanceReport; message: string }
   | { status: "empty" | "error" | "loading"; message: string };
-type ReportObserver = (url: string | undefined, state: ReportState) => void;
+type ReportObserver = (url: string | undefined, state: ReportState, verified: boolean) => void;
 const observers = new Set<ReportObserver>();
 export function subscribeReportObservations(observer: ReportObserver): () => void {
   observers.add(observer);
@@ -13,8 +13,12 @@ export function subscribeReportObservations(observer: ReportObserver): () => voi
     observers.delete(observer);
   };
 }
-export function publishReportObservation(url: string | undefined, state: ReportState): void {
-  for (const observer of observers) observer(url, state);
+export function publishReportObservation(
+  url: string | undefined,
+  state: ReportState,
+  verified = false,
+): void {
+  for (const observer of observers) observer(url, state, verified);
 }
 export function decodeReport(raw: unknown, now = Date.now()): ReportState {
   if (
@@ -72,12 +76,47 @@ export function decodeReport(raw: unknown, now = Date.now()): ReportState {
   return { status: "ready", report: raw };
 }
 export type ReportFetcher = (url: string, options: RequestInit) => Promise<Response>;
+export async function verifyReportSource(
+  state: ReportState,
+  base: string,
+  fetcher: ReportFetcher = (input, options) => fetch(input, options),
+  signal?: AbortSignal,
+  allowSnapshot = false,
+): Promise<ReportState> {
+  if (state.status !== "ready") return state;
+  try {
+    const url = new URL("/__governator/registry-source", base);
+    url.searchParams.set("commit", state.report.commit);
+    const response = await fetcher(url.href, {
+      cache: "no-store",
+      credentials: "omit",
+      redirect: "error",
+      ...(signal ? { signal } : {}),
+    });
+    if (
+      allowSnapshot &&
+      (response.status === 404 ||
+        (response.ok && response.headers.get("content-type")?.includes("text/html")))
+    )
+      return { ...state, source: "snapshot" };
+    if (response.ok && (await response.json()).matches === true)
+      return { ...state, source: "local-match" };
+  } catch {
+    /* Source verification failed; fail closed. */
+  }
+  return {
+    status: "error",
+    message:
+      "Unverified — registry does not match the report source. Commit the registry, regenerate and reload the report.",
+  };
+}
 export async function loadReport(
   url: string | undefined,
   base: string,
   now: number | (() => number) = Date.now,
   fetcher: ReportFetcher = (input, options) => fetch(input, options),
   signal?: AbortSignal,
+  verifySource = false,
 ): Promise<ReportState> {
   if (!url)
     return {
@@ -111,7 +150,8 @@ export async function loadReport(
       };
     const body: unknown = await response.json();
     if (signal?.aborted) throw new Error("Report request aborted");
-    return decodeReport(body, typeof now === "function" ? now() : now);
+    const decoded = decodeReport(body, typeof now === "function" ? now() : now);
+    return await verifyReportSource(decoded, base, fetcher, signal, !verifySource);
   } catch {
     return {
       status: "error",
@@ -134,5 +174,44 @@ export function reportExpiry(report: GovernanceReport): number {
 }
 
 export function revalidateReport(state: ReportState): ReportState {
-  return state.status === "ready" ? decodeReport(state.report) : state;
+  if (state.status !== "ready") return state;
+  const current = decodeReport(state.report);
+  return current.status === "ready" ? state : current;
+}
+
+/** Recheck a local source on focus and periodically, failing closed on a hung request. */
+export function watchReportSource(state: ReportState, invalidate: () => void): () => void {
+  let active = true;
+  let pending = false;
+  let controller: AbortController | undefined;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const check = () => {
+    if (pending) return;
+    pending = true;
+    const request = new AbortController();
+    controller = request;
+    timeout = setTimeout(() => {
+      if (active && !request.signal.aborted) {
+        request.abort();
+        pending = false;
+        invalidate();
+      }
+    }, 10_000);
+    void verifyReportSource(state, window.location.href, fetch, request.signal).then((result) => {
+      if (active && !request.signal.aborted) {
+        clearTimeout(timeout);
+        pending = false;
+        if (result.status !== "ready") invalidate();
+      }
+    });
+  };
+  window.addEventListener("focus", check);
+  const interval = setInterval(check, 60_000);
+  return () => {
+    active = false;
+    controller?.abort();
+    clearTimeout(timeout);
+    clearInterval(interval);
+    window.removeEventListener("focus", check);
+  };
 }

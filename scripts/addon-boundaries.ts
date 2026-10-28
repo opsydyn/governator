@@ -28,7 +28,11 @@ export function inspectAddon(
         const typeOnly =
           (ts.isImportDeclaration(node) && node.importClause?.isTypeOnly) ||
           (ts.isExportDeclaration(node) && node.isTypeOnly);
-        if (/^\.\/tag-(?:storage|csf|editor-server)(?:\.|$)/.test(name))
+        if (
+          /^\.\/(?:tag-(?:storage|csf|editor-server)|registry-editor|registry-source)(?:\.|$)/.test(
+            name,
+          )
+        )
           errors.push(`Browser must not import tag-editor server module ${name}`);
         if (
           !name.startsWith(".") &&
@@ -54,9 +58,13 @@ export function inspectEditor(sources: readonly string[]): string[] {
   const errors: string[] = [];
   const permitted = new Set([
     "node:crypto",
+    "node:child_process",
     "node:fs/promises",
     "node:path",
     "node:http",
+    "node:module",
+    "node:util",
+    "yaml",
     "storybook/internal/csf-tools",
     "storybook/internal/types",
   ]);
@@ -94,7 +102,7 @@ if (import.meta.main) {
   ).scan("."))
     if (!path.endsWith("/generated-validator.mjs")) {
       if (
-        /\/(?:tag-storage|tag-csf|tag-editor-server|story-index|preset|tag-editor\.(?:mjs|d\.mts))/.test(
+        /\/(?:tag-storage|tag-csf|tag-editor-server|registry-editor\.|registry-source\.|story-index|preset|tag-editor\.(?:mjs|d\.mts))/.test(
           path,
         )
       )

@@ -1,6 +1,6 @@
 # Storybook governance metadata editor
 
-Status: **proposed design**. The user chose descriptive tags and governance metadata for the 0.1.0 editor and approved the registry-backed approach. This document describes the proposed implementation for review; it does not assert that the editor or its qualification already exists.
+Status: **approved design**. The user chose descriptive tags and governance metadata for the 0.1.0 editor and approved the registry-backed approach. Implementation and qualification are tracked separately.
 
 ## Intent and boundaries
 
