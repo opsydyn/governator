@@ -3,7 +3,7 @@ import "../src/preview.css";
 const preview: Preview = {
   parameters: {
     layout: "centered",
-    governance: { reportUrl: "/governance-report.json", registryEditor: import.meta.env.DEV },
+    governance: { reportUrl: "./governance-report.json", registryEditor: import.meta.env.DEV },
     controls: { expanded: true },
     backgrounds: {
       options: {

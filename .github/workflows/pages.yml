@@ -29,6 +29,10 @@ jobs:
       - run: bun install --cwd apps/docs --frozen-lockfile
       - uses: actions/configure-pages@v5
       - run: bun run --cwd apps/docs build
+      - run: bun run dogfood:report
+      - run: bun run storybook:build
+      - run: mkdir -p apps/docs/dist/storybook && cp -R apps/storybook-demo/storybook-static/. apps/docs/dist/storybook/
+      - run: test -f apps/docs/dist/storybook/index.html && test -f apps/docs/dist/storybook/governance-report.json
       - run: bun scripts/check-docs-links.ts
       - uses: actions/upload-pages-artifact@v4
         with:
