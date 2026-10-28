@@ -1,7 +1,14 @@
 /** @jsxRuntime classic */
 import React, { useEffect, useRef, useState } from "react";
 import type { API, HashEntry } from "storybook/manager-api";
-import { addons, types, useParameter, useStorybookState } from "storybook/manager-api";
+import {
+  addons,
+  types,
+  useParameter,
+  useStorybookApi,
+  useStorybookState,
+} from "storybook/manager-api";
+import { storiesByComponent } from "./story-navigation.ts";
 import { AddonPanel } from "storybook/internal/components";
 import { useTheme } from "storybook/theming";
 import { loadReport, reportExpiry, revalidateReport } from "./report.ts";
@@ -102,7 +109,8 @@ class FocusRecovery extends React.Component<{
 }
 function Panel() {
   const theme = useTheme();
-  const { storyId } = useStorybookState();
+  const { storyId, index } = useStorybookState();
+  const api = useStorybookApi();
   const params = useParameter<{ componentId?: unknown; reportUrl?: unknown }>("governance", {});
   const componentId = typeof params.componentId === "string" ? params.componentId : undefined;
   const reportUrl = typeof params.reportUrl === "string" ? params.reportUrl : undefined;
@@ -215,7 +223,13 @@ function Panel() {
               ? `No registry decision for ${componentId}.`
               : "Link this story with parameters.governance.componentId."}
       </div>
-      {report && <Discovery decisions={report.decisions} />}
+      {report && (
+        <Discovery
+          decisions={report.decisions}
+          stories={storiesByComponent(index)}
+          selectStory={(id) => api.selectStory(id)}
+        />
+      )}
       {storyId && <TagEditor key={storyId} storyId={storyId} />}
       {!report ? (
         <p className="gn-small">

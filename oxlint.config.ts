@@ -84,7 +84,10 @@ export default defineConfig({
     },
     {
       // Browser fetch/JSON error boundary; importing Effect here would violate distribution isolation.
-      files: ["packages/storybook-addon/src/report.ts"],
+      files: [
+        "packages/storybook-addon/src/report.ts",
+        "packages/storybook-addon/src/story-navigation.ts",
+      ],
       rules: { "linteffect/no-try-catch": "off" },
     },
     {
@@ -99,7 +102,10 @@ export default defineConfig({
     },
     {
       // Optional Node-only authoring boundary handles CSF parsing, HTTP and filesystem cleanup.
-      files: ["packages/storybook-addon/src/tag-{csf,storage,editor-server}.ts"],
+      files: [
+        "packages/storybook-addon/src/tag-{csf,storage,editor-server}.ts",
+        "packages/storybook-addon/src/story-index.ts",
+      ],
       rules: {
         "linteffect/no-node-platform-in-shared-code": "off",
         "linteffect/no-try-catch": "off",
@@ -110,13 +116,19 @@ export default defineConfig({
     },
     {
       // The rendered UI test uses a small deterministic fetch stub.
-      files: ["tests/storybook-tag-editor-ui.test.ts"],
+      files: ["tests/storybook-tag-editor-ui.test.ts", "tests/addon-validator-equivalence.test.ts"],
       rules: { "linteffect/no-return-in-arrow": "off" },
+    },
+    {
+      // Temporary CSF fixture cleanup and schema generation are boundary operations.
+      files: ["tests/storybook-source-navigation.test.ts"],
+      rules: { "linteffect/no-try-catch": "off" },
     },
     {
       // These files implement wire serialization or deliberately construct malformed test inputs.
       files: [
         "scripts/protocol.ts",
+        "scripts/schema-deduplicate.ts",
         "scripts/dogfood-report.ts",
         "scripts/snapshot-demo-baseline.ts",
         "scripts/snapshot-release-baseline.ts",

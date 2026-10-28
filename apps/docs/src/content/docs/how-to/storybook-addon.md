@@ -26,7 +26,9 @@ Generate a report using the [Vitest workflow](/how-to/vitest-evidence/), copy it
 
 The addon reads strict schema 1 or 2 reports; it never evaluates policy or runs tests. It rejects stale reports older than 24 hours, malformed data, unsupported schemas and unknown identities as ready evidence. Fetch uses no credentials and rejects redirects. Report URLs must be same-origin.
 
-With a current report, open **Find components** in the Governance panel to search component IDs, packages or owners and filter readiness decisions. The default view shows blocked and insufficient-evidence decisions. The list is limited to the first 100 matches; narrow the search to find others. Readiness, release and API compatibility remain independent. The report does not map component IDs to Storybook story IDs, so use the sidebar to find the relevant story rather than assuming a matching ID.
+With a current report, open **Find components** in the Governance panel to search component IDs, packages or owners and filter readiness decisions. The default view shows blocked and insufficient-evidence decisions. The list is limited to the first 100 matches; narrow the search to find others. Readiness, release and API compatibility remain independent. When local CSF story source declares a literal `parameters.governance.componentId`, the list offers links to matching stories. Unsupported dynamic or ambiguous declarations stay unlinked.
+
+The addon uses Storybook's experimental indexer API to add `governator:component:` tags to its index. These appear in Storybook's tag filters and are reserved for navigation; don't define them in project-level tags. They are not evidence or approvals. Composed Storybooks, custom indexers and dynamic source may not provide links. Rebuild or restart Storybook after configuration changes.
 
 Schema 2 displays reported evidence producer, provenance, observation time, age at evaluation and optional source. Schema 1 metadata is unknown. HTTP(S) sources without credentials can be links; relative and unsafe sources remain text. No evidence source is fetched. Only use reports from a producer you trust: validation cannot authenticate JSON.
 

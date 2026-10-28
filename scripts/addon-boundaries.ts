@@ -58,6 +58,7 @@ export function inspectEditor(sources: readonly string[]): string[] {
     "node:path",
     "node:http",
     "storybook/internal/csf-tools",
+    "storybook/internal/types",
   ]);
   for (const source of sources) {
     const ast = ts.createSourceFile("editor.ts", source, ts.ScriptTarget.Latest, true);
@@ -92,7 +93,11 @@ if (import.meta.main) {
     "packages/storybook-addon/{src,dist}/**/*.{ts,tsx,mts,js,mjs}",
   ).scan("."))
     if (!path.endsWith("/generated-validator.mjs")) {
-      if (/\/(?:tag-storage|tag-csf|tag-editor-server|tag-editor\.(?:mjs|d\.mts))/.test(path))
+      if (
+        /\/(?:tag-storage|tag-csf|tag-editor-server|story-index|preset|tag-editor\.(?:mjs|d\.mts))/.test(
+          path,
+        )
+      )
         editorSources.push(await Bun.file(path).text());
       else sources.push(await Bun.file(path).text());
     }

@@ -15,6 +15,9 @@ describe("component tag editing", () => {
     const source = 'export default { title: "Button", tags: ["forms"] };';
     expect(() => editComponentTags(source, "Button.stories.tsx", ["!test"])).toThrow();
     expect(() => editComponentTags(source, "Button.stories.tsx", ["test"])).toThrow();
+    expect(() =>
+      editComponentTags(source, "Button.stories.tsx", ["governator:component:ui-button"]),
+    ).toThrow();
     const quoted = 'export default { title: "Button", "tags": ["forms"] };';
     expect(editComponentTags(quoted, "Button.stories.tsx", ["layout"])).toContain(
       '"tags": ["layout"]',

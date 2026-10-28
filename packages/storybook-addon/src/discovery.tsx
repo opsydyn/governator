@@ -1,6 +1,7 @@
 /** @jsxRuntime classic */
 import React, { useState } from "react";
 import type { GovernanceReport } from "@governator/protocol";
+import type { StoryLink } from "./story-navigation.ts";
 
 type Decision = Pick<
   GovernanceReport["decisions"][number],
@@ -9,7 +10,15 @@ type Decision = Pick<
 type Filter = "attention" | "all" | "blocked" | "insufficient_evidence" | "ready";
 
 /** Lists report decisions without guessing story IDs or changing governance. */
-export function Discovery({ decisions }: { decisions: readonly Decision[] }) {
+export function Discovery({
+  decisions,
+  stories = {},
+  selectStory,
+}: {
+  decisions: readonly Decision[];
+  stories?: Record<string, StoryLink[]>;
+  selectStory?: (id: string) => void;
+}) {
   const [filter, setFilter] = useState<Filter>("attention");
   const [search, setSearch] = useState("");
   const attention = decisions.filter((item) => item.gate !== "ready").length;
@@ -32,7 +41,8 @@ export function Discovery({ decisions }: { decisions: readonly Decision[] }) {
       </summary>
       <p className="gn-small">
         These are readiness decisions from this report. Release and API compatibility are separate.
-        Use Storybook's sidebar to find the relevant story; report IDs may not match story names.
+        Story links use explicit component identities in story source. Unmapped stories remain
+        unlinked.
       </p>
       <div className="gn-discovery-controls">
         <label>
@@ -78,6 +88,11 @@ export function Discovery({ decisions }: { decisions: readonly Decision[] }) {
               {item.lifecycle} · {item.owners?.join(", ") || "owner not provided"}
             </span>
             {item.reasons[0] && <p className="gn-small">{item.reasons[0]}</p>}
+            {stories[item.componentId]?.map((story) => (
+              <button key={story.id} type="button" onClick={() => selectStory?.(story.id)}>
+                Open {story.name}
+              </button>
+            ))}
           </li>
         ))}
       </ul>

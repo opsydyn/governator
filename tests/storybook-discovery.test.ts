@@ -92,3 +92,39 @@ test("large reports limit rendered entries without hiding searchable matches", a
   expect(el.textContent).toContain("ui.item-104");
   await act(async () => root.unmount());
 });
+
+test("offers the explicitly mapped stories and navigates to the chosen story", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  const decisions = [
+    {
+      componentId: "ui.select",
+      package: "@example/ui",
+      gate: "blocked" as const,
+      lifecycle: "candidate" as const,
+      owners: [],
+      reasons: [],
+    },
+  ];
+  const selectStory = vi.fn();
+  const el = document.createElement("div");
+  document.body.append(el);
+  const root = createRoot(el);
+  await act(async () =>
+    root.render(
+      React.createElement(Discovery, {
+        decisions,
+        stories: {
+          "ui.select": [{ id: "components-select--default", name: "Components/Select / Default" }],
+        },
+        selectStory,
+      }),
+    ),
+  );
+  const button = [...el.querySelectorAll("button")].find((item) =>
+    item.textContent?.includes("Components/Select / Default"),
+  );
+  expect(button).toBeDefined();
+  await act(async () => button!.click());
+  expect(selectStory).toHaveBeenCalledWith("components-select--default");
+  await act(async () => root.unmount());
+});
