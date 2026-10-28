@@ -48,7 +48,7 @@ export function TagEditor({ storyId }: { storyId: string }) {
                 typeof tag === "string" &&
                 !reserved.has(tag) &&
                 !tag.startsWith("!") &&
-                !tag.startsWith("governator:component:"),
+                !tag.startsWith("governator:"),
             ),
           );
         const url = endpoint();
@@ -87,7 +87,7 @@ export function TagEditor({ storyId }: { storyId: string }) {
   }, [storyId, reload]);
   const add = () => {
     const tag = input.trim();
-    if (!tagPattern.test(tag) || reserved.has(tag) || tag.startsWith("governator:component:")) {
+    if (!tagPattern.test(tag) || reserved.has(tag) || tag.startsWith("governator:")) {
       setMessage("Enter a descriptive tag; built-in Storybook tags cannot be edited here.");
       return;
     }

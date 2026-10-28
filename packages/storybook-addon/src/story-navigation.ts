@@ -17,6 +17,8 @@ export function storiesByComponent(
       !Array.isArray(item.tags)
     )
       continue;
+    if (!item.tags.includes("governator:indexed") || item.tags.includes("governator:unmapped"))
+      continue;
     const tags = item.tags.filter(
       (tag): tag is string => typeof tag === "string" && tag.startsWith("governator:component:"),
     );

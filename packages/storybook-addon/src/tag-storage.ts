@@ -29,7 +29,7 @@ function parseTags(source: string, file: string): string[] {
   editComponentTags(source, file, []); // Validate that the file can be edited safely.
   const csf = loadCsf(source, { fileName: file, makeTitle: (title) => title ?? "" }).parse();
   return (csf.meta?.tags ?? []).filter(
-    (tag) => !tag.startsWith("!") && !tag.startsWith("governator:component:") && !reserved.has(tag),
+    (tag) => !tag.startsWith("!") && !tag.startsWith("governator:") && !reserved.has(tag),
   );
 }
 async function readSource(file: string): Promise<string> {

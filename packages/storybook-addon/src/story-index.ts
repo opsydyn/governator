@@ -10,7 +10,7 @@ export function wrapIndexers(indexers: Indexer[]): Indexer[] {
     async createIndex(fileName, options) {
       const entries = await indexer.createIndex(fileName, options);
       let identities: Record<string, string> = Object.create(null);
-      if (/\.stories\.[cm]?[jt]sx?$/.test(fileName)) {
+      if (/\.(?:stories|story)\.[cm]?[jt]sx?$/.test(fileName)) {
         try {
           identities = identitiesFromCsf(
             await readFile(fileName, "utf8"),
@@ -22,17 +22,21 @@ export function wrapIndexers(indexers: Indexer[]): Indexer[] {
         }
       }
       return entries.map((entry) => {
-        const tags = (entry.tags ?? []).filter((tag) => !tag.startsWith(componentTagPrefix));
+        const tags = (entry.tags ?? []).filter((tag) => !tag.startsWith("governator:"));
+        tags.push("governator:indexed");
         const identity = Object.hasOwn(identities, entry.exportName)
           ? identities[entry.exportName]
           : undefined;
+        let mapped = false;
         if (identity) {
           try {
             tags.push(`${componentTagPrefix}${encodeURIComponent(identity)}`);
+            mapped = true;
           } catch {
             /* Malformed Unicode stays unlinked. */
           }
         }
+        if (!mapped) tags.push("governator:unmapped");
         return { ...entry, tags };
       });
     },
@@ -98,14 +102,23 @@ export function identitiesFromCsf(
   const result: Record<string, string> = Object.create(null);
   try {
     const csf = loadCsf(source, { fileName, makeTitle: (title) => title ?? "" }).parse();
-    if (
-      csf._ast.program.body.some(
-        (statement) =>
-          statement.type === "ExpressionStatement" &&
-          statement.expression.type === "CallExpression",
+    const hasEagerCall = (value: unknown): boolean => {
+      if (!value || typeof value !== "object") return false;
+      if (Array.isArray(value)) return value.some(hasEagerCall);
+      const item = value as Record<string, unknown>;
+      if (
+        ["ArrowFunctionExpression", "FunctionExpression", "FunctionDeclaration"].includes(
+          String(item.type),
+        )
       )
-    )
-      return result;
+        return false;
+      if (["CallExpression", "OptionalCallExpression", "NewExpression"].includes(String(item.type)))
+        return true;
+      return Object.entries(item).some(
+        ([key, child]) => !["loc", "tokens", "comments"].includes(key) && hasEagerCall(child),
+      );
+    };
+    if (csf._ast.program.body.some(hasEagerCall)) return result;
     // Assignments can mutate metadata or exported stories after the indexed declaration.
     // Refuse the file rather than claiming a potentially obsolete identity.
     let mutated = false;
