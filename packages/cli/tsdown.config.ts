@@ -8,7 +8,11 @@ export default defineConfig({
   hooks: { "build:prepare": assertSafeBuildPrepare },
   deps: {
     neverBundle: ["typescript", "yaml", "tar", "semver", "@changesets/parse"],
-    alwaysBundle: [/^@governator\//, /^effect(?:\/|$)/],
+    alwaysBundle: [
+      /^@governator\//,
+      /^effect(?:\/|$)/,
+      /^@effect\/platform-(?:bun|node-shared)(?:\/|$)/,
+    ],
   },
   sourcemap: false,
   target: "es2022",

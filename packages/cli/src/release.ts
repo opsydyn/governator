@@ -207,33 +207,15 @@ export async function checkCandidate(
     baselineSource: "explicit-local-fixture" as const,
   };
 }
-export async function runRelease(args: readonly string[]): Promise<CliResult> {
-  const operation = args[0];
+export async function runRelease(
+  operation: string,
+  values: Map<string, string>,
+  demo: boolean,
+): Promise<CliResult> {
   ensure(
     operation === "candidate" || operation === "plan" || operation === "check",
     "Expected release candidate, plan or check",
   );
-  const values = new Map<string, string>();
-  let demo = false;
-  for (let i = 1; i < args.length; i++) {
-    const key = args[i] ?? "";
-    if (key === "--demo") {
-      ensure(operation !== "candidate" && !demo, "Unsupported or duplicate --demo");
-      demo = true;
-      continue;
-    }
-    const allowed =
-      operation === "candidate"
-        ? ["--root", "--config", "--out"]
-        : ["--root", "--config", "--candidate"];
-    ensure(
-      allowed.includes(key) && !values.has(key),
-      `Unknown or duplicate release option: ${key}`,
-    );
-    const value = args[++i];
-    ensure(!!value && !value.startsWith("--"), `Missing value for ${key}`);
-    values.set(key, value);
-  }
   const root = await realpath(resolve(values.get("--root") ?? ".")),
     config = values.get("--config");
   ensure(!!config, "Required option --config");

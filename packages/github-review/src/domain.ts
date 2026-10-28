@@ -133,7 +133,7 @@ export function requireCondition(condition: unknown, reason: ReviewReason): asse
 }
 
 /** Exact UTC round-trip rejects impossible calendar dates and unsupported precision. */
-export function normalizeTimestamp(raw: unknown): string {
+function normalizeTimestamp(raw: unknown): string {
   const timestamp = Schema.decodeUnknownSync(
     Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/)),
   )(raw);

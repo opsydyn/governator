@@ -59,9 +59,9 @@ const canonical = (value: any): string =>
       : JSON.stringify(value);
 const sha = (value: string | Buffer) => createHash("sha256").update(value).digest("hex");
 
-export const loopbackSandboxProfile =
+const loopbackSandboxProfile =
   '(version 1)(allow default)(deny network*)(allow network-outbound (remote ip "localhost:*"))(allow network-bind (local ip "localhost:*"))(allow network-inbound (local ip "localhost:*"))';
-export function confinedCommand(command: string[]) {
+function confinedCommand(command: string[]) {
   return ["/usr/bin/sandbox-exec", "-p", loopbackSandboxProfile, ...command];
 }
 

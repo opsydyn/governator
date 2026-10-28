@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/fallow/schema.json",
+  // Explicit roots for standalone rehearsals, generated protocols, Storybook and the separately installed docs app.
+  "entry": [
+    "apps/docs/src/components/*.astro",
+    "apps/docs/src/content/**/*.mdx",
+    "apps/docs/src/content.config.ts",
+    "apps/docs/src/styles/custom.css",
+    "governance/consumer.tsx",
+    "packages/*/tsdown*.config.ts",
+    "packages/protocol/src/generated-versioned.ts",
+    "scripts/mcp-readonly-preload.ts",
+    "scripts/rehearse-npm-archives.ts",
+    "scripts/rehearse-publish-custody.mjs",
+    "scripts/snapshot-demo-baseline.ts",
+    "scripts/snapshot-release-baseline.ts",
+  ],
+  // Astro uses a virtual module; Storybook supplies React to the manager and it is bundled at build time.
+  "ignoreDependencies": ["astro:content", "react"],
+}

@@ -14,7 +14,7 @@ export const TestMap = Schema.Struct({
   ),
 });
 export type TestMap = typeof TestMap.Type;
-export const VitestReport = Schema.Struct({
+const VitestReport = Schema.Struct({
   numFailedTests: count,
   numFailedTestSuites: count,
   numPassedTests: count,

@@ -5,20 +5,11 @@ import { createSnapshot, loadSnapshot, createQueryService } from "@governator/qu
 import { git } from "./source.ts";
 import type { CliResult } from "./commands.ts";
 
-export async function runQueryCommand(args: readonly string[]): Promise<CliResult> {
-  const exporting = args[0] === "snapshot";
-  if (exporting) ensure(args[1] === "export", "Expected snapshot export");
-  const allowed = exporting
-    ? ["--root", "--report", "--release", "--config", "--out"]
-    : ["--root", "--snapshot", "--tool", "--args"];
-  const values = new Map<string, string>();
-  for (let i = exporting ? 2 : 1; i < args.length; i++) {
-    const key = args[i] ?? "",
-      value = args[++i];
-    ensure(allowed.includes(key) && !values.has(key), `Unknown or duplicate query option: ${key}`);
-    ensure(!!value && !value.startsWith("--"), `Missing value for ${key}`);
-    values.set(key, value);
-  }
+export async function runQueryCommand(
+  command: string,
+  values: Map<string, string>,
+): Promise<CliResult> {
+  const exporting = command === "snapshot.export";
   const root = await realpath(resolve(values.get("--root") ?? "."));
   if (exporting) {
     const report = values.get("--report"),

@@ -80,3 +80,5 @@ bun ./node_modules/.bin/governator snapshot export --report artifacts/governance
 Reports default to schema 1; `--report-schema 2` adds evidence metadata without changing readiness or trust. Use schema 1 for older readers. Exit codes are **0** satisfied, **1** blocked/insufficient evidence and **2** invalid input/runtime error. A valid report can record a blocked gate. JSON metadata does not authenticate evidence; local checks and saved snapshots do not establish approval, publication or deployment.
 
 Independent packed consumer qualification and real registry installation are separate release gates. Local or reconstructed package sources must be identified in qualification evidence. Additional repository-only documentation is located at `docs/test-evidence.md`, `docs/storybook-contracts.md` and `docs/mcp.md` in the source checkout; those files are not included in this tarball.
+
+The CLI uses the pinned Effect command parser with Bun platform services internally. Its existing commands and exit codes remain the consumer contract; Effect is bundled rather than required as a consumer peer.

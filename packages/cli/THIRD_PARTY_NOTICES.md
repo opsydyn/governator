@@ -2,7 +2,7 @@
 
 The shipped bundle includes the following third-party software.
 
-## Effect 4.0.6 (MIT)
+## Effect and its Bun and Node shared platform packages 4.0.6 (MIT)
 
 MIT License
 

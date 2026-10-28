@@ -4,24 +4,11 @@ import { ensure } from "@governator/core";
 import { snapshotApi, diffApi, decodeApiSnapshot, checkApiVersions } from "@governator/versioning";
 import { containedFile } from "./files.ts";
 import type { CliResult } from "./commands.ts";
-export async function runContracts(args: readonly string[]): Promise<CliResult> {
-  const command = args[0];
+export async function runContracts(
+  command: string,
+  values: Map<string, string>,
+): Promise<CliResult> {
   ensure(command === "snapshot" || command === "diff", "Expected contracts snapshot or diff");
-  const values = new Map<string, string>();
-  const allowed =
-    command === "snapshot"
-      ? ["--root", "--config", "--declarations"]
-      : ["--root", "--baseline", "--candidate", "--baseline-digest"];
-  for (let i = 1; i < args.length; i++) {
-    const key = args[i] ?? "";
-    ensure(
-      allowed.includes(key) && !values.has(key),
-      `Unknown or duplicate contracts option: ${key}`,
-    );
-    const value = args[++i];
-    ensure(!!value && !value.startsWith("--"), `Missing ${key} value`);
-    values.set(key, value);
-  }
   const root = resolve(values.get("--root") ?? ".");
   async function input(key: string) {
     const path = values.get(key);

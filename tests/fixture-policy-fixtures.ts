@@ -1,6 +1,6 @@
 import { createHash, generateKeyPairSync, sign } from "node:crypto";
 
-export const TYPES = {
+const TYPES = {
   root: "application/vnd.governanator.fixture-root.v1+json",
   policy: "application/vnd.governanator.fixture-policy.v1+json",
   enrollment: "application/vnd.governanator.fixture-enrollment.v1+json",
@@ -8,8 +8,8 @@ export const TYPES = {
 } as const;
 export const hash = (bytes: Uint8Array) =>
   `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
-export const encode = (value: unknown) => Buffer.from(JSON.stringify(value));
-export const pae = (type: string, bytes: Uint8Array) =>
+const encode = (value: unknown) => Buffer.from(JSON.stringify(value));
+const pae = (type: string, bytes: Uint8Array) =>
   Buffer.concat([
     Buffer.from(`DSSEv1 ${Buffer.byteLength(type)} ${type} ${bytes.byteLength} `),
     bytes,

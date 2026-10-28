@@ -1,10 +1,10 @@
 import { createHash, generateKeyPairSync, sign } from "node:crypto";
 
-export const PAYLOAD_TYPE = "application/vnd.in-toto+json";
+const PAYLOAD_TYPE = "application/vnd.in-toto+json";
 const bytes = (value: unknown) => Buffer.from(JSON.stringify(value));
 export const hash = (value: Uint8Array) =>
   `sha256:${createHash("sha256").update(value).digest("hex")}`;
-export const pae = (type: string, payload: Uint8Array) =>
+const pae = (type: string, payload: Uint8Array) =>
   Buffer.concat([
     Buffer.from(`DSSEv1 ${Buffer.byteLength(type)} ${type} ${payload.length} `),
     payload,

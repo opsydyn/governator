@@ -9,6 +9,7 @@ import type { GovernanceReport } from "@governator/protocol";
 import { runRelease } from "./release.ts";
 import { runContracts } from "./contracts.ts";
 import { runQueryCommand } from "./queries.ts";
+import { parseCli } from "./parser.ts";
 
 export interface CliResult {
   readonly code: 0 | 1 | 2;
@@ -31,64 +32,31 @@ governator contracts diff --baseline PATH --candidate PATH --baseline-digest PAT
 Demo mode accepts only labelled demo evidence and never proves publication or deployment.
 Raw imports remain unverified. Local check executes installed Vitest 4 in a clean repository; it proves only that local process, never external approval or publication.
 `;
-function options(args: readonly string[]): {
-  command: string;
-  values: Map<string, string>;
-  demo: boolean;
-} {
-  if (!args.length || args[0] === "--help")
-    return { command: "help", values: new Map(), demo: false };
-  const importing = args[0] === "evidence";
-  if (importing) ensure(args[1] === "import", "Expected evidence import");
-  const command = importing ? "import" : (args[0] ?? "");
-  ensure(
-    ["validate", "evaluate", "check", "import"].includes(command),
-    `Unknown command: ${command}`,
-  );
-  const values = new Map<string, string>();
-  let demo = false;
-  const allowed = new Set(
-    command === "import"
-      ? ["--root", "--format", "--file", "--mapping", "--commit", "--report-root"]
-      : command === "check"
-        ? ["--root", "--format", "--mapping", "--target", "--component", "--report-schema"]
-        : ["--root", "--target", "--component", "--at", "--format", "--report-schema"],
-  );
-  for (let i = importing ? 2 : 1; i < args.length; i++) {
-    const key = args[i] ?? "";
-    if (key === "--demo") {
-      ensure(command === "evaluate", "--demo is only valid for evaluate");
-      ensure(!demo, "Duplicate --demo");
-      demo = true;
-      continue;
-    }
-    ensure(allowed.has(key), `Unknown option: ${key}`);
-    ensure(!values.has(key), `Duplicate option: ${key}`);
-    const value = args[++i];
-    ensure(!!value && !value.startsWith("--"), `Missing value for ${key}`);
-    values.set(key, value);
-  }
+export async function executeCli(args: readonly string[]): Promise<CliResult> {
+  if (args.length === 0 || args[0] === "--help") return { code: 0, stdout: help, stderr: "" };
+  const parsed = await parseCli(args);
+  if (parsed.kind === "help") return { code: 0, stdout: parsed.text, stderr: "" };
+  const { command, values, demo } = parsed;
+  if (command === "snapshot.export" || command === "query") return runQueryCommand(command, values);
+  if (command.startsWith("release."))
+    return runRelease(command.slice("release.".length), values, demo);
+  if (command.startsWith("contracts."))
+    return runContracts(command.slice("contracts.".length), values);
   ensure(
     !values.has("--format") ||
-      (command === "import" ? ["vitest"] : ["json", "text"]).includes(values.get("--format") ?? ""),
-    command === "import" ? "Import format must be vitest" : "Format must be json or text",
+      (command === "evidence.import" ? ["vitest"] : ["json", "text"]).includes(
+        values.get("--format") ?? "",
+      ),
+    command === "evidence.import" ? "Import format must be vitest" : "Format must be json or text",
   );
   ensure(
     !values.has("--report-schema") || ["1", "2"].includes(values.get("--report-schema") ?? ""),
     "Report schema must be 1 or 2",
   );
-  return { command, values, demo };
-}
-export async function executeCli(args: readonly string[]): Promise<CliResult> {
-  if (args[0] === "snapshot" || args[0] === "query") return runQueryCommand(args);
-  if (args[0] === "release") return runRelease(args.slice(1));
-  if (args[0] === "contracts") return runContracts(args.slice(1));
-  const { command, values, demo } = options(args);
-  if (command === "help") return { code: 0, stdout: help, stderr: "" };
   const reportVersion = values.get("--report-schema") === "2" ? 2 : 1;
   const root = resolve(values.get("--root") ?? ".");
   const project = await loadProject(root);
-  if (command === "import") {
+  if (command === "evidence.import") {
     ensure(
       values.get("--format") === "vitest" && values.has("--file") && values.has("--mapping"),
       "evidence import requires --format vitest --file PATH --mapping PATH",

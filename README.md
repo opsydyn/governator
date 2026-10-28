@@ -37,7 +37,7 @@ Open http://127.0.0.1:6006, choose a story and its **Governance** tab. Button, S
 
 The deliberately removed Button `tone` prop requires a major bump. Proposed contract `1.2.1` and package `8.4.2` patches are blocked. Passing local unit tests can satisfy the explicitly limited dogfood readiness policy while API compatibility stays blocked. This policy is a demonstration of real local evidence, not production design-system acceptance. Publication, deployment and adoption remain unknown.
 
-`bun run check` runs Moon tasks for TypeScript, oxlint with `@opsydyn/oxlint-effect`, oxfmt, Vitest under Bun, generated protocol/validator freshness, protocol dependency boundaries and the built addon dependency/bundle budget. `bun run storybook:build` produces the static app. These commands do not publish or version packages.
+`bun run check` runs Moon tasks for TypeScript, oxlint with `@opsydyn/oxlint-effect`, oxfmt, Vitest under Bun, generated protocol/validator freshness, protocol dependency boundaries and the built addon dependency/bundle budget. `bun run fallow:dead-code` separately analyzes unused files, exports and dependencies; its configured entry points include the standalone tools, generated protocol and Starlight app. Review findings before deleting files, especially public exports and framework entry points. `bun run storybook:build` produces the static app. These commands do not publish or version packages.
 
 ## API commands
 
