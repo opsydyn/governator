@@ -83,11 +83,25 @@ describe("mounted freshness", () => {
     await act(async () => root.render(renderPanel()));
     await flush();
     expect(container.textContent).toContain("Gate:");
+    expect(container.textContent).toContain("Find components");
     await act(async () => vi.advanceTimersByTime(10));
     expect(container.textContent).toContain("Gate:");
     await act(async () => vi.advanceTimersByTime(1));
     expect(container.textContent).toContain("older than 24 hours");
     expect(container.textContent).not.toContain("Gate:");
+    expect(container.textContent).not.toContain("Find components");
+  });
+  test("expiry recovers focus from a discovery control", async () => {
+    await act(async () => root.render(renderPanel()));
+    await flush();
+    const discovery = container.querySelector<HTMLDetailsElement>(".gn-discovery")!;
+    discovery.open = true;
+    const select = discovery.querySelector<HTMLSelectElement>("select")!;
+    select.focus();
+    expect(document.activeElement).toBe(select);
+    await act(async () => vi.advanceTimersByTime(11));
+    expect(container.textContent).not.toContain("Find components");
+    expect(document.activeElement).toBe(container.querySelector("[data-reload]"));
   });
   test("sidebar revalidates a cached observation before showing it", async () => {
     await act(async () => root.render(renderLabel()));

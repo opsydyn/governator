@@ -7,6 +7,8 @@ import { useTheme } from "storybook/theming";
 import { loadReport, reportExpiry, revalidateReport } from "./report.ts";
 import type { ReportState } from "./report.ts";
 import { TagEditor } from "./tag-editor-ui.tsx";
+import { Discovery } from "./discovery.tsx";
+import { brandCss } from "./brand.ts";
 
 function useFreshness(
   state: ReportState,
@@ -73,6 +75,7 @@ function CopyId({ id }: { id: string }) {
 }
 class FocusRecovery extends React.Component<{
   style: React.CSSProperties;
+  mode: string;
   children: React.ReactNode;
 }> {
   panel = React.createRef<HTMLElement>();
@@ -86,7 +89,12 @@ class FocusRecovery extends React.Component<{
   }
   render() {
     return (
-      <section ref={this.panel} className="gn-panel" style={this.props.style}>
+      <section
+        ref={this.panel}
+        className="gn-panel"
+        data-gn-theme={this.props.mode}
+        style={this.props.style}
+      >
         {this.props.children}
       </section>
     );
@@ -155,11 +163,20 @@ function Panel() {
   const component = report?.decisions.find((item) => item.componentId === componentId);
   const compatibility = component?.compatibility;
   return (
-    <FocusRecovery style={{ color: theme.color.defaultText, background: theme.background.content }}>
-      <style>
-        {css +
-          `.gn-tag-list{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0!important;margin:12px 0!important}.gn-tag-list li{display:flex;align-items:center;gap:6px;border:1px solid color-mix(in srgb,currentColor 25%,transparent);padding:3px 6px;border-radius:4px}.gn-tag-label{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}.gn-tag-label input{font:inherit;color:inherit;background:transparent;border:1px solid currentColor;border-radius:4px;padding:5px 8px;max-width:100%}.gn-tag-label input:focus-visible{outline:3px solid #6b9bff;outline-offset:2px}`}
-      </style>
+    <FocusRecovery
+      mode={theme.base}
+      style={{ color: theme.color.defaultText, background: theme.background.content }}
+    >
+      <style>{css + brandCss}</style>
+      <div className="gn-brand" aria-label="Governator design system governance">
+        <span className="gn-brand-mark" aria-hidden="true">
+          G
+        </span>
+        <span>
+          <strong>GOVERNATOR</strong>
+          <small>DESIGN SYSTEM GOVERNANCE</small>
+        </span>
+      </div>
       <div className="gn-top">
         <div>
           <h2>{component?.componentId ?? (report ? "Unverified component" : "Governance")}</h2>
@@ -198,6 +215,7 @@ function Panel() {
               ? `No registry decision for ${componentId}.`
               : "Link this story with parameters.governance.componentId."}
       </div>
+      {report && <Discovery decisions={report.decisions} />}
       {storyId && <TagEditor key={storyId} storyId={storyId} />}
       {!report ? (
         <p className="gn-small">
@@ -418,6 +436,7 @@ function sidebarReport(url: string): Promise<ReportState> {
   return promise;
 }
 function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: React.ReactNode }) {
+  const theme = useTheme();
   const id = item.type === "component" ? item.children[0] : item.id;
   const params: unknown = id ? api.getParameters(id, "governance") : undefined;
   const componentId =
@@ -469,13 +488,23 @@ function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: 
   const title = component
     ? `Lifecycle: ${component.lifecycle}; readiness gate: ${component.gate}; release gate: ${currentState.status === "ready" ? (currentState.report.release?.gate ?? "unknown") : "unknown"}`
     : "Governance unverified: identity or current report unavailable";
+  const sidebarAccent = theme.base === "dark" ? "#ff9fac" : "#98001d";
   return (
     <span style={{ display: "flex", gap: 6, alignItems: "center", minWidth: 0 }}>
       <span>{label}</span>
       <small
         title={title}
         aria-label={title}
-        style={{ fontSize: 9, opacity: 0.7, whiteSpace: "nowrap" }}
+        style={{
+          fontSize: 10,
+          fontFamily: "ui-monospace, monospace",
+          color: "inherit",
+          border: "1px solid currentColor",
+          borderLeft: `3px solid ${sidebarAccent}`,
+          borderRadius: 2,
+          padding: "1px 3px",
+          whiteSpace: "nowrap",
+        }}
       >
         {component
           ? `L ${component.lifecycle} · G ${component.gate === "insufficient_evidence" ? "missing" : component.gate}`

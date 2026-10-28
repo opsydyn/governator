@@ -58,6 +58,8 @@ The writer only handles loopback requests; JSON writes require a same-origin req
 
 The panel displays the snapshot's readiness and optional API compatibility independently. It performs no policy evaluation and grants no approval. Provenance and publication/deployment/adoption remain visible. Only configure reports produced by an engine you trust; schema validation does not authenticate a JSON file.
 
+When a current report is available, open **Find components** in the Governance panel to filter its readiness decisions by blocked, insufficient evidence or ready, and search component IDs, packages or owners. The default view lists readiness decisions needing attention; release and API compatibility remain separate gates. The list shows up to 100 matches at a time; narrow the search to find others. Report IDs are not Storybook story IDs, so the list does not guess story links. Missing or stale reports do not show current discovery results.
+
 The browser bundle has no runtime dependency on the CLI, engine, Effect, Node or MCP. Storybook is the sole peer. The manager build supplies React. Bundle budget: 128 KiB raw / 16 KiB gzip.
 
 The addon accepts strict schema 1 and schema 2 reports. Schema 2 shows each selected evidence ID with its reported producer and provenance, canonical UTC observation time, age in seconds at report evaluation, and optional source. Schema 1 details and missing sources are explicitly unknown. Reported metadata does not authenticate producers, and age at evaluation is not a live freshness guarantee. Existing report expiry and reload behavior applies to both versions.

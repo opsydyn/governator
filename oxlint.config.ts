@@ -72,7 +72,10 @@ export default defineConfig({
     {
       // The public addon is a native Storybook/React adapter and must not ship Effect.
       // React effects own fetch cancellation/cleanup; UI state stays local to this read-only panel.
-      files: ["packages/storybook-addon/src/manager.tsx"],
+      files: [
+        "packages/storybook-addon/src/manager.tsx",
+        "packages/storybook-addon/src/discovery.tsx",
+      ],
       rules: {
         "linteffect/no-react-state": "off",
         "linteffect/no-return-in-arrow": "off",
