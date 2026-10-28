@@ -40,7 +40,8 @@
     "docs:check": "moon run docs:typecheck",
     "docs:preview": "bun run --cwd apps/docs preview",
     "docs:install": "bun install --cwd apps/docs --frozen-lockfile",
-    "docs:links": "moon run docs:links"
+    "docs:links": "moon run docs:links",
+    "release:adapter:qualify": "bun scripts/qualify-single-maintainer-adapter.ts"
   },
   "devDependencies": {
     "@changesets/cli": "2.31.0",
