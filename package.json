@@ -54,7 +54,7 @@
     "@types/semver": "7.8.0",
     "ajv": "8.20.0",
     "fallow": "3.37.0",
-    "happy-dom": "20.10.6",
+    "happy-dom": "21.0.4",
     "json-schema-to-typescript": "16.0.0",
     "oxfmt": "0.74.0",
     "oxlint": "1.71.0",
