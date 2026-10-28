@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 420" fill="none">
+<defs><linearGradient id="fg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ff1738" stop-opacity=".65"/><stop offset="1" stop-color="#ff1738" stop-opacity=".06"/></linearGradient></defs>
+<path d="M0 91H1440" stroke="#ff1738" stroke-width="2"/>
+<g stroke="#ff1738" stroke-width="1" opacity=".78">
+<path d="M504 91L-10 420"/>
+<path d="M522 91L110 420"/>
+<path d="M540 91L230 420"/>
+<path d="M558 91L350 420"/>
+<path d="M576 91L470 420"/>
+<path d="M594 91L590 420"/>
+<path d="M612 91L710 420"/>
+<path d="M630 91L830 420"/>
+<path d="M648 91L950 420"/>
+<path d="M666 91L1070 420"/>
+<path d="M684 91L1190 420"/>
+<path d="M702 91L1310 420"/>
+<path d="M720 91L1430 420"/>
+<path d="M738 91L1550 420"/>
+<path d="M756 91L1670 420"/>
+<path d="M774 91L1790 420"/>
+<path d="M792 91L1910 420"/>
+<path d="M810 91L2030 420"/>
+<path d="M828 91L2150 420"/>
+<path d="M846 91L2270 420"/>
+<path d="M864 91L2390 420"/>
+<path d="M882 91L2510 420"/>
+<path d="M900 91L2630 420"/>
+<path d="M918 91L2750 420"/>
+<path d="M936 91L2870 420"/>
+<path d="M0 104H1440"/>
+<path d="M0 120H1440"/>
+<path d="M0 143H1440"/>
+<path d="M0 173H1440"/>
+<path d="M0 209H1440"/>
+<path d="M0 252H1440"/>
+<path d="M0 301H1440"/>
+<path d="M0 357H1440"/>
+<path d="M0 420H1440"/>
+</g><path d="M0 92H1440V420H0Z" fill="url(#fg)" opacity=".15"/>
+</svg>

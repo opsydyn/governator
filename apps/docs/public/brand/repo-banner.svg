@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 230" role="img" aria-labelledby="title desc">
+  <title id="title">Governator: control before you ship</title>
+  <desc id="desc">A red, black and silver control-room graphic with a perspective grid.</desc>
+  <rect width="1200" height="230" fill="#0b0c0e"/>
+  <path d="M24 24h1152v182H24z" fill="none" stroke="#737276"/>
+  <path d="M24 25h1152" stroke="#ff1738" stroke-width="4"/>
+  <g stroke="#ff1738" opacity=".28" fill="none">
+    <path d="M600 123 370 206M600 123 450 206M600 123 530 206M600 123 670 206M600 123 750 206M600 123 830 206M600 123 910 206M600 123 990 206M600 123 1070 206M600 123 1170 206"/>
+    <path d="M24 151h1152M24 169h1152M24 187h1152"/>
+  </g>
+  <text x="50" y="91" fill="#f4f1eb" font-family="Arial Black, Impact, sans-serif" font-size="67" font-weight="900" letter-spacing="3">GOVERNATOR</text>
+  <path d="M50 106h475" stroke="#ff1738" stroke-width="6"/>
+  <text x="52" y="139" fill="#f4f1eb" font-family="monospace" font-size="17" letter-spacing="4">DESIGN SYSTEM GOVERNANCE</text>
+  <text x="52" y="175" fill="#ff5369" font-family="monospace" font-size="15" font-weight="bold" letter-spacing="3">CONTROL BEFORE YOU SHIP.</text>
+  <circle cx="1005" cy="100" r="48" fill="none" stroke="#a5a2a1" opacity=".7"/>
+  <ellipse cx="1005" cy="100" rx="22" ry="48" fill="none" stroke="#a5a2a1" opacity=".7"/>
+  <path d="M957 100h96M963 78h84M963 122h84" fill="none" stroke="#a5a2a1" opacity=".7"/>
+  <circle cx="1005" cy="100" r="5" fill="#ff1738"/>
+</svg>

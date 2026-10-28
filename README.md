@@ -1,6 +1,10 @@
-# governanator
+# GOVERNATOR
+
+![Governator: design system governance. Control before you ship.](apps/docs/public/brand/repo-banner.svg)
 
 Offline design-system governance: a component's status should show its evidence.
+
+Governator is the product name. The current local commands and private package names still use the earlier `governanator` spelling; the examples below use their actual names.
 
 The local workspace includes a deterministic policy engine, source-bound Vitest checks, TypeScript declaration compatibility analysis, a Bun CLI, fourteen read-only MCP queries and a real React/Storybook dogfood app. All packages remain private and unpublished.
 

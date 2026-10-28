@@ -4,7 +4,8 @@ import starlight from "@astrojs/starlight";
 export default defineConfig({
   integrations: [
     starlight({
-      title: "Governanator",
+      title: "Governator",
+      favicon: "/brand/icon-192.png",
       disable404Route: true,
       description: "Local governance tools for design-system maintainers.",
       customCss: ["./src/styles/custom.css"],

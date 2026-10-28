@@ -1,27 +1,154 @@
-/* Hallmark · v2.0.0 | Governanator docs: native Starlight, technical index, amber accent */
+/* Governator: a readable field manual with the supplied control-room palette. */
 :root {
   --sl-font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --sl-font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
-  --sl-color-accent-low: #352b13;
-  --sl-color-accent: #d4a837;
-  --sl-color-accent-high: #f5df9a;
-  --docs-focus: var(--sl-color-accent-high);
+  --sl-color-accent-low: #470e17;
+  --sl-color-accent: #ff5c70;
+  --sl-color-accent-high: #ffc4cb;
+  --docs-focus: #ff9caa;
   --sl-content-width: 49rem;
 }
 
+:root:not([data-theme="light"]) {
+  --sl-color-black: #0b0c0e;
+  --sl-color-gray-6: #151619;
+}
+
 :root[data-theme="light"] {
-  --sl-color-accent-low: #fff1c6;
-  --sl-color-accent: #846000;
-  --sl-color-accent-high: #46340b;
+  --sl-color-accent-low: #ffe3e6;
+  --sl-color-accent: #a6001d;
+  --sl-color-accent-high: #5c0010;
+  --docs-focus: #9f001a;
+}
+
+.site-title {
+  font-family: var(--sl-font-mono);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  text-transform: uppercase;
+}
+
+header.header {
+  border-bottom: 1px solid var(--sl-color-accent);
 }
 
 .sl-markdown-content h2 {
   letter-spacing: -0.025em;
 }
 
+.governator-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.54fr);
+  align-items: center;
+  gap: 1rem;
+  overflow: hidden;
+  margin: 1.5rem 0 2rem;
+  padding: clamp(1.4rem, 4vw, 2.5rem);
+  color: #f5f3ef;
+  background: #0b0c0e;
+  border: 1px solid #68666a;
+  border-top: 3px solid #ff1738;
+}
+
+.governator-hero::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 36%;
+  background: url("/brand/perspective-grid.svg") center bottom / cover no-repeat;
+  opacity: 0.32;
+  pointer-events: none;
+  content: "";
+}
+
+.governator-hero-copy,
+.governator-hero-art {
+  position: relative;
+  z-index: 1;
+}
+.governator-hero p {
+  margin: 0;
+}
+.governator-eyebrow,
+.governator-art-label {
+  color: #c9c6c5;
+  font: 600 0.64rem/1.4 var(--sl-font-mono);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.governator-display {
+  padding: 1rem 0;
+  font:
+    900 clamp(2rem, 5vw, 3.7rem)/0.96 Impact,
+    "Arial Black",
+    sans-serif;
+  letter-spacing: 0.01em;
+}
+.governator-display span {
+  color: #ff4058;
+}
+.governator-hero-copy > p:not(.governator-eyebrow, .governator-display) {
+  max-width: 45ch;
+  color: #e1dddc;
+  line-height: 1.6;
+}
+.governator-start {
+  display: inline-flex;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1.4rem;
+  padding: 0.65rem 0.9rem;
+  color: #fff;
+  background: #b90020;
+  border: 1px solid #ff697b;
+  font: 700 0.78rem var(--sl-font-mono);
+  text-decoration: none;
+}
+.governator-start:hover {
+  background: #d60025;
+  color: #fff;
+}
+.governator-hero-art {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+}
+.governator-globe {
+  position: absolute;
+  width: 100%;
+  opacity: 0.55;
+}
+.governator-mascot {
+  position: relative;
+  width: min(100%, 167px);
+  filter: drop-shadow(0 0 18px #ff173866);
+}
+.governator-art-label {
+  position: absolute;
+  bottom: 0;
+  text-align: center;
+}
+
 :focus-visible {
   outline: 2px solid var(--docs-focus);
   outline-offset: 3px;
+}
+
+@media (max-width: 560px) {
+  .governator-hero {
+    grid-template-columns: 1fr;
+  }
+  .governator-hero-art {
+    min-height: 170px;
+  }
+  .governator-globe {
+    width: min(100%, 240px);
+  }
+  .governator-mascot {
+    width: 130px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

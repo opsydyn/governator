@@ -3,7 +3,7 @@ title: Evidence, provenance and trust
 description: Why a passing record and a trusted local observation have different meanings.
 ---
 
-A report can describe success without establishing who observed it. Governanator keeps the declaration, the observation and its trust boundary visible. JSON fields, digests and self-consistent timestamps can establish consistency; they cannot authenticate a producer by themselves.
+A report can describe success without establishing who observed it. Governator keeps the declaration, the observation and its trust boundary visible. JSON fields, digests and self-consistent timestamps can establish consistency; they cannot authenticate a producer by themselves.
 
 Importing Vitest JSON records its digest and declared source association. Every imported record stays unverified, including reports containing approval-like fields. A local `check` instead executes installed Vitest in the same producer-to-gate process, observes times and rechecks clean source/config/mappings. Only that in-process path supplies its content-bound test attestations.
 

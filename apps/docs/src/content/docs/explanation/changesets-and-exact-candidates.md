@@ -3,7 +3,7 @@ title: Changesets and exact candidates
 description: Connect intended version bumps to the actual bytes being evaluated.
 ---
 
-Changesets records intended package bumps and release notes. Governanator independently evaluates compatibility and evidence for the exact candidate. A declaration of intent cannot approve a breaking change or authorize publication.
+Changesets records intended package bumps and release notes. Governator independently evaluates compatibility and evidence for the exact candidate. A declaration of intent cannot approve a breaking change or authorize publication.
 
 The release gate starts from clean tracked source and an explicit immutable local baseline archive. Capture builds a disposable clean clone of the commit, links installed dependencies, and packs after the explicit build with pack hooks disabled. Ignored working-tree declarations or environment files do not become candidate source. Operator-trusted build/dependency code still runs.
 
