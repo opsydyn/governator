@@ -69,7 +69,7 @@ CLI exit codes: **0** satisfied the requested check, **1** blocked/insufficient 
 
 See [architecture](docs/architecture.md), [dogfood and API runbook](docs/storybook-contracts.md), [verification](docs/storybook-contracts-verification.md), [release conventions](docs/releasing.md) and the [handoff](docs/reference/CODEX_HANDOFF_DESIGN_SYSTEM_GOVERNANCE.md).
 
-Local release enforcement: `bun run release:plan` blocks the deliberately insufficient patch; `bun run release:demo` exercises blocked patch/minor and an explicitly simulated reviewed major. Storybook includes release details and lifecycle/readiness sidebar markers. See the [release runbook](docs/release-candidates.md).
+Local release enforcement: `bun run release:plan` blocks the deliberately insufficient patch; `bun run release:demo` exercises blocked patch/minor and an explicitly simulated reviewed major. Storybook includes release details and lifecycle/readiness sidebar markers. See the [release runbook](docs/release-candidates.md). A separate [single-maintainer local rehearsal](docs/qualification/single-maintainer-release-rehearsal.md) records reviewed first-release archive hashes and simulates transfer without publishing.
 
 Targeted local browser checks and reconstructed-cache consumer tests are recorded in [qualification](docs/qualification/consumer-distribution-verification.md); these do not establish screen-reader or human acceptance. Hosted CI/required-check configuration and authenticated published baselines remain unverified. M2 provides local read-only MCP; see the [launch and snapshot runbook](docs/mcp.md) and [M2 verification](docs/m2-verification.md). External approvals, publication and deployment need trusted adapters.
 

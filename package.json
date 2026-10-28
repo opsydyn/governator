@@ -29,6 +29,7 @@
     "addon:validator": "bun scripts/addon-validator.ts",
     "addon:check": "bun scripts/addon-validator.ts --check && bun scripts/addon-boundaries.ts",
     "release:demo": "bun scripts/release-demo.ts",
+    "release:rehearse": "bun scripts/rehearse-single-maintainer.ts",
     "release:plan": "bun packages/cli/src/main.ts release plan --config governance/release.json",
     "mcp": "bun packages/mcp/src/main.ts",
     "mcp:smoke": "bun scripts/mcp-smoke.ts",
