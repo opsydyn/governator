@@ -13,8 +13,11 @@ jobs:
     # Repository-local filters remain visible and are rejected by the verifier.
     env:
       GIT_CONFIG_NOSYSTEM: "1"
-      GIT_CONFIG_GLOBAL: /dev/null
     steps:
+      - name: Prepare isolated Git configuration
+        run: |
+          install -m 600 /dev/null "$RUNNER_TEMP/governator-gitconfig"
+          echo "GIT_CONFIG_GLOBAL=$RUNNER_TEMP/governator-gitconfig" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
