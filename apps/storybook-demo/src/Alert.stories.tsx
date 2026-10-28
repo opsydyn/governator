@@ -5,7 +5,7 @@ const meta = {
   component: Alert,
   parameters: { governance: { componentId: "ui.alert" } },
   args: { message: "Your changes have been saved." },
-  tags: ["stable"],
+  tags: ["stable", "new"],
 } satisfies Meta<typeof Alert>;
 export default meta;
 export const Information: StoryObj<typeof meta> = {};
