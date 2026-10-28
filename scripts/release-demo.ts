@@ -19,6 +19,13 @@ git(["clone", "--quiet", "--no-hardlinks", source, root], source);
 git(["remote", "remove", "origin"]);
 await symlink(join(source, "node_modules"), join(root, "node_modules"));
 await writeFile(join(root, ".git/info/exclude"), "node_modules\n");
+// The intentionally invalid declaration belongs only to this disposable simulation.
+const releaseConfig = await Bun.file(join(root, "governance/release.json")).json();
+releaseConfig.changesets = [".changeset/dogfood-breaking-button.md"];
+await writeFile(
+  join(root, "governance/release.json"),
+  JSON.stringify(releaseConfig, null, 2) + "\n",
+);
 const results: Record<string, unknown> = {};
 for (const bump of ["patch", "minor", "major"] as const) {
   const version = bump === "major" ? "9.0.0" : bump === "minor" ? "8.5.0" : "8.4.2";

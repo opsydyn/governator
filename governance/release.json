@@ -8,17 +8,7 @@
   "baselineDigest": "governance/releases/ui-8.4.1.json.sha256",
   "mapping": "governance/tests.json",
   "consumerFixtures": ["governance/consumer.tsx"],
-  "changesets": [
-    ".changeset/dogfood-breaking-button.md",
-    ".changeset/exact-release-candidates.md",
-    ".changeset/m0-foundation.md",
-    ".changeset/m2-readonly-mcp.md",
-    ".changeset/m3a-synthetic-review.md",
-    ".changeset/m3b-github-review-reader.md",
-    ".changeset/m3c-fixture-attestations.md",
-    ".changeset/m3d-fixture-policy.md",
-    ".changeset/vitest-evidence.md"
-  ],
+  "changesets": [],
   "classification": "governance/release-change.json",
   "simulatedReview": "artifacts/simulated-release-review.json"
 }

@@ -125,3 +125,25 @@ test("direct candidate APIs canonicalize a symlinked repository root", async () 
   const checked = await checkCandidate(alias, "governance/release.json", captured.path, true);
   expect(checked.gate).toBe("ready");
 }, 30000);
+
+test("rejects an unlisted tracked Changeset", async () => {
+  const root = await project();
+  await writeFile(
+    join(root, ".changeset/unlisted.md"),
+    '---\n"@test/ui": patch\n---\nAdditional release intent.\n',
+  );
+  git(root, "add", ".changeset/unlisted.md");
+  git(
+    root,
+    "-c",
+    "user.name=Fixture",
+    "-c",
+    "user.email=fixture@example.invalid",
+    "commit",
+    "-qm",
+    "Add unlisted intent",
+  );
+  const result = await capture(root);
+  expect(result.code).toBe(2);
+  expect(result.stderr).toMatch(/enumerate every pending/);
+}, 30000);
