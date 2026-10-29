@@ -34,7 +34,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@example/ui": "workspace:*",
-        "governator-npm-addon": "npm:@opsydyn/storybook-addon-governator@0.1.0",
+        "@opsydyn/storybook-addon-governator": "workspace:*",
         "governator-npm-cli": "npm:@opsydyn/governator-cli@0.1.0",
         "governator-npm-mcp": "npm:@opsydyn/governator-mcp@0.1.0",
         "react": "19.3.1",
@@ -882,8 +882,6 @@
     "glob-parent": ["glob-parent@5.1.2", "", { "dependencies": { "is-glob": "^4.0.1" } }, "sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow=="],
 
     "globby": ["globby@11.1.0", "", { "dependencies": { "array-union": "^2.1.0", "dir-glob": "^3.0.1", "fast-glob": "^3.2.9", "ignore": "^5.2.0", "merge2": "^1.4.1", "slash": "^3.0.0" } }, "sha512-jhIXaOzy1sb8IyocaruWSn1TjmnBVs8Ayhcy83rmxNJ8q2uWKCAj3CnJY+KpGSXCueAPc0i05kVvVKtP1t9S3g=="],
-
-    "governator-npm-addon": ["@opsydyn/storybook-addon-governator@0.1.0", "", { "peerDependencies": { "storybook": "10.6.4" } }, "sha512-Hitd6GQovrgIk1XCW4LOZULDgVfTpUvw91cOXjbRK7hxoSYXUVUJrYycCbbO0DQFBeoIAfgpApxs5HutsE253w=="],
 
     "governator-npm-cli": ["@opsydyn/governator-cli@0.1.0", "", { "dependencies": { "@changesets/parse": "0.4.3", "semver": "7.8.5", "tar": "7.5.22", "typescript": "5.9.3", "yaml": "2.9.1" }, "bin": { "governator": "dist/main.mjs" } }, "sha512-vcCWkQkqlNXp9IemQoo7m4U5qM3EIz6EDEXYpJ/jzau/c2xX1h19Ek0AChFKWCgtW/7KHe/Qm+syrWXkNzTVqQ=="],
 

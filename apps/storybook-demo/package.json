@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@example/ui": "workspace:*",
-    "governator-npm-addon": "npm:@opsydyn/storybook-addon-governator@0.1.0",
+    "@opsydyn/storybook-addon-governator": "workspace:*",
     "governator-npm-cli": "npm:@opsydyn/governator-cli@0.1.0",
     "governator-npm-mcp": "npm:@opsydyn/governator-mcp@0.1.0",
     "react": "19.3.1",

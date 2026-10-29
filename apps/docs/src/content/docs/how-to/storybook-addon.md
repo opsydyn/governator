@@ -15,7 +15,7 @@ Version `0.1.0` is published on npm:
 npm install --save-dev @opsydyn/storybook-addon-governator@0.1.0
 ```
 
-The repository demo intentionally uses this published version. Features below may be marked candidate-only until the next release is published.
+The hosted demo uses the published version. The repository's local Storybook intentionally dogfoods the workspace addon; features below may be marked candidate-only until the next release is published.
 
 ## Test the local candidate
 

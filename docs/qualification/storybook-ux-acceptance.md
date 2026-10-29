@@ -2,6 +2,8 @@
 
 Date: 29 October 2026. Status: automated and bounded scripted-browser qualification complete for the retained local candidate. Named human, VoiceOver and wide-desktop visual acceptance remain open.
 
+Follow-up: after this retained-candidate record was completed, the root local Storybook switched from the published 0.1.0 alias to workspace-addon dogfood. The hosted demo and this record's exact archive evidence are unchanged; the newer source state requires its own retained archive before publication.
+
 This record separates source tests, packed-consumer builds, scripted browser observations and named human acceptance. A passing build does not imply that a browser task, assistive-technology check or unfamiliar-user task passed.
 
 ## Candidate identity

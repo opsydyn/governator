@@ -4,7 +4,7 @@ Storybook governance panel and opt-in local metadata editor. Version `0.1.0` is 
 
 ## Addon-only quick start
 
-Use an existing Storybook React/Vite project. The declared and qualified Storybook peer is exactly `10.6.4`. Other renderers and versions have not been qualified. Published 0.1.0 was installed and built in the repository demo. Earlier packed-consumer records describe their own historical qualification conditions.
+Use an existing Storybook React/Vite project. The declared and qualified Storybook peer is exactly `10.6.4`. Other renderers and versions have not been qualified. Published 0.1.0 was installed and built in the repository demo during its release qualification; the current local demo dogfoods workspace source. Packed-consumer records describe their own exact historical qualification conditions.
 
 Install the published addon in your consumer project:
 

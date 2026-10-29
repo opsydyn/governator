@@ -381,6 +381,13 @@ test("enabled local source verification keeps a mismatched report from filtering
       .disabled,
   ).toBe(true);
   expect(sb.filters["governator/readiness"]!(sb.index["button--one"])).toBe(true);
+  expect(el.textContent).not.toContain("Report does not match this checkout");
+  await act(async () =>
+    el.querySelector<HTMLButtonElement>('button[aria-label="Readiness filter help"]')!.click(),
+  );
+  expect(el.textContent).toContain(
+    "Report does not match this checkout. Regenerate the report, then retry.",
+  );
   await act(async () => root.unmount());
   el.remove();
   sb.params = { reportUrl: "/report.json" };

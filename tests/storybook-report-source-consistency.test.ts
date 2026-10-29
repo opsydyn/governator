@@ -87,14 +87,15 @@ test("the configured local source endpoint verifies a report commit", async () =
 test("a source mismatch or unavailable local adapter makes a report unverified", async () => {
   const state = decodeReport(evaluate(evaluation()), Date.parse(at));
   expect(
-    (
-      await verifyReportSource(
-        state,
-        "http://localhost:6006/",
-        async () => new Response(JSON.stringify({ matches: false })),
-      )
-    ).status,
-  ).toBe("error");
+    await verifyReportSource(
+      state,
+      "http://localhost:6006/",
+      async () => new Response(JSON.stringify({ matches: false })),
+    ),
+  ).toEqual({
+    status: "error",
+    message: "Report does not match this checkout. Regenerate the report, then retry.",
+  });
   expect(
     await verifyReportSource(
       state,

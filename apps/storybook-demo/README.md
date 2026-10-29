@@ -1,6 +1,6 @@
 # Governator Storybook demo
 
-This demo uses the published 0.1.0 addon, CLI and MCP packages from npm. The `governator-npm-*` aliases keep those dependencies distinct from the monorepo's source packages. The root Bun configuration disables implicit workspace linking; explicit `workspace:` dependencies such as the demo UI still use local source. The Bun lockfile records the published package integrity hashes.
+This is the current-product dogfood surface. It uses the workspace Storybook addon and demo UI so `bun run storybook` reflects the latest local UX. The published 0.1.0 CLI and MCP remain installed under `governator-npm-*` aliases for their separate smoke commands. The root Bun configuration disables implicit workspace linking; these local packages opt in with explicit `workspace:` dependencies.
 
 From the repository root, install and start the demo:
 
@@ -17,6 +17,4 @@ bun run governator:npm --help
 bun run mcp:npm --help
 ```
 
-This demo exercises published `0.1.0`, not the workspace addon or local `0.2.0` candidate. It is a release-regression demo, not evidence for current-source UX acceptance.
-
-To qualify the candidate, pack the exact local addon, preserve its digest and use the disposable npm/pnpm consumer harness. Do not change this demo to a workspace dependency and then report it as candidate installation evidence. The hosted build remains read-only; local editing writes source files only when the development adapter is enabled.
+This demo is workspace dogfood, not package-installation evidence. To qualify a candidate, pack the exact local addon once, preserve its digest and use the disposable npm/pnpm consumer harness. The hosted build remains read-only; local editing writes source files only when the development adapter is enabled.

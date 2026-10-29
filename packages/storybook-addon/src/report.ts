@@ -117,8 +117,7 @@ export async function verifyReportSource(
   }
   return {
     status: "error",
-    message:
-      "Unverified — registry does not match the report source. Commit the registry, regenerate and reload the report.",
+    message: "Report does not match this checkout. Regenerate the report, then retry.",
   };
 }
 export async function loadReport(

@@ -16,7 +16,7 @@ The local workspace includes a deterministic policy engine, source-bound Vitest 
 
 ## Use in another project
 
-Install the published `0.1.0` packages from npm. The monorepo demo also consumes those published packages. Start with the [addon-only setup](packages/storybook-addon/README.md) for Storybook React/Vite 10.6.4, or the [Bun CLI quick start](packages/cli/README.md) and [read-only MCP quick start](packages/mcp/README.md). The addon needs only its Storybook peer; CLI/MCP require Bun >=1.4.2 and declared runtime dependencies. Independent clean-consumer results must be recorded separately from workspace builds, with any reconstructed local package source identified.
+Install the published `0.1.0` packages from npm. The monorepo Storybook dogfoods the workspace addon, while its separate CLI and MCP aliases still exercise the published packages. Start with the [addon-only setup](packages/storybook-addon/README.md) for Storybook React/Vite 10.6.4, or the [Bun CLI quick start](packages/cli/README.md) and [read-only MCP quick start](packages/mcp/README.md). The addon needs only its Storybook peer; CLI/MCP require Bun >=1.4.2 and declared runtime dependencies. Independent clean-consumer results must be recorded separately from workspace builds, with any reconstructed local package source identified.
 
 ## Run locally
 
