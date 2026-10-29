@@ -9,17 +9,17 @@ Use an existing React/Vite Storybook project. The qualified reference is Storybo
 
 ## Install the published release
 
-Version `0.1.0` is published on npm:
+Version `0.2.0` is published on npm:
 
 ```sh
-npm install --save-dev @opsydyn/storybook-addon-governator@0.1.0
+npm install --save-dev @opsydyn/storybook-addon-governator@0.2.0
 ```
 
-The hosted demo uses the published version. The repository's local Storybook intentionally dogfoods the workspace addon; features below may be marked candidate-only until the next release is published.
+The repository's local Storybook intentionally dogfoods the workspace addon so source changes remain visible before the next release. The hosted demo is deployed separately from the npm package.
 
-## Test the local candidate
+## Test local source
 
-The current source manifest is `0.2.0`, but a checkout is not an npm release. Pack the candidate, retain that exact archive and install its file path in a disposable consumer. Record the archive SHA-256 and source commit; do not describe a workspace link or rebuilt archive as the reviewed candidate. Ordinary users should follow the published path above.
+A checkout is not an npm release. To test an unpublished change, pack it once, retain that exact archive and install its file path in a disposable consumer. Record the archive SHA-256 and source commit; do not describe a workspace link or rebuilt archive as the reviewed candidate. Ordinary users should follow the published path above.
 
 In the source checkout the demo is already wired. For a configured consumer, add the package name to the existing `.storybook/main.ts` addon list:
 

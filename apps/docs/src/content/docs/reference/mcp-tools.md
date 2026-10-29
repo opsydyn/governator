@@ -42,4 +42,4 @@ Results include `snapshotDigest`, source, evaluation time, provenance, scope and
 
 Oversized results fail explicitly. Documents are untrusted data, never execution instructions. Cancellation is checked at dispatch boundaries; synchronous queries cannot be preempted mid-computation. Local guarded API tests establish application behavior, not a kernel sandbox or authenticated remote service.
 
-Published 0.1.0 exposes fourteen tools. Development source adds the ready-components alias and exposes fifteen; discover the installed server to determine availability.
+Published 0.2.0 exposes fifteen tools, including the preferred ready-components name; discover the installed server to determine availability.

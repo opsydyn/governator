@@ -1,13 +1,13 @@
 # Governator MCP adapter
 
-Bun stdio application for fourteen immutable governance queries. Published as `0.1.0` on npm. Requires Bun **>=1.4.2** and a source-bound snapshot exported by the `@opsydyn/governator-cli` package. Node runtime compatibility is not claimed.
+Bun stdio application for fifteen immutable governance queries. Published as `0.2.0` on npm. Requires Bun **>=1.4.2** and a source-bound snapshot exported by the `@opsydyn/governator-cli` package. Node runtime compatibility is not claimed.
 
 ## Consumer quick start
 
 Install the MCP package in the consumer project:
 
 ```sh
-bun add --dev @opsydyn/governator-mcp@0.1.0
+bun add --dev @opsydyn/governator-mcp@0.2.0
 bun ./node_modules/.bin/governator-mcp --root /absolute/path/to/consumer --snapshot artifacts/governance-snapshot.json
 ```
 
@@ -30,4 +30,4 @@ The server uses Effect’s MCP implementation internally. The `createMcpServer(s
 
 Independent packed consumer qualification must be recorded separately, including whether dependencies came from caches or reconstructed local sources. No registry availability or automatic client activation is claimed.
 
-Development source adds `list_ready_components` as the preferred name. `list_approved_components` remains available with identical results and `approvalVerified: false`. This brings development discovery to fifteen tools; published 0.1.0 exposes fourteen.
+`list_ready_components` is the preferred name. `list_approved_components` remains available with identical results and `approvalVerified: false`.

@@ -3,7 +3,7 @@ title: Agent workflow interfaces
 description: Discover setup, plan source edits, collect evidence and refresh an agent's governance context.
 ---
 
-These interfaces are source additions after the published 0.1.0 release. Build the source packages to use them. The local repository Storybook dogfoods the workspace addon; the hosted demo remains a separately deployed published snapshot. Automated source and packed-consumer qualification has passed for the local 0.2.0 candidate; manual first-user acceptance and npm publication remain separate, open gates.
+These interfaces are published in 0.2.0. The local repository Storybook dogfoods the workspace addon; the hosted demo remains a separately deployed snapshot. Automated source, packed-consumer and npm exact-byte qualification passed for 0.2.0; manual first-user acceptance remains a separate, open gate.
 
 ## Diagnose the project
 
@@ -36,7 +36,7 @@ Use `--root`, `--registry` and `--mapping` to select non-default files. New regi
 
 ## Edit descriptive tags
 
-The CLI loads an optional installed addon adapter only for tag commands. Install a source-built addon version exposing `./authoring` API 1 in the target project. Published 0.1.0 does not expose this new adapter. Ordinary CLI consumers need no Storybook dependency.
+The CLI loads an optional installed addon adapter only for tag commands. Install the 0.2.0 addon, which exposes `./authoring` API 1, in the target project. Ordinary CLI consumers need no Storybook dependency.
 
 ```sh
 bun run governator tags inspect --story-path ./src/Button.stories.tsx

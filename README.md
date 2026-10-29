@@ -12,11 +12,11 @@ Offline design-system governance: a component's status should show its evidence.
 
 The local CLI uses the `governator` command and public packages use the `@opsydyn` scope.
 
-The local workspace includes a deterministic policy engine, source-bound Vitest checks, TypeScript declaration compatibility analysis, a Bun CLI, read-only MCP queries (fourteen in published 0.1.0; fifteen in development) and a real React/Storybook dogfood app. The addon, CLI and MCP are published at 0.1.0; check the release dashboard for current registry observations.
+The local workspace includes a deterministic policy engine, source-bound Vitest checks, TypeScript declaration compatibility analysis, a Bun CLI, fifteen read-only MCP queries and a real React/Storybook dogfood app. The addon, CLI and MCP are published at 0.2.0; check the release dashboard for current registry observations.
 
 ## Use in another project
 
-Install the published `0.1.0` packages from npm. The monorepo Storybook dogfoods the workspace addon, while its separate CLI and MCP aliases still exercise the published packages. Start with the [addon-only setup](packages/storybook-addon/README.md) for Storybook React/Vite 10.6.4, or the [Bun CLI quick start](packages/cli/README.md) and [read-only MCP quick start](packages/mcp/README.md). The addon needs only its Storybook peer; CLI/MCP require Bun >=1.4.2 and declared runtime dependencies. Independent clean-consumer results must be recorded separately from workspace builds, with any reconstructed local package source identified.
+Install the published `0.2.0` packages from npm. The monorepo Storybook dogfoods the workspace addon so source work remains visible before the next release. Start with the [addon-only setup](packages/storybook-addon/README.md) for Storybook React/Vite 10.6.4, or the [Bun CLI quick start](packages/cli/README.md) and [read-only MCP quick start](packages/mcp/README.md). The addon needs only its Storybook peer; CLI/MCP require Bun >=1.4.2 and declared runtime dependencies. Independent clean-consumer results must be recorded separately from workspace builds, with any reconstructed local package source identified.
 
 ## Run locally
 
@@ -72,7 +72,7 @@ See [architecture](docs/architecture.md), [dogfood and API runbook](docs/storybo
 
 Local release enforcement: `bun run release:plan` blocks the deliberately insufficient patch; `bun run release:demo` exercises blocked patch/minor and an explicitly simulated reviewed major. Storybook includes release details and lifecycle/readiness sidebar markers. See the [release runbook](docs/release-candidates.md). A separate [single-maintainer local rehearsal](docs/qualification/single-maintainer-release-rehearsal.md) records reviewed first-release archive hashes and simulates transfer without publishing.
 
-Targeted local browser checks and reconstructed-cache consumer tests are recorded in [qualification](docs/qualification/consumer-distribution-verification.md). The current [Storybook UX acceptance record](docs/qualification/storybook-ux-acceptance.md) adds exact-archive npm/pnpm builds and bounded scripted-browser tasks; named human, VoiceOver, wide-desktop/right-panel, light-theme and true 200% zoom acceptance remain open. M2 introduced local read-only MCP; see the [launch and snapshot runbook](docs/mcp.md) and [M2 verification](docs/m2-verification.md). External approvals, a new npm publication and deployment remain separate observations.
+Targeted local browser checks and reconstructed-cache consumer tests are recorded in [qualification](docs/qualification/consumer-distribution-verification.md). The current [Storybook UX acceptance record](docs/qualification/storybook-ux-acceptance.md) adds exact-archive npm/pnpm builds and bounded scripted-browser tasks; named human, VoiceOver, wide-desktop/right-panel, light-theme and true 200% zoom acceptance remain open. M2 introduced local read-only MCP; see the [launch and snapshot runbook](docs/mcp.md) and [M2 verification](docs/m2-verification.md). External approvals, future npm publications and deployment remain separate observations.
 
 M3a introduces a private synthetic review-evidence evaluator for testing exact candidate, policy, reviewer-role and freshness bindings. Its results are fixtures only; normal release review stays unconfigured. See [M3a evidence and verification](docs/m3a-verification.md).
 
@@ -82,6 +82,6 @@ M3d models a signed two-owner policy lifecycle with synthetic witnesses and in-m
 
 ## Agent-assisted governance
 
-Use the [onboarding skill](skills/governator-onboarding/SKILL.md) for published 0.1.0 setup. The [development agent workflow](apps/docs/src/content/docs/reference/agent-workflow.md) documents diagnostics, source editing and explicit snapshot refresh. The local 0.2.0 candidate has automated source and packed-consumer qualification; manual first-user acceptance and npm publication remain separate gates.
+Use the [onboarding skill](skills/governator-onboarding/SKILL.md) for published 0.2.0 setup. The [development agent workflow](apps/docs/src/content/docs/reference/agent-workflow.md) documents diagnostics, source editing and explicit snapshot refresh. Version 0.2.0 passed automated source, packed-consumer and npm exact-byte qualification; manual first-user acceptance remains a separate gate.
 
-The next CLI release also provides previewable `init plan/apply`, `skill export`, and machine-readable `capabilities`. These commands are in development source; published 0.1.0 does not include them.
+The published CLI provides previewable `init plan/apply`, `skill export`, and machine-readable `capabilities`.

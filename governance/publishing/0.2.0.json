@@ -30,7 +30,8 @@
       "integrity": "sha512-bdNVHzNY9KQb/+b/T3cbDPh//1ZdmlE7M+3BdOBUpLSA+mfsJ3guxGiLxFi+VXgN86gy4cJQ1ePtGhhdjnbYlQ=="
     }
   ],
-  "publication": "disabled",
+  "publication": "readback_verified",
+  "publicationWorkflowRun": 40967626952,
   "manualAcceptance": "deferred",
   "publishingAdapter": "historical 0.1.0 workflow not qualified for this candidate"
 }

@@ -12,4 +12,10 @@ The three packages were built once and packed with `npm pack --ignore-scripts` i
 
 Fresh source qualification passed all 18 workspace tasks, 85 test files and 849 tests, followed by the full workspace build. The exact addon archive passed clean npm and strict-peer pnpm installs plus both no-report and configured-report Storybook static builds. Local evidence is retained in `artifacts/addon-consumer-jvg5heqk/summary.json`; its dependency inputs were reconstructed from the local Bun cache under loopback-only confinement, so it is not npm registry provenance.
 
-The tracked inventory in `governance/publishing/0.2.0.json` is the publication selector. The publisher must verify these bytes before sending them and verify the npm tarball bytes after publication. At the time of this record, no `0.2.0` package had been published and the remote draft still contained the superseded addon archive.
+The tracked inventory in `governance/publishing/0.2.0.json` is the publication selector. The publisher verified these bytes before sending them and verified the npm tarball bytes after publication.
+
+## Publication result
+
+All three packages are public on npm at `0.2.0` with SLSA provenance metadata. Push-triggered governance CI [40965151867](https://github.com/opsydyn/governator/actions/runs/40965151867) and retained-archive rehearsal [40965186071](https://github.com/opsydyn/governator/actions/runs/40965186071) passed first.
+
+npm exposed version metadata before immutable tarball storage on the first two live attempts. Runs [40965779548](https://github.com/opsydyn/governator/actions/runs/40965779548) and [40966796596](https://github.com/opsydyn/governator/actions/runs/40966796596) stopped on unavailable readback after publishing MCP and the addon respectively. No conflicting resend occurred. Each tarball was then observed independently at its selected size and SHA-256. Final reconciliation run [40967626952](https://github.com/opsydyn/governator/actions/runs/40967626952) read all three exact archives from npm and completed successfully without republishing them.

@@ -1,13 +1,13 @@
 # @opsydyn/governator-cli
 
-Bun CLI for local governance reports, source-bound Vitest checks, declaration compatibility and snapshot export. Published as `0.1.0` on npm. Bun **>=1.4.2** is required; Node runtime compatibility is not claimed. The private engine and Effect are internal implementation details.
+Bun CLI for local governance reports, source-bound Vitest checks, declaration compatibility and snapshot export. Published as `0.2.0` on npm. Bun **>=1.4.2** is required; Node runtime compatibility is not claimed. The private engine and Effect are internal implementation details.
 
 ## Consumer quick start
 
 Install the CLI in your project:
 
 ```sh
-bun add --dev @opsydyn/governator-cli@0.1.0
+bun add --dev @opsydyn/governator-cli@0.2.0
 bun ./node_modules/.bin/governator validate
 bun ./node_modules/.bin/governator evaluate --format json --report-schema 2 > artifacts/governance.json
 ```

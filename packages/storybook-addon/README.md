@@ -1,19 +1,19 @@
 # Governator Governance addon
 
-Storybook governance panel and opt-in local metadata editor. Version `0.1.0` is published on npm. This source package identifies the local `0.2.0` candidate; it is not published merely because the manifest has that version.
+Storybook governance panel and opt-in local metadata editor. Version `0.2.0` is published on npm.
 
 ## Addon-only quick start
 
-Use an existing Storybook React/Vite project. The declared and qualified Storybook peer is exactly `10.6.4`. Other renderers and versions have not been qualified. Published 0.1.0 was installed and built in the repository demo during its release qualification; the current local demo dogfoods workspace source. Packed-consumer records describe their own exact historical qualification conditions.
+Use an existing Storybook React/Vite project. The declared and qualified Storybook peer is exactly `10.6.4`. Other renderers and versions have not been qualified. The current local demo dogfoods workspace source. Packed-consumer records describe their own exact historical qualification conditions.
 
 Install the published addon in your consumer project:
 
 ```sh
-npm install --save-dev @opsydyn/storybook-addon-governator@0.1.0
-# Or: pnpm add --save-dev @opsydyn/storybook-addon-governator@0.1.0
+npm install --save-dev @opsydyn/storybook-addon-governator@0.2.0
+# Or: pnpm add --save-dev @opsydyn/storybook-addon-governator@0.2.0
 ```
 
-Your project must also install the supported Storybook peer. To test the candidate, install one retained local `0.2.0` archive by exact file path and record its digest; do not substitute a workspace link or repacked archive.
+Your project must also install the supported Storybook peer. To test later source changes, install one retained local archive by exact file path and record its digest; do not substitute a workspace link or repacked archive.
 
 Add the package to your existing `.storybook/main.ts` configuration:
 
@@ -100,4 +100,4 @@ The addon accepts strict schema 1 and schema 2 reports. Schema 2 shows each sele
 
 Source references are displayed as text except absolute HTTP(S) URLs without credentials, which are keyboard-accessible links. Relative artifact paths and unsafe schemes remain escaped text. The addon does not fetch evidence sources. Older schema-1-only readers reject schema 2; generate schema 1 for those consumers (the CLI defaults to schema 1; use `--report-schema 2` to opt in).
 
-The development source adds an optional `./authoring` API-1 adapter for CLI tag inspection, plans and updates. It reuses the local editor parser and revision checks. This adapter is not included in published 0.1.0.
+The optional `./authoring` API-1 adapter supports CLI tag inspection, plans and updates. It reuses the local editor parser and revision checks and is published in 0.2.0.
