@@ -1,6 +1,6 @@
 # Governator Governance addon
 
-Storybook governance panel and opt-in local metadata editor. Published as 0.1.0 on npm.
+Storybook governance panel and opt-in local metadata editor. Version `0.1.0` is published on npm. This source package identifies the local `0.2.0` candidate; it is not published merely because the manifest has that version.
 
 ## Addon-only quick start
 
@@ -13,7 +13,7 @@ npm install --save-dev @opsydyn/storybook-addon-governator@0.1.0
 # Or: pnpm add --save-dev @opsydyn/storybook-addon-governator@0.1.0
 ```
 
-Your project must also install the supported Storybook peer. See the development workflow documentation for features added after 0.1.0.
+Your project must also install the supported Storybook peer. To test the candidate, install one retained local `0.2.0` archive by exact file path and record its digest; do not substitute a workspace link or repacked archive.
 
 Add the package to your existing `.storybook/main.ts` configuration:
 
@@ -60,7 +60,7 @@ export default {
 };
 ```
 
-Select a mapped story and use **Declared governance metadata** in its Governance panel. The editor changes the matching registry record; it does not change the stable component ID, evaluate a transition, generate evidence or grant approval. It validates the complete registry and its paths, preserves supported YAML, and rejects aliases, duplicate keys, unsafe paths and unsupported edits. A revision conflict leaves the draft unsaved until you discard and reload. Drafts survive story switches in the current browser session, but not page reloads; independent writers do not share a lock. Review and commit the resulting registry diff normally.
+Select a mapped story and open **Edit story governance** in its Governance panel. The editor names the configured registry file and changes only the matching record. It validates individual fields before sending, and the server remains authoritative for the complete registry and paths. A revision conflict or uncertain response preserves the intended declaration: load current metadata, compare it, then explicitly reapply or discard the draft. Dirty metadata triggers the browser leave warning. In-session drafts do not survive a completed reload; independent writers do not share a lock. Review and commit the resulting registry diff normally.
 
 After an edit, report-based status is unverified until the registry is committed and a report for that commit is regenerated and reloaded. With the editor enabled, the local adapter checks the report commit against Git HEAD and compares registry working-tree and index bytes to that commit; it rechecks on focus and periodically. A mismatch or unavailable check clears readiness filtering and current-status displays. This compares the registry only; it does not authenticate the report producer or prove that other report inputs are unchanged. Static and non-opted-in Storybooks show report snapshots without a live registry match. The writer is loopback-only, requires same-origin JSON writes and is not a hosted service.
 
@@ -80,7 +80,7 @@ viteFinal: async (config) => ({
 
 Open a story's Governance panel to add or remove descriptive tags and save them to the component metadata in that story file. Storybook reindexes the file and its existing sidebar tag filter can include or exclude the tags. Tags apply to stories in that file; other files for the same component are not changed. They do not modify lifecycle, readiness or release policy.
 
-Unsaved edits are retained in memory when you switch stories or hide the addon panel and are restored when you return. Save or discard them before navigating from **Find components**. If the story file changes in the meantime, the restored draft cannot be saved until you discard it and reload. Drafts do not survive a page reload.
+Unsaved edits are retained in memory when you switch stories or hide the addon panel and are restored when you return. Save or discard them before navigating from **Find components**. If the story file changes or a save outcome is unknown, load the current file and compare it with the preserved draft before reapplying. You can copy the intended tags for manual recovery. Dirty edits trigger the browser leave warning; drafts do not survive a completed page reload.
 
 The editor only handles static CSF component metadata and literal string tag arrays. Built-in Storybook tags and negated tags are preserved and cannot be edited in the panel. Dynamic metadata, comments inside the tag array, linked files and stories outside the project are not editable. The editor checks the file revision and reports a conflict if it has changed; save again only after reloading. Edits through a single editor process are serialized, but other independent writers are not locked. Review the resulting file change in Git.
 

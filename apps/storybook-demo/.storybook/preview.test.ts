@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import preview from "./preview";
 
 test("the governance report follows the deployed Storybook base path", () => {

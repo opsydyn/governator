@@ -13,6 +13,30 @@ spec.loader.exec_module(qualification)
 
 
 class QualificationSafety(unittest.TestCase):
+    def test_acceptance_record_starts_explicitly_open(self):
+        case = qualification.new_case(Path('/tmp/consumer'), configured_report=True)
+        self.assertEqual(case['buildNoReport'], 'not-run')
+        self.assertEqual(case['buildConfiguredReport'], 'not-run')
+        self.assertEqual(case['browserTasks']['configuredReport']['status'], 'not-run')
+        self.assertEqual(case['humanAcceptance']['status'], 'not-run')
+        qualification.validate_acceptance_record(case, configured_report=True)
+
+    def test_passed_acceptance_requires_named_evidence(self):
+        case = qualification.new_case(Path('/tmp/consumer'), configured_report=True)
+        case['browserTasks']['configuredReport']['status'] = 'passed'
+        with self.assertRaises(ValueError):
+            qualification.validate_acceptance_record(case, configured_report=True)
+        case['browserTasks']['configuredReport'].update(
+            executor='scripted-browser', evidence=['configured-report.png']
+        )
+        case['humanAcceptance']['status'] = 'passed'
+        with self.assertRaises(ValueError):
+            qualification.validate_acceptance_record(case, configured_report=True)
+        case['humanAcceptance'].update(
+            assessor='Named reviewer', evidence=['acceptance-notes.md']
+        )
+        qualification.validate_acceptance_record(case, configured_report=True)
+
     def test_retained_candidate_version_is_explicit(self):
         manifest = {'name': '@opsydyn/storybook-addon-governator', 'version': '0.2.0'}
         qualification.validate_candidate_identity(manifest, '0.2.0')

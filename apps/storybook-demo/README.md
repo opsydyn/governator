@@ -17,4 +17,6 @@ bun run governator:npm --help
 bun run mcp:npm --help
 ```
 
-The demo exercises the last published version, not changes to the workspace addon. Update the pinned versions deliberately when testing another release.
+This demo exercises published `0.1.0`, not the workspace addon or local `0.2.0` candidate. It is a release-regression demo, not evidence for current-source UX acceptance.
+
+To qualify the candidate, pack the exact local addon, preserve its digest and use the disposable npm/pnpm consumer harness. Do not change this demo to a workspace dependency and then report it as candidate installation evidence. The hosted build remains read-only; local editing writes source files only when the development adapter is enabled.

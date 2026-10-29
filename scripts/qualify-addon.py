@@ -115,6 +115,43 @@ def validate_candidate_identity(manifest, expected_version):
         raise ValueError('Candidate identity differs from selected name/version')
 
 
+def new_case(root, configured_report=False):
+    task = lambda: {'status': 'not-run', 'executor': None, 'evidence': []}
+    return {
+        'root': str(root),
+        'install': 'not-run',
+        'buildNoReport': 'not-run',
+        'buildConfiguredReport': 'not-run' if configured_report else 'not-applicable',
+        'browserTasks': {'noReport': task(), 'configuredReport': task()},
+        'humanAcceptance': {'status': 'not-run', 'assessor': None, 'evidence': []},
+        'unsupportedCombinations': [
+            'non-React renderers',
+            'Storybook versions other than 10.6.4',
+            'composed Storybooks for readiness filtering',
+        ],
+    }
+
+
+def validate_acceptance_record(case, configured_report=False):
+    statuses = {'not-run', 'not-applicable', 'passed', 'blocked-or-failed'}
+    for field in ['install', 'buildNoReport', 'buildConfiguredReport']:
+        if case.get(field) not in statuses:
+            raise ValueError('Missing explicit qualification status: ' + field)
+    if configured_report and case['buildConfiguredReport'] == 'not-applicable':
+        raise ValueError('Configured-report build cannot be not-applicable')
+    for name in ['noReport', 'configuredReport']:
+        task = case.get('browserTasks', {}).get(name, {})
+        if task.get('status') not in {'not-run', 'not-applicable', 'passed', 'blocked-or-failed'}:
+            raise ValueError('Missing browser task status: ' + name)
+        if task['status'] == 'passed' and (not task.get('executor') or not task.get('evidence')):
+            raise ValueError('Passed browser task requires executor and evidence: ' + name)
+    human = case.get('humanAcceptance', {})
+    if human.get('status') not in {'not-run', 'passed', 'blocked-or-failed'}:
+        raise ValueError('Missing human acceptance status')
+    if human['status'] == 'passed' and (not human.get('assessor') or not human.get('evidence')):
+        raise ValueError('Passed human acceptance requires named assessor and evidence')
+
+
 def assert_no_ancestor_modules(root):
     for ancestor in root.parents:
         if (ancestor / 'node_modules').exists():
@@ -219,7 +256,7 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
             root = home / manager
             root.mkdir()
             assert_no_ancestor_modules(root)
-            case = summary['cases'][manager] = {'root': str(root), 'browserNoReport': 'open: browser interaction not executed', 'browserConfiguredReport': 'open: browser interaction not executed'}
+            case = summary['cases'][manager] = new_case(root, configured_report=bool(args.report))
             try:
                 (root / '.storybook').mkdir()
                 (root / 'src').mkdir()
@@ -285,6 +322,8 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
 
             except Exception as error:
                 case['error'] = str(error)
+            finally:
+                validate_acceptance_record(case, configured_report=bool(args.report))
     except Exception as error:
         summary['error'] = str(error)
     finally:

@@ -14,5 +14,8 @@ export default defineConfig({
       "@governator/versioning": `${import.meta.dirname}/packages/versioning/src/index.ts`,
     },
   },
-  test: { include: ["tests/**/*.test.ts"], fileParallelism: false },
+  test: {
+    include: ["tests/**/*.test.ts", "apps/storybook-demo/.storybook/**/*.test.ts"],
+    fileParallelism: false,
+  },
 });
