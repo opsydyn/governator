@@ -17,9 +17,9 @@ import {
 
 const commit = "a".repeat(40);
 const archives = [
-  { name: "@governator/cli", version: "0.1.0", bytes: new Uint8Array([1, 2]) },
-  { name: "@governator/mcp", version: "0.1.0", bytes: new Uint8Array([3, 4]) },
-  { name: "@governator/storybook-addon", version: "0.1.0", bytes: new Uint8Array([5, 6]) },
+  { name: "@opsydyn/governator-cli", version: "0.1.0", bytes: new Uint8Array([1, 2]) },
+  { name: "@opsydyn/governator-mcp", version: "0.1.0", bytes: new Uint8Array([3, 4]) },
+  { name: "@opsydyn/storybook-addon-governator", version: "0.1.0", bytes: new Uint8Array([5, 6]) },
 ];
 
 describe("single-maintainer offline rehearsal", () => {
@@ -87,15 +87,19 @@ it("checks identity and required files inside the actual npm archive", async () 
   await mkdir(join(dir, "package"));
   await writeFile(
     join(dir, "package/package.json"),
-    JSON.stringify({ name: "@governator/cli", version: "0.1.0" }),
+    JSON.stringify({ name: "@opsydyn/governator-cli", version: "0.1.0" }),
   );
   for (const file of ["README.md", "LICENSE", "THIRD_PARTY_NOTICES.md"])
     await writeFile(join(dir, "package", file), file);
   const path = join(dir, "candidate.tgz");
   await tar.c({ cwd: dir, gzip: true, file: path }, ["package"]);
   const bytes = await readFile(path);
-  await expect(inspectArchiveForRehearsal(bytes, "@governator/cli")).resolves.toBeUndefined();
-  await expect(inspectArchiveForRehearsal(bytes, "@governator/mcp")).rejects.toThrow(/identity/);
+  await expect(
+    inspectArchiveForRehearsal(bytes, "@opsydyn/governator-cli"),
+  ).resolves.toBeUndefined();
+  await expect(inspectArchiveForRehearsal(bytes, "@opsydyn/governator-mcp")).rejects.toThrow(
+    /identity/,
+  );
 });
 
 it("rejects plain tar and silently ignored tar entries", async () => {
@@ -103,14 +107,16 @@ it("rejects plain tar and silently ignored tar entries", async () => {
   await mkdir(join(dir, "package"));
   await writeFile(
     join(dir, "package/package.json"),
-    JSON.stringify({ name: "@governator/cli", version: "0.1.0" }),
+    JSON.stringify({ name: "@opsydyn/governator-cli", version: "0.1.0" }),
   );
   for (const file of ["README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "EXTRA"])
     await writeFile(join(dir, "package", file), file);
   const path = join(dir, "archive.tar");
   await tar.c({ cwd: dir, file: path }, ["package"]);
   const plain = await readFile(path);
-  await expect(inspectArchiveForRehearsal(plain, "@governator/cli")).rejects.toThrow(/gzip/);
+  await expect(inspectArchiveForRehearsal(plain, "@opsydyn/governator-cli")).rejects.toThrow(
+    /gzip/,
+  );
   const changed = Buffer.from(plain);
   let found = false;
   for (let i = 0; i + 512 <= changed.length; i += 512) {
@@ -127,7 +133,9 @@ it("rejects plain tar and silently ignored tar entries", async () => {
     break;
   }
   expect(found).toBe(true);
-  await expect(inspectArchiveForRehearsal(gzipSync(changed), "@governator/cli")).rejects.toThrow();
+  await expect(
+    inspectArchiveForRehearsal(gzipSync(changed), "@opsydyn/governator-cli"),
+  ).rejects.toThrow();
 });
 
 it("verifies the exact bytes received by the fake npm registry", async () => {
@@ -145,7 +153,9 @@ it("verifies the exact bytes received by the fake npm registry", async () => {
       _attachments: { "package.tgz": { data: "eA==" } },
     }),
   ).toThrow();
-  expect(() => verifyNpmFixtureUpload(expected, { ...body, name: "@governator/mcp" })).toThrow();
+  expect(() =>
+    verifyNpmFixtureUpload(expected, { ...body, name: "@opsydyn/governator-mcp" }),
+  ).toThrow();
   expect(() =>
     verifyNpmFixtureUpload(expected, {
       ...body,

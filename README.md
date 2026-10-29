@@ -6,7 +6,7 @@
 
 [Documentation](https://opsydyn.github.io/governator/) · [Storybook demo](https://opsydyn.github.io/governator/storybook/) · [Release status](https://opsydyn.github.io/governator/status/)
 
-[![Storybook addon on npm](https://img.shields.io/npm/v/%40governator%2Fstorybook-addon?label=addon)](https://www.npmjs.com/package/@governator/storybook-addon) [![CLI on npm](https://img.shields.io/npm/v/%40governator%2Fcli?label=CLI)](https://www.npmjs.com/package/@governator/cli) [![MCP on npm](https://img.shields.io/npm/v/%40governator%2Fmcp?label=MCP)](https://www.npmjs.com/package/@governator/mcp)
+[![Storybook addon on npm](https://img.shields.io/npm/v/%40opsydyn%2Fstorybook-addon-governator?label=addon)](https://www.npmjs.com/package/@opsydyn/storybook-addon-governator) [![CLI on npm](https://img.shields.io/npm/v/%40opsydyn%2Fgovernator-cli?label=CLI)](https://www.npmjs.com/package/@opsydyn/governator-cli) [![MCP on npm](https://img.shields.io/npm/v/%40opsydyn%2Fgovernator-mcp?label=MCP)](https://www.npmjs.com/package/@opsydyn/governator-mcp)
 
 Offline design-system governance: a component's status should show its evidence.
 
@@ -53,19 +53,19 @@ CLI exit codes: **0** satisfied the requested check, **1** blocked/insufficient 
 
 ## Packages
 
-| Package                           | Responsibility                                                      |
-| --------------------------------- | ------------------------------------------------------------------- |
-| `@governator/protocol`            | Generated plain TypeScript and JSON Schema; no runtime dependencies |
-| `@governator/core`                | Private Effect schemas, deterministic evaluation and digests        |
-| `@governator/versioning`          | Private API extraction/diff, SemVer and baseline checks             |
-| `@governator/fixture-attestation` | Private offline verifier for fixture-signed candidate statements    |
-| `@governator/fixture-policy`      | Private synthetic signed reviewer-policy lifecycle model            |
-| `@governator/query`               | Private immutable snapshots and shared read queries                 |
-| `@governator/mcp`                 | Bun stdio MCP adapter                                               |
-| `@governator/cli`                 | Bun filesystem, Git, local test runner and presentation boundary    |
-| `@governator/storybook-addon`     | Independently packed read-only manager panel; sole peer Storybook   |
-| `@example/ui`                     | Shared private React library used by the dogfood app                |
-| `@governator/storybook-demo`      | Storybook 10.6.4 React/Vite app                                     |
+| Package                               | Responsibility                                                      |
+| ------------------------------------- | ------------------------------------------------------------------- |
+| `@governator/protocol`                | Generated plain TypeScript and JSON Schema; no runtime dependencies |
+| `@governator/core`                    | Private Effect schemas, deterministic evaluation and digests        |
+| `@governator/versioning`              | Private API extraction/diff, SemVer and baseline checks             |
+| `@governator/fixture-attestation`     | Private offline verifier for fixture-signed candidate statements    |
+| `@governator/fixture-policy`          | Private synthetic signed reviewer-policy lifecycle model            |
+| `@governator/query`                   | Private immutable snapshots and shared read queries                 |
+| `@opsydyn/governator-mcp`             | Bun stdio MCP adapter                                               |
+| `@opsydyn/governator-cli`             | Bun filesystem, Git, local test runner and presentation boundary    |
+| `@opsydyn/storybook-addon-governator` | Independently packed read-only manager panel; sole peer Storybook   |
+| `@example/ui`                         | Shared private React library used by the dogfood app                |
+| `@governator/storybook-demo`          | Storybook 10.6.4 React/Vite app                                     |
 
 See [architecture](docs/architecture.md), [dogfood and API runbook](docs/storybook-contracts.md), [verification](docs/storybook-contracts-verification.md), [release conventions](docs/releasing.md) and the [handoff](docs/reference/CODEX_HANDOFF_DESIGN_SYSTEM_GOVERNANCE.md).
 

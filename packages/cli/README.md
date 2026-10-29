@@ -1,4 +1,4 @@
-# @governator/cli
+# @opsydyn/governator-cli
 
 Bun CLI for local governance reports, source-bound Vitest checks, declaration compatibility and snapshot export. Unpublished `0.1.0` release candidate; registry installation is unverified. Bun **>=1.4.2** is required; Node runtime compatibility is not claimed. The private engine and Effect are internal implementation details.
 
@@ -7,7 +7,7 @@ Bun CLI for local governance reports, source-bound Vitest checks, declaration co
 Given an actual locally packed CLI tarball, install it into your own project (replace the illustrative path). Its declared runtime dependencies must also be available from your chosen package source:
 
 ```sh
-bun add --dev /absolute/path/to/governator-cli-0.1.0.tgz
+bun add --dev /absolute/path/to/opsydyn-governator-cli-0.1.0.tgz
 bun ./node_modules/.bin/governator validate
 bun ./node_modules/.bin/governator evaluate --format json --report-schema 2 > artifacts/governance.json
 ```
@@ -75,7 +75,7 @@ bun ./node_modules/.bin/governator check --mapping governance/tests.json --forma
 bun ./node_modules/.bin/governator snapshot export --report artifacts/governance.json --out artifacts/governance-snapshot.json
 ```
 
-`check` executes the consumer's installed test/config code with Bun, rechecks clean source, and retains raw Vitest output and a receipt under ignored `artifacts/`. The policy must accept producer `vitest` for `unit-test`; passing tests cannot waive other requirements. A saved receipt or imported report does not recreate in-process trust. Snapshot export runs no producers, creates a new file exclusively, and requires a fresh filename for each export. To serve it, install the locally packed `@governator/mcp` package and run `bun ./node_modules/.bin/governator-mcp --root /absolute/path/to/consumer --snapshot artifacts/governance-snapshot.json`.
+`check` executes the consumer's installed test/config code with Bun, rechecks clean source, and retains raw Vitest output and a receipt under ignored `artifacts/`. The policy must accept producer `vitest` for `unit-test`; passing tests cannot waive other requirements. A saved receipt or imported report does not recreate in-process trust. Snapshot export runs no producers, creates a new file exclusively, and requires a fresh filename for each export. To serve it, install the locally packed `@opsydyn/governator-mcp` package and run `bun ./node_modules/.bin/governator-mcp --root /absolute/path/to/consumer --snapshot artifacts/governance-snapshot.json`.
 
 Reports default to schema 1; `--report-schema 2` adds evidence metadata without changing readiness or trust. Use schema 1 for older readers. Exit codes are **0** satisfied, **1** blocked/insufficient evidence and **2** invalid input/runtime error. A valid report can record a blocked gate. JSON metadata does not authenticate evidence; local checks and saved snapshots do not establish approval, publication or deployment.
 

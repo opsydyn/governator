@@ -10,7 +10,7 @@ Use an existing React/Vite Storybook project. The qualified development referenc
 In the source checkout the demo is already wired. For a configured consumer, add the package name to the existing `.storybook/main.ts` addon list:
 
 ```ts
-addons: ["@governator/storybook-addon"];
+addons: ["@opsydyn/storybook-addon-governator"];
 ```
 
 Add governance parameters to the story's default export:
@@ -45,7 +45,7 @@ The same opt-in development plugin can edit a component's record in the canonica
 ```ts
 // .storybook/main.ts: add the plugin to your existing viteFinal.
 import { resolve } from "node:path";
-import { tagEditor } from "@governator/storybook-addon/tag-editor";
+import { tagEditor } from "@opsydyn/storybook-addon-governator/tag-editor";
 
 tagEditor({
   registry: {
@@ -71,7 +71,7 @@ After an edit, report-based status is unverified until the registry is committed
 For React/Vite 10.6.4, enable the optional local development writer in `.storybook/main.ts`:
 
 ```ts
-import { tagEditor } from "@governator/storybook-addon/tag-editor";
+import { tagEditor } from "@opsydyn/storybook-addon-governator/tag-editor";
 
 // Add to your existing configuration object:
 viteFinal: async (config) => ({

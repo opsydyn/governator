@@ -150,7 +150,7 @@ async function main() {
       const manifest = JSON.parse(
         (await run(`candidate-${i}`, ["tar", "-xOf", destination, "package/package.json"])).stdout,
       );
-      assert.equal(manifest.name, i === 0 ? "@governator/cli" : "@governator/mcp");
+      assert.equal(manifest.name, i === 0 ? "@opsydyn/governator-cli" : "@opsydyn/governator-mcp");
       assertConventionalDependencies(manifest);
       candidateFiles.push(destination);
       (summary.candidates ??= []).push({
@@ -217,7 +217,7 @@ async function main() {
     // Force every npm scope through the bounded server and ignore ambient npm configuration.
     await writeFile(
       join(consumer, ".npmrc"),
-      `registry=${registry}\n@governator:registry=${registry}\n@modelcontextprotocol:registry=${registry}\nignore-scripts=true\naudit=false\nfund=false\n`,
+      `registry=${registry}\n@opsydyn:registry=${registry}\n@modelcontextprotocol:registry=${registry}\nignore-scripts=true\naudit=false\nfund=false\n`,
     );
     await writeFile(
       join(consumer, "package.json"),
@@ -227,8 +227,8 @@ async function main() {
           private: true,
           type: "module",
           dependencies: {
-            "@governator/cli": `file:${candidateFiles[0]}`,
-            "@governator/mcp": `file:${candidateFiles[1]}`,
+            "@opsydyn/governator-cli": `file:${candidateFiles[0]}`,
+            "@opsydyn/governator-mcp": `file:${candidateFiles[1]}`,
             "@modelcontextprotocol/client": "2.4.0",
             vitest: "4.1.12",
           },

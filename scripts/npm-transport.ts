@@ -49,7 +49,8 @@ export async function readNpmVersion(
 ): Promise<RegistryRead> {
   ensure(validRegistry(registry), "Unsupported registry");
   ensure(
-    /^@governator\/(cli|mcp|storybook-addon)$/.test(name) && version === "0.1.0",
+    /^@opsydyn\/(governator-cli|governator-mcp|storybook-addon-governator)$/.test(name) &&
+      version === "0.1.0",
     "Unexpected package identity",
   );
   const metadata = await fetcher(
@@ -115,7 +116,8 @@ export function npmTransport(options: {
     read: (name, version) => readNpmVersion(registry, name, version),
     async send(name, version, input) {
       ensure(
-        /^@governator\/(cli|mcp|storybook-addon)$/.test(name) && version === "0.1.0",
+        /^@opsydyn\/(governator-cli|governator-mcp|storybook-addon-governator)$/.test(name) &&
+          version === "0.1.0",
         "Unexpected package identity",
       );
       ensure(input.byteLength > 0 && input.byteLength <= maxSize, "Invalid archive size");
@@ -151,7 +153,7 @@ export function npmTransport(options: {
               archive,
               "--registry",
               registry.href,
-              `--@governator:registry=${registry.href}`,
+              `--@opsydyn:registry=${registry.href}`,
               "--ignore-scripts",
               "--access=public",
               `--provenance=${options.provenance}`,

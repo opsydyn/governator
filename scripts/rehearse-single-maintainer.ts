@@ -14,7 +14,7 @@ import {
 } from "../packages/cli/src/first-release-rehearsal.ts";
 import type { Archive } from "../packages/cli/src/first-release-rehearsal.ts";
 
-const names = ["cli", "mcp", "storybook-addon"] as const;
+const names = ["governator-cli", "governator-mcp", "storybook-addon-governator"] as const;
 export async function readRegular(path: string): Promise<Uint8Array> {
   const file = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
   try {
@@ -133,8 +133,8 @@ export async function inspectArchiveForRehearsal(
 export async function loadArchives(directory: string): Promise<Archive[]> {
   const result: Archive[] = [];
   for (const name of names) {
-    const bytes = await readRegular(join(directory, `governator-${name}-0.1.0.tgz`));
-    const fullName = `@governator/${name}`;
+    const bytes = await readRegular(join(directory, `opsydyn-${name}-0.1.0.tgz`));
+    const fullName = `@opsydyn/${name}`;
     await inspectArchiveForRehearsal(bytes, fullName);
     result.push({ name: fullName, version: "0.1.0", bytes });
   }

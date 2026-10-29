@@ -97,7 +97,7 @@ test("packed manifests, exports and Bun bins retain the distribution contract", 
       expect(child.exitCode, child.stderr.toString()).toBe(0);
       const unpacked = `${root}/${name}`;
       await mkdir(unpacked);
-      await extract({ file: `${root}/governator-${name}-0.1.0.tgz`, cwd: unpacked });
+      await extract({ file: `${root}/opsydyn-governator-${name}-0.1.0.tgz`, cwd: unpacked });
       const pkg = `${unpacked}/package`;
       const manifest = JSON.parse(await readFile(`${pkg}/package.json`, "utf8"));
       expect(manifest.private).toBe(false);

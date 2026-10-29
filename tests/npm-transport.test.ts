@@ -12,7 +12,7 @@ describe("npm registry observation", () => {
   test("recognizes an absent version", async () => {
     const result = await readNpmVersion(
       base,
-      "@governator/cli",
+      "@opsydyn/governator-cli",
       "0.1.0",
       async () => new Response(null, { status: 404 }),
     );
@@ -22,12 +22,12 @@ describe("npm registry observation", () => {
     const fetcher = async (url: string | URL | Request) =>
       String(url).endsWith("0.1.0")
         ? Response.json({
-            name: "@governator/cli",
+            name: "@opsydyn/governator-cli",
             version: "0.1.0",
-            dist: { tarball: "https://registry.npmjs.org/@governator/cli/-/cli-0.1.0.tgz" },
+            dist: { tarball: "https://registry.npmjs.org/@opsydyn/governator-cli/-/cli-0.1.0.tgz" },
           })
         : new Response(Uint8Array.from([1, 2, 3]));
-    expect(await readNpmVersion(base, "@governator/cli", "0.1.0", fetcher)).toEqual({
+    expect(await readNpmVersion(base, "@opsydyn/governator-cli", "0.1.0", fetcher)).toEqual({
       status: "present",
       bytes: Uint8Array.from([1, 2, 3]),
     });
@@ -35,13 +35,15 @@ describe("npm registry observation", () => {
   test("refuses cross-origin archives and malformed metadata", async () => {
     const fetcher = async () =>
       Response.json({
-        name: "@governator/cli",
+        name: "@opsydyn/governator-cli",
         version: "0.1.0",
         dist: { tarball: "https://example.com/archive.tgz" },
       });
-    await expect(readNpmVersion(base, "@governator/cli", "0.1.0", fetcher)).rejects.toThrow();
     await expect(
-      readNpmVersion(base, "@governator/cli", "0.1.0", async () => Response.json({})),
+      readNpmVersion(base, "@opsydyn/governator-cli", "0.1.0", fetcher),
+    ).rejects.toThrow();
+    await expect(
+      readNpmVersion(base, "@opsydyn/governator-cli", "0.1.0", async () => Response.json({})),
     ).rejects.toThrow();
   });
 });
@@ -51,7 +53,7 @@ test("rejects redirects, errors, and oversized responses", async () => {
   await expect(
     readNpmVersion(
       registry,
-      "@governator/cli",
+      "@opsydyn/governator-cli",
       "0.1.0",
       async () => new Response(null, { status: 302, headers: { location: "https://example.com" } }),
     ),
@@ -59,7 +61,7 @@ test("rejects redirects, errors, and oversized responses", async () => {
   await expect(
     readNpmVersion(
       registry,
-      "@governator/cli",
+      "@opsydyn/governator-cli",
       "0.1.0",
       async () => new Response(null, { status: 503 }),
     ),
@@ -67,7 +69,7 @@ test("rejects redirects, errors, and oversized responses", async () => {
   await expect(
     readNpmVersion(
       registry,
-      "@governator/cli",
+      "@opsydyn/governator-cli",
       "0.1.0",
       async () => new Response(new Uint8Array(1024 * 1024 + 1)),
     ),
@@ -81,9 +83,9 @@ test("rejects archive publishConfig routing before starting npm", async () => {
     await writeFile(
       join(dir, "package/package.json"),
       JSON.stringify({
-        name: "@governator/cli",
+        name: "@opsydyn/governator-cli",
         version: "0.1.0",
-        publishConfig: { "@governator:registry": "https://example.com/" },
+        publishConfig: { "@opsydyn:registry": "https://example.com/" },
       }),
     );
     for (const name of ["README.md", "LICENSE", "THIRD_PARTY_NOTICES.md"])
@@ -97,7 +99,7 @@ test("rejects archive publishConfig routing before starting npm", async () => {
       path: "/usr/bin:/bin",
     });
     await expect(
-      port.send("@governator/cli", "0.1.0", await readFile(join(dir, "candidate.tgz"))),
+      port.send("@opsydyn/governator-cli", "0.1.0", await readFile(join(dir, "candidate.tgz"))),
     ).rejects.toThrow(/publishConfig/);
   } finally {
     await rm(dir, { recursive: true, force: true });

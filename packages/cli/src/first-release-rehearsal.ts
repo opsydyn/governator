@@ -5,7 +5,11 @@ import { decode, ensure } from "@governator/core";
 
 const hash = Schema.String.check(Schema.isPattern(/^[a-f0-9]{64}$/));
 const packageSchema = Schema.Struct({
-  name: Schema.Literals(["@governator/cli", "@governator/mcp", "@governator/storybook-addon"]),
+  name: Schema.Literals([
+    "@opsydyn/governator-cli",
+    "@opsydyn/governator-mcp",
+    "@opsydyn/storybook-addon-governator",
+  ]),
   version: Schema.Literal("0.1.0"),
   size: Schema.Number.check(
     Schema.isInt(),
@@ -23,7 +27,11 @@ const candidateSchema = Schema.Struct({
 });
 export type Candidate = typeof candidateSchema.Type;
 export type Archive = { name: string; version: string; bytes: Uint8Array };
-const names = ["@governator/cli", "@governator/mcp", "@governator/storybook-addon"] as const;
+const names = [
+  "@opsydyn/governator-cli",
+  "@opsydyn/governator-mcp",
+  "@opsydyn/storybook-addon-governator",
+] as const;
 function sha256(bytes: Uint8Array): string {
   return new Bun.CryptoHasher("sha256").update(bytes).digest("hex");
 }

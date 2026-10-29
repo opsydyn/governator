@@ -167,8 +167,8 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
             try:
                 (root / '.storybook').mkdir()
                 (root / 'src').mkdir()
-                (root / 'package.json').write_text(json.dumps({'name': 'independent-addon-consumer', 'private': True, 'type': 'module', 'dependencies': {'@governator/storybook-addon': 'file:' + str(packed), 'storybook': '10.6.4', '@storybook/react-vite': '10.6.4', 'react': '19.3.1', 'react-dom': '19.3.1', 'vite': '8.3.5'}}))
-                common_config = f'registry={registry}\n@storybook:registry={registry}\n@governator:registry={registry}\nignore-scripts=true\naudit=false\nfund=false\nupdate-notifier=false\n'
+                (root / 'package.json').write_text(json.dumps({'name': 'independent-addon-consumer', 'private': True, 'type': 'module', 'dependencies': {'@opsydyn/storybook-addon-governator': 'file:' + str(packed), 'storybook': '10.6.4', '@storybook/react-vite': '10.6.4', 'react': '19.3.1', 'react-dom': '19.3.1', 'vite': '8.3.5'}}))
+                common_config = f'registry={registry}\n@storybook:registry={registry}\n@opsydyn:registry={registry}\nignore-scripts=true\naudit=false\nfund=false\nupdate-notifier=false\n'
                 manager_config = 'strict-peer-deps=true\n' if manager == 'npm' else 'strict-peer-dependencies=true\nmanage-package-manager-versions=false\n'
                 (root / '.npmrc').write_text(common_config + manager_config)
                 env.update(HOME=str(root), TMPDIR=str(root), npm_config_registry=registry, npm_config_userconfig=str(root / '.npmrc'), npm_config_globalconfig=str(root / 'empty-global'), npm_config_cache=str(root / 'npm-cache'))
@@ -176,7 +176,7 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
                 if manager == 'pnpm':
                     env['npm_config_store_dir'] = str(root / 'pnpm-store')
                 (root / 'empty-global').write_text('')
-                (root / '.storybook/main.ts').write_text("import {tagEditor} from '@governator/storybook-addon/tag-editor'; export default {framework:'@storybook/react-vite',stories:['../src/**/*.stories.tsx'],addons:['@governator/storybook-addon'],viteFinal:async(config)=>({...config,plugins:[...(config.plugins||[]),tagEditor({registry:{root:process.cwd(),path:'governance/components.yaml'}})]}),core:{disableTelemetry:true}};\n")
+                (root / '.storybook/main.ts').write_text("import {tagEditor} from '@opsydyn/storybook-addon-governator/tag-editor'; export default {framework:'@storybook/react-vite',stories:['../src/**/*.stories.tsx'],addons:['@opsydyn/storybook-addon-governator'],viteFinal:async(config)=>({...config,plugins:[...(config.plugins||[]),tagEditor({registry:{root:process.cwd(),path:'governance/components.yaml'}})]}),core:{disableTelemetry:true}};\n")
                 (root / '.storybook/preview.ts').write_text("export default {parameters:{governance:{registryEditor:true}}};\n")
                 (root / 'src/Button.stories.tsx').write_text("import React from 'react'; const Button=()=> <button>Independent consumer</button>; export default {title:'Button',component:Button,parameters:{governance:{componentId:'ui.button'}}}; export const Default={};\n")
                 pnpm = Path.home() / '.cache/node/corepack/v1/pnpm/11.9.0/bin/pnpm.cjs'

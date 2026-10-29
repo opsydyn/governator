@@ -3,7 +3,11 @@ import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 
 const root = join(import.meta.dirname, "..");
-const publicPackages = ["@governator/cli", "@governator/mcp", "@governator/storybook-addon"];
+const publicPackages = [
+  "@opsydyn/governator-cli",
+  "@opsydyn/governator-mcp",
+  "@opsydyn/storybook-addon-governator",
+];
 
 test("only the three selected packages are eligible for public release", async () => {
   const publishable: string[] = [];
@@ -23,7 +27,10 @@ test.each(["storybook-addon", "cli", "mcp"])(
   async (name) => {
     const manifest = await Bun.file(join(root, "packages", name, "package.json")).json();
     expect(manifest).toMatchObject({
-      name: `@governator/${name}`,
+      name:
+        name === "storybook-addon"
+          ? "@opsydyn/storybook-addon-governator"
+          : `@opsydyn/governator-${name}`,
       private: false,
       license: "MIT",
       repository: {

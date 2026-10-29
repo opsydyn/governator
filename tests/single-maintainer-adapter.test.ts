@@ -9,9 +9,9 @@ import {
 
 const commit = "a".repeat(40);
 const archives = [
-  { name: "@governator/cli", version: "0.1.0", bytes: Uint8Array.from([1, 2]) },
-  { name: "@governator/mcp", version: "0.1.0", bytes: Uint8Array.from([3, 4]) },
-  { name: "@governator/storybook-addon", version: "0.1.0", bytes: Uint8Array.from([5, 6]) },
+  { name: "@opsydyn/governator-cli", version: "0.1.0", bytes: Uint8Array.from([1, 2]) },
+  { name: "@opsydyn/governator-mcp", version: "0.1.0", bytes: Uint8Array.from([3, 4]) },
+  { name: "@opsydyn/storybook-addon-governator", version: "0.1.0", bytes: Uint8Array.from([5, 6]) },
 ];
 function fixture() {
   const stored = new Map<string, Uint8Array>();

@@ -25,7 +25,7 @@ test("release demo isolates its simulated changeset from a real pending changese
   }
   await writeFile(
     join(root, ".changeset/real-change.md"),
-    '---\n"@governator/cli": patch\n---\nA real future release.\n',
+    '---\n"@opsydyn/governator-cli": patch\n---\nA real future release.\n',
   );
   const configPath = join(root, "governance/release.json");
   const config = await Bun.file(configPath).json();

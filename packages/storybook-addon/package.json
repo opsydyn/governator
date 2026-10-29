@@ -1,5 +1,5 @@
 {
-  "name": "@governator/storybook-addon",
+  "name": "@opsydyn/storybook-addon-governator",
   "version": "0.1.0",
   "private": false,
   "description": "Storybook addon for design system governance and local metadata editing.",

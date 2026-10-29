@@ -9,8 +9,8 @@ Use an existing Storybook React/Vite project. The declared and qualified Storybo
 The package is prepared for a public `0.1.0` release but is not yet published; registry installation is unverified. Given an actual locally packed addon tarball, install it in your consumer project (replace the illustrative path):
 
 ```sh
-npm install --save-dev /absolute/path/to/governator-storybook-addon-0.1.0.tgz
-# Or: pnpm add --save-dev /absolute/path/to/governator-storybook-addon-0.1.0.tgz
+npm install --save-dev /absolute/path/to/opsydyn-storybook-addon-governator-0.1.0.tgz
+# Or: pnpm add --save-dev /absolute/path/to/opsydyn-storybook-addon-governator-0.1.0.tgz
 ```
 
 These commands still require an available source for your project's Storybook dependencies. Local-cache or reconstructed-source qualification does not establish registry availability.
@@ -18,7 +18,7 @@ These commands still require an available source for your project's Storybook de
 Add the package to your existing `.storybook/main.ts` configuration:
 
 ```ts
-addons: ["@governator/storybook-addon"];
+addons: ["@opsydyn/storybook-addon-governator"];
 ```
 
 In a story's default export, map its component and optionally supply a same-origin report served by your Storybook static directory:
@@ -32,7 +32,7 @@ parameters: {
 },
 ```
 
-Omit `reportUrl` for the no-report onboarding panel. To supply a report, generate it with the `@governator/cli` package using `bun ./node_modules/.bin/governator check --mapping governance/tests.json --format json --report-schema 2 > artifacts/governance.json` in a configured clean consumer Git project (see that package's README for prerequisites), copy the resulting JSON into your configured Storybook static directory as `governance.json`, and rebuild static Storybook after updating it. The addon does not run the CLI or generate evidence.
+Omit `reportUrl` for the no-report onboarding panel. To supply a report, generate it with the `@opsydyn/governator-cli` package using `bun ./node_modules/.bin/governator check --mapping governance/tests.json --format json --report-schema 2 > artifacts/governance.json` in a configured clean consumer Git project (see that package's README for prerequisites), copy the resulting JSON into your configured Storybook static directory as `governance.json`, and rebuild static Storybook after updating it. The addon does not run the CLI or generate evidence.
 
 Set `parameters.governance.componentId` on each component's stories. Optionally set `parameters.governance.reportUrl` to a same-origin JSON report path. Without a report the panel shows onboarding; Storybook still works. Reports older than 24 hours, malformed reports, unsupported schemas and unknown IDs never show a ready gate. Fetch uses no credentials and rejects redirects.
 
@@ -43,7 +43,7 @@ The same opt-in development plugin can edit a component's record in the canonica
 ```ts
 // .storybook/main.ts: add the plugin to your existing viteFinal.
 import { resolve } from "node:path";
-import { tagEditor } from "@governator/storybook-addon/tag-editor";
+import { tagEditor } from "@opsydyn/storybook-addon-governator/tag-editor";
 
 tagEditor({
   registry: {
@@ -69,7 +69,7 @@ After an edit, report-based status is unverified until the registry is committed
 The optional editor is supported for local React/Vite Storybook 10.6.4. Enable the development-only Vite plugin in `.storybook/main.ts`:
 
 ```ts
-import { tagEditor } from "@governator/storybook-addon/tag-editor";
+import { tagEditor } from "@opsydyn/storybook-addon-governator/tag-editor";
 
 // Add this property to the existing Storybook configuration.
 viteFinal: async (config) => ({

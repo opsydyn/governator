@@ -12,7 +12,11 @@ export type ReleaseStatus = {
   }[];
 };
 
-const names = ["@governator/storybook-addon", "@governator/cli", "@governator/mcp"];
+const names = [
+  "@opsydyn/storybook-addon-governator",
+  "@opsydyn/governator-cli",
+  "@opsydyn/governator-mcp",
+];
 const ciUrl =
   "https://api.github.com/repos/opsydyn/governator/actions/workflows/check.yml/runs?branch=main&event=push&per_page=1";
 

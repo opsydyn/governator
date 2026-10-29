@@ -119,8 +119,8 @@ if(code!=="EPERM") throw Error("external denial not proven: "+code);`;
     ensure(probeExit === 0, "Network sandbox probes failed; refusing to run npm");
     for (const item of validated.packages) {
       expected = item;
-      const basename = item.name.slice("@governator/".length);
-      const path = join(directory!, `governator-${basename}-0.1.0.tgz`);
+      const basename = item.name.slice("@opsydyn/".length);
+      const path = join(directory!, `opsydyn-${basename}-0.1.0.tgz`);
       const args = [
         "-p",
         profile,

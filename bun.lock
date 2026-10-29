@@ -34,7 +34,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@example/ui": "workspace:*",
-        "@governator/storybook-addon": "workspace:*",
+        "@opsydyn/storybook-addon-governator": "workspace:*",
         "react": "19.3.1",
         "react-dom": "19.3.1",
       },
@@ -46,7 +46,7 @@
       },
     },
     "packages/cli": {
-      "name": "@governator/cli",
+      "name": "@opsydyn/governator-cli",
       "version": "0.1.0",
       "bin": {
         "governator": "./dist/main.mjs",
@@ -101,7 +101,7 @@
       },
     },
     "packages/mcp": {
-      "name": "@governator/mcp",
+      "name": "@opsydyn/governator-mcp",
       "version": "0.1.0",
       "bin": {
         "governator-mcp": "./dist/main.mjs",
@@ -136,7 +136,7 @@
       },
     },
     "packages/storybook-addon": {
-      "name": "@governator/storybook-addon",
+      "name": "@opsydyn/storybook-addon-governator",
       "version": "0.1.0",
       "devDependencies": {
         "yaml": "2.9.1",
@@ -314,8 +314,6 @@
 
     "@fallow-cli/win32-x64-msvc": ["@fallow-cli/win32-x64-msvc@3.37.0", "", { "os": "win32", "cpu": "x64" }, "sha512-nNneEE31mlAGsgcgJvHfqAy921Tn/bWSRXb6yd5xK3A0TUdyQKcANAyKH8a/4g3G6rLwqkkWe+ZBSCdhYHTIPg=="],
 
-    "@governator/cli": ["@governator/cli@workspace:packages/cli"],
-
     "@governator/core": ["@governator/core@workspace:packages/core"],
 
     "@governator/fixture-attestation": ["@governator/fixture-attestation@workspace:packages/fixture-attestation"],
@@ -324,13 +322,9 @@
 
     "@governator/github-review": ["@governator/github-review@workspace:packages/github-review"],
 
-    "@governator/mcp": ["@governator/mcp@workspace:packages/mcp"],
-
     "@governator/protocol": ["@governator/protocol@workspace:packages/protocol"],
 
     "@governator/query": ["@governator/query@workspace:packages/query"],
-
-    "@governator/storybook-addon": ["@governator/storybook-addon@workspace:packages/storybook-addon"],
 
     "@governator/storybook-demo": ["@governator/storybook-demo@workspace:apps/storybook-demo"],
 
@@ -388,7 +382,13 @@
 
     "@nodelib/fs.walk": ["@nodelib/fs.walk@1.2.8", "", { "dependencies": { "@nodelib/fs.scandir": "2.1.5", "fastq": "^1.6.0" } }, "sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg=="],
 
+    "@opsydyn/governator-cli": ["@opsydyn/governator-cli@workspace:packages/cli"],
+
+    "@opsydyn/governator-mcp": ["@opsydyn/governator-mcp@workspace:packages/mcp"],
+
     "@opsydyn/oxlint-effect": ["@opsydyn/oxlint-effect@2.0.1", "", { "dependencies": { "@oxlint/plugins": "^1.71.0" } }, "sha512-vY8DwhMSbNvtFiD5b6ekcXNHzLdCS+6rYLM70ajteJoStX0mdb+bf9M6OPyG5tkbYG7Oao5f+pIHxIHTd/rPGg=="],
+
+    "@opsydyn/storybook-addon-governator": ["@opsydyn/storybook-addon-governator@workspace:packages/storybook-addon"],
 
     "@oxc-parser/binding-android-arm-eabi": ["@oxc-parser/binding-android-arm-eabi@0.127.0", "", { "os": "android", "cpu": "arm" }, "sha512-0LC7ye4hvqbIKxAzThzvswgHLFu2AURKzYLeSVvLdu2TBOYWQDmHnTqPLeA597BcUCxiLqLsS4CJ5uoI5WYWCQ=="],
 

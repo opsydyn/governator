@@ -1,5 +1,5 @@
 {
-  "name": "@governator/mcp",
+  "name": "@opsydyn/governator-mcp",
   "version": "0.1.0",
   "private": false,
   "description": "Read-only MCP server for Governator governance snapshots.",

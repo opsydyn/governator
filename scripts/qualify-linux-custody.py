@@ -16,7 +16,7 @@ import tempfile
 import threading
 from pathlib import Path
 
-NAMES = ("cli", "mcp", "storybook-addon")
+NAMES = ("governator-cli", "governator-mcp", "storybook-addon-governator")
 LIMIT = 16 * 1024 * 1024
 
 
@@ -39,7 +39,7 @@ def validate(directory, digest, commit):
     if not re.fullmatch(r"[a-f0-9]{64}", digest) or not re.fullmatch(r"[a-f0-9]{40}", commit):
         raise ValueError("invalid identity")
     root = Path(directory)
-    allowed = {"candidate.json", *(f"governator-{name}-0.1.0.tgz" for name in NAMES)}
+    allowed = {"candidate.json", *(f"opsydyn-{name}-0.1.0.tgz" for name in NAMES)}
     actual = set(os.listdir(root))
     if actual not in (allowed, allowed | {"SHA256SUMS"}):
         raise ValueError("unexpected candidate files")
@@ -55,8 +55,8 @@ def validate(directory, digest, commit):
     for name, package in zip(NAMES, candidate["packages"], strict=True):
         if not isinstance(package, dict) or set(package) != {"name", "version", "size", "sha256"}:
             raise ValueError("invalid package record")
-        data = read_regular(root / f"governator-{name}-0.1.0.tgz", LIMIT)
-        if package["name"] != f"@governator/{name}" or package["version"] != "0.1.0" or type(package["size"]) is not int or package["size"] != len(data) or package["sha256"] != hashlib.sha256(data).hexdigest():
+        data = read_regular(root / f"opsydyn-{name}-0.1.0.tgz", LIMIT)
+        if package["name"] != f"@opsydyn/{name}" or package["version"] != "0.1.0" or type(package["size"]) is not int or package["size"] != len(data) or package["sha256"] != hashlib.sha256(data).hexdigest():
             raise ValueError("candidate bytes mismatch")
         canonical_packages.append({"name": package["name"], "version": package["version"], "size": package["size"], "sha256": package["sha256"]})
         snapshots.append((package["name"], data))
@@ -153,7 +153,7 @@ def exercise(snapshots, npm_path, node_path):
                     checked = subprocess.run(["/usr/bin/python3", "-c", probe, str(fd), str(link)], env=env, user=65534, group=65534, extra_groups=[], pass_fds=(fd,), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
                     if checked.returncode:
                         raise RuntimeError("unprivileged mutation was not prevented")
-                    run = subprocess.run([npm_path, "publish", str(link), "--registry", registry, f"--@governator:registry={registry}", "--ignore-scripts", "--access=public", "--provenance=false"], cwd=str(home), env=env, user=65534, group=65534, extra_groups=[], pass_fds=(fd,), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=90)
+                    run = subprocess.run([npm_path, "publish", str(link), "--registry", registry, f"--@opsydyn:registry={registry}", "--ignore-scripts", "--access=public", "--provenance=false"], cwd=str(home), env=env, user=65534, group=65534, extra_groups=[], pass_fds=(fd,), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=90)
                     if run.returncode or received.get(name) != hashlib.sha256(data).hexdigest():
                         raise RuntimeError(f"fixture npm upload failed for {name}")
                     results.append({"name": name, "sha256": received[name], "mutationBlocked": True})

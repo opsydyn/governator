@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@example/ui": "workspace:*",
-    "@governator/storybook-addon": "workspace:*",
+    "@opsydyn/storybook-addon-governator": "workspace:*",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },

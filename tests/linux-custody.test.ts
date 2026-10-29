@@ -7,9 +7,9 @@ import { describe, expect, test } from "vitest";
 import { candidateDigest, createCandidate } from "../packages/cli/src/first-release-rehearsal.ts";
 
 const commit = "a".repeat(40);
-const names = ["cli", "mcp", "storybook-addon"];
+const names = ["governator-cli", "governator-mcp", "storybook-addon-governator"];
 const archives = names.map((name, i) => ({
-  name: `@governator/${name}`,
+  name: `@opsydyn/${name}`,
   version: "0.1.0",
   bytes: Uint8Array.from([i + 1, 2, 3]),
 }));
@@ -18,7 +18,7 @@ function fixture() {
   const candidate = createCandidate(commit, archives);
   writeFileSync(join(dir, "candidate.json"), JSON.stringify(candidate));
   for (const [index, archive] of archives.entries())
-    writeFileSync(join(dir, `governator-${names[index]}-0.1.0.tgz`), archive.bytes);
+    writeFileSync(join(dir, `opsydyn-${names[index]}-0.1.0.tgz`), archive.bytes);
   return { dir, digest: candidateDigest(candidate) };
 }
 function verify(dir: string, digest: string, source = commit) {
@@ -42,9 +42,9 @@ describe("sealed custody candidate validation", () => {
     try {
       expect(verify(f.dir, f.digest, "b".repeat(40)).status).not.toBe(0);
       expect(verify(f.dir, "0".repeat(64)).status).not.toBe(0);
-      writeFileSync(join(f.dir, "governator-cli-0.1.0.tgz"), "changed");
+      writeFileSync(join(f.dir, "opsydyn-governator-cli-0.1.0.tgz"), "changed");
       expect(verify(f.dir, f.digest).status).not.toBe(0);
-      writeFileSync(join(f.dir, "governator-cli-0.1.0.tgz"), archives[0]!.bytes);
+      writeFileSync(join(f.dir, "opsydyn-governator-cli-0.1.0.tgz"), archives[0]!.bytes);
       writeFileSync(join(f.dir, "extra.tgz"), "extra");
       expect(verify(f.dir, f.digest).status).not.toBe(0);
     } finally {
@@ -54,7 +54,7 @@ describe("sealed custody candidate validation", () => {
   test("rejects symlink archive inputs", () => {
     const f = fixture();
     try {
-      const target = join(f.dir, "governator-cli-0.1.0.tgz");
+      const target = join(f.dir, "opsydyn-governator-cli-0.1.0.tgz");
       rmSync(target);
       symlinkSync("/dev/null", target);
       expect(verify(f.dir, f.digest).status).not.toBe(0);

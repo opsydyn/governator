@@ -1,5 +1,5 @@
 {
-  "name": "@governator/cli",
+  "name": "@opsydyn/governator-cli",
   "version": "0.1.0",
   "private": false,
   "description": "Bun CLI for design system governance, evidence, and release checks.",
