@@ -1,7 +1,11 @@
 import { defineConfig } from "tsdown";
 export default defineConfig({
   tsconfig: "tsconfig.json",
-  entry: { "tag-editor": "src/tag-editor-server.ts", preset: "src/preset.ts" },
+  entry: {
+    "tag-editor": "src/tag-editor-server.ts",
+    preset: "src/preset.ts",
+    authoring: "src/authoring.ts",
+  },
   format: ["esm"],
   dts: true,
   clean: false,

@@ -24,6 +24,7 @@ export const toolInputs = {
   evaluate_component: Schema.Struct({ ...component, targetLifecycle: Lifecycle }),
   explain_governance_failure: Schema.Struct({ ...component, targetLifecycle: Lifecycle }),
   get_design_system_report: Schema.Record(Schema.String, Schema.Never),
+  list_ready_components: Schema.Struct(page),
   list_approved_components: Schema.Struct(page),
   get_component_contract: Schema.Struct({
     ...component,
@@ -82,6 +83,7 @@ export const ToolNameSchema = Schema.Literals([
   "evaluate_component",
   "explain_governance_failure",
   "get_design_system_report",
+  "list_ready_components",
   "list_approved_components",
   "get_component_contract",
   "diff_component_contract",
@@ -106,6 +108,8 @@ export const toolDescriptions: Record<ToolName, string> = {
     "Explain unmet requirements under a pure evaluation of snapshot declarations. Use get_component for the recorded result and get_component_evidence for available evidence.",
   get_design_system_report:
     "Read the saved governance report. It is not refreshed by this call; export a new snapshot after collecting new evidence.",
+  list_ready_components:
+    "List components recorded as ready under local policy. Returns approvalVerified=false; readiness is distinct from human approval and release eligibility.",
   list_approved_components:
     "Legacy name: list components recorded as ready under local policy. approvalVerified is false; these results do not establish human or release approval.",
   get_component_contract:

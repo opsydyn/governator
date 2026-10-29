@@ -7,7 +7,7 @@ This tutorial follows the source checkout's React/Storybook example from tests t
 
 ## Prepare the checkout
 
-Use a full local Git checkout of this repository, Bun **1.4.2**, and the pinned Moon **2.6.4** supplied by the workspace. TypeScript **5.9.3** and Vitest **4.1.12** are pinned dependencies. Run every command from the repository root. This is a source-checkout workflow; registry installation remains unverified.
+Use a full local Git checkout of this repository, Bun **1.4.2**, and the pinned Moon **2.6.4** supplied by the workspace. TypeScript **5.9.3** and Vitest **4.1.12** are pinned dependencies. Run every command from the repository root. This is a source-checkout workflow. The Storybook demo consumes pinned published 0.1.0 Governator packages; root commands use workspace source.
 
 The producer requires a clean, committed tree, tracked governance inputs, no submodules or clean/process Git filters, and no assume-unchanged or skip-worktree index flags. Finish and commit your own changes before starting. Generated `artifacts/` is ignored. Installed dependencies and test/config code execute with your local operator trust.
 
@@ -32,7 +32,7 @@ bun run storybook
 
 Open `http://127.0.0.1:6006`, select Button and its **Governance** tab. Inspect the readiness, API compatibility and release sections independently. Select Select, Alert, LegacyAlert and Unmapped to compare component identity and lifecycle. Unmapped declares `ui.unmapped`, which has no matching registry decision and cannot acquire a ready badge by inference. Stop the development server with Ctrl-C when finished.
 
-Button deliberately removes the `tone` prop from the baseline. The proposed Button contract **1.2.1** and shared package **8.4.2** are patch bumps; that removal requires a major. Expect blocked API/release results even when the limited local unit-test readiness policy passes. Publication, deployment and adoption remain unknown.
+Button deliberately removes the `tone` prop from the baseline. The proposed Button contract **1.2.1** and shared package **8.4.2** are patch bumps; that removal requires a major. Expect blocked API/release results even when the limited local unit-test readiness policy passes. These fixture component decisions do not establish publication, deployment or adoption of the example UI library.
 
 ## Query the saved view
 

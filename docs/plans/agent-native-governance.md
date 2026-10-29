@@ -1,23 +1,25 @@
-# Agent-native governance progress
+# Agent-native governance implementation
 
-Approved direction: deterministic policy core, CLI operations, immutable MCP reads, shared local editing, and a portable onboarding skill. Tests are explicitly deferred by the maintainer; static validation does not qualify behavior for publication.
+Approved direction: deterministic policy core, CLI operations, immutable MCP reads, shared local editing, and a portable onboarding skill. Implementation of the agreed phase is complete locally. Behavioral qualification is deferred by the maintainer; static validation does not qualify behavior for publication.
 
-Implemented locally:
+Delivered:
 
-- Published-package onboarding guidance and a portable skill under skills/governator-onboarding.
-- Corrections to current README/docs release status and public package names.
-- Read-only working-tree doctor diagnostics, distinct from evidence production.
-- Task-specific MCP descriptions, including the legacy approved-components terminology.
-- Shared registry metadata editing used by Storybook and CLI inspect/update commands, preserving existing revision and path checks.
+- Portable onboarding skill, published-package setup, and version-aware command discovery.
+- Current documentation corrected for published 0.1.0 packages, public names, source versus installed demo, and historical synthetic experiments.
+- Working-tree doctor diagnostics for canonical configuration, dependency resolution paths, Git source, selected report source/time, and fully loaded snapshot freshness. Findings include structured remediation descriptions. Dependency resolution does not prove runtime compatibility; saved reports do not recreate producer trust.
+- Task-specific MCP descriptions and the preferred list_ready_components query, retaining list_approved_components with identical data. Development exposes fifteen tools; published 0.1.0 exposes fourteen.
+- Shared registry metadata operations consumed by Storybook and CLI.
+- Component registration and test mapping plans with before/after content and expected-revision application. Each command changes one existing file; no multi-file transaction or initial registry creation is claimed.
+- Optional installed Storybook authoring adapter for tag inspection, preview and revision-checked updates. Ordinary CLI consumers do not depend on Storybook.
+- Explicit snapshot refresh invoking the existing local producer, writing a fresh report and snapshot, and directing MCP restart. This produces governance-only snapshots; combined release snapshots use the existing report/release and export workflow. No refresh was executed while tests were deferred.
+- Architecture package map, command reference and recovery guidance.
 
-Remaining before the phase is complete:
+Acceptance work still deferred:
 
-- Doctor dependency, report and snapshot freshness diagnostics with explicit source identities.
-- A clearer ready-components API alias while retaining the legacy tool name.
-- New-component registration and mapping operations with previewable changes.
-- CSF tag editing through a framework-specific adapter; avoid adding Storybook to ordinary CLI consumers.
-- Explicit snapshot refresh workflow and structured remediation actions across interfaces.
-- Review all current docs for historical qualification language and update the architecture package map.
-- Behavioral qualification of the skill, diagnostics and editing workflows when tests resume. Test working-tree changes, conflicts, stale inputs and consumers using published packages.
+- Behavioral checks for registration, mapping, metadata/tag conflicts, malformed inputs, stale source/evidence, aliases, producer failure and snapshot refresh.
+- Skill onboarding in a fresh consumer, including intentionally missing configuration and deferred test execution.
+- Clean packed-consumer qualification of the next release, including absence of Storybook dependencies from ordinary CLI/MCP installs and optional authoring availability.
 
-No release or publication is authorized by this work. The demo remains pinned to published 0.1.0; source additions do not appear in that installed release.
+Future ideas outside this phase: hosted control plane, background agents, writable MCP tools, automatic client activation and autonomous publishing. The single-maintainer release model remains selected; dual custody remains deferred.
+
+The demo remains pinned to published 0.1.0. These source additions require a future release; no publication or push is part of this implementation.

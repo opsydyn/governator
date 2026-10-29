@@ -143,6 +143,7 @@ export default defineConfig({
         "packages/storybook-addon/src/preset.ts",
         "packages/storybook-addon/src/registry-editor.ts",
         "packages/operations/src/registry.ts",
+        "packages/storybook-addon/src/authoring.ts",
         "packages/storybook-addon/src/registry-source.ts",
       ],
       rules: {

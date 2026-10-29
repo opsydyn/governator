@@ -30,7 +30,7 @@ const allowed = new Set([
 const revision = (value: string) => createHash("sha256").update(value).digest("hex");
 const writes = new Map<string, Promise<void>>();
 
-async function fileWithin(root: string, path: string): Promise<string> {
+export async function fileWithin(root: string, path: string): Promise<string> {
   if (
     !path ||
     isAbsolute(path) ||

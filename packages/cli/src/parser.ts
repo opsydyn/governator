@@ -72,9 +72,11 @@ export async function parseCli(args: readonly string[]): Promise<ParsedCli> {
   };
   const root = Command.make("governator").pipe(
     Command.withSubcommands([
-      leaf("doctor", "doctor", ["root", "format"]),
+      leaf("doctor", "doctor", ["root", "format", "report", "snapshot"]),
       Command.make("registry").pipe(
         Command.withSubcommands([
+          leaf("plan", "registry.plan", ["root", "registry", "fields"]),
+          leaf("register", "registry.register", ["root", "registry", "fields", "revision"]),
           leaf("inspect", "registry.inspect", [
             "root",
             "registry",
@@ -111,9 +113,30 @@ export async function parseCli(args: readonly string[]): Promise<ParsedCli> {
       ),
       leaf("check", "check", ["root", "format", "mapping", "target", "component", "report-schema"]),
       leaf("query", "query", ["root", "snapshot", "tool", "args"]),
+      Command.make("tags").pipe(
+        Command.withSubcommands([
+          leaf("inspect", "tags.inspect", ["root", "story-path", "adapter"]),
+          leaf("plan", "tags.plan", ["root", "story-path", "adapter", "tags"]),
+          leaf("update", "tags.update", ["root", "story-path", "adapter", "tags", "revision"]),
+        ]),
+      ),
+      Command.make("mapping").pipe(
+        Command.withSubcommands([
+          leaf("plan", "mapping.plan", ["root", "mapping", "registry", "component", "files"]),
+          leaf("update", "mapping.update", [
+            "root",
+            "mapping",
+            "registry",
+            "component",
+            "files",
+            "revision",
+          ]),
+        ]),
+      ),
       Command.make("snapshot").pipe(
         Command.withSubcommands([
           leaf("export", "snapshot.export", ["root", "report", "release", "config", "out"]),
+          leaf("refresh", "snapshot.refresh", ["root", "mapping", "target", "out"]),
         ]),
       ),
       Command.make("evidence").pipe(

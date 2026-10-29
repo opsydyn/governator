@@ -469,11 +469,11 @@ const cli = root+'/node_modules/.bin/governator';
 const client = new Client({name:'independent-consumer',version:'0.1.0'});
 const transport = new StdioClientTransport({command:bun,args:[root+'/node_modules/.bin/governator-mcp','--root',root,'--snapshot','artifacts/snapshot.json'],cwd:root,stderr:'pipe'});
 const requests = {
-list_components:{},get_component:{componentId:'ui.button'},get_component_evidence:{componentId:'ui.button'},evaluate_component:{componentId:'ui.button',targetLifecycle:'stable'},explain_governance_failure:{componentId:'ui.button',targetLifecycle:'stable'},get_design_system_report:{},list_approved_components:{},get_component_contract:{componentId:'ui.button'},diff_component_contract:{componentId:'ui.button',fromVersion:'1.0.0',toVersionOrCandidate:'candidate'},list_breaking_changes:{},explain_release_block:{packageId:'@example/ui',candidateVersion:'1.0.1'},get_release_manifest:{packageId:'@example/ui',version:'1.0.1'},get_consumer_compatibility:{packageId:'@example/ui',candidateVersion:'1.0.1'},plan_component_migration:{componentId:'ui.button',fromVersion:'1.0.0',toVersion:'1.0.1'}
+list_components:{},get_component:{componentId:'ui.button'},get_component_evidence:{componentId:'ui.button'},evaluate_component:{componentId:'ui.button',targetLifecycle:'stable'},explain_governance_failure:{componentId:'ui.button',targetLifecycle:'stable'},get_design_system_report:{},list_ready_components:{},list_approved_components:{},get_component_contract:{componentId:'ui.button'},diff_component_contract:{componentId:'ui.button',fromVersion:'1.0.0',toVersionOrCandidate:'candidate'},list_breaking_changes:{},explain_release_block:{packageId:'@example/ui',candidateVersion:'1.0.1'},get_release_manifest:{packageId:'@example/ui',version:'1.0.1'},get_consumer_compatibility:{packageId:'@example/ui',candidateVersion:'1.0.1'},plan_component_migration:{componentId:'ui.button',fromVersion:'1.0.0',toVersion:'1.0.1'}
 };
 try {
  await client.connect(transport);
- const {tools} = await client.listTools(); assert.equal(tools.length,14);
+ const {tools} = await client.listTools(); assert.equal(tools.length,15);
  assert.deepEqual(tools.map(t=>t.name).sort(),Object.keys(requests).sort());
  const results = {};
  for (const tool of tools) {

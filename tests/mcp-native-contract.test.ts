@@ -24,7 +24,7 @@ test("a failed transport start does not keep the server connected", async () => 
   try {
     await server.connect(s);
     await client.connect(c);
-    expect((await client.listTools()).tools).toHaveLength(14);
+    expect((await client.listTools()).tools).toHaveLength(15);
   } finally {
     await client.close();
     await server.close();
@@ -46,7 +46,7 @@ test("late events from an earlier transport cannot close a later connection", as
     await server.connect(secondServer);
     await second.connect(secondClient);
     lateClose?.();
-    expect((await second.listTools()).tools).toHaveLength(14);
+    expect((await second.listTools()).tools).toHaveLength(15);
   } finally {
     await second.close();
     await server.close();

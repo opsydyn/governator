@@ -83,3 +83,11 @@ export async function saveComponentTags(
     if (writes.get(file) === current) writes.delete(file);
   }
 }
+
+/** Produce a reviewable edit using the same parser and protected-tag rules as save. */
+export async function previewComponentTags(root: string, path: string, tags: readonly string[]) {
+  const file = await storyFile(root, path);
+  const before = await readSource(file);
+  const after = editComponentTags(before, file, tags);
+  return { tags: parseTags(after, file), revision: revision(before), before, after };
+}

@@ -1,6 +1,6 @@
 # Read-only local MCP
 
-Governator M2 exposes fourteen shared governance queries through a private Bun stdio application. It loads one explicitly exported snapshot. Tool calls use immutable memory; they do not execute tests, builds, packing, approvals, edits, publication or network requests.
+Governator exposes shared governance queries through a Bun stdio application. Published 0.1.0 has fourteen tools; development adds list_ready_components as a compatibility-preserving alias, bringing discovery to fifteen. It loads one explicitly exported snapshot. Tool calls use immutable memory; they do not execute tests, builds, packing, approvals, edits, publication or network requests.
 
 Use Bun 1.4.2, Moon 2.6.4 and TypeScript 5.9.3. The server uses the MCP implementation in Effect 4.0.6; the MCP SDK client 2.4.0 is retained as a workspace development dependency for interoperability tests. Effect is bundled internally, with no MCP SDK server or Zod runtime dependency. The plain protocol and Storybook addon have no MCP dependency.
 

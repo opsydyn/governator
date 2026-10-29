@@ -49,7 +49,7 @@ test.each([1, 2] as const)(
     try {
       await client.connect(transport);
       pid = transport.pid;
-      expect((await client.listTools()).tools).toHaveLength(14);
+      expect((await client.listTools()).tools).toHaveLength(15);
       const responses = await Promise.all(
         Array.from({ length: 8 }, () =>
           client.callTool({ name: "get_design_system_report", arguments: {} }),

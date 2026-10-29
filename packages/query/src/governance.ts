@@ -191,7 +191,7 @@ export function createProjector(snapshot: QuerySnapshot) {
       data = report.decisions.find((item) => item.componentId === c.id);
       scope = "pure-unverified-evaluation";
     } else if (tool === "get_design_system_report") data = payload.report;
-    else if (tool === "list_approved_components")
+    else if (tool === "list_approved_components" || tool === "list_ready_components")
       data = {
         ...pageItems(
           payload.report.decisions.filter((c) => c.gate === "ready"),

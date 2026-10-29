@@ -15,6 +15,12 @@ Help the user reach a first understandable governance result in their actual rep
 
 Read [setup](references/setup.md) for the file and command sequence. Use locally installed commands; avoid downloading an unpinned executable for each invocation. Prefer command discovery from the installed version: development-only commands may be absent in 0.1.0.
 
+## Development capability discovery
+
+Discover commands from the installed version before using development additions. If available, use `doctor --format json` with selected report and snapshot paths to inspect setup and remediation without executing producers. Use registration/mapping/tag plans to review source changes, then their revision-checked apply operations. The tag adapter must be installed in the chosen project and explicitly exposes API 1. If these commands are absent, use the published 0.1.0 file setup flow; do not assume a repository document upgrades an installed package.
+
+Only invoke `snapshot refresh` when producer execution is authorized; it runs tests. Otherwise explain the pending work. Restart MCP with the newly returned snapshot path. Use `list_ready_components` when discovery exposes it; its legacy approved-components alias does not establish approval.
+
 ## Establish real inputs
 
 Map actual component IDs to existing source and story files. Reuse existing IDs and configuration. Identify missing owners and policy decisions, asking the maintainer only for facts the repository cannot supply. Propose changes before writing new configuration. A starter policy should describe exactly the checks it enforces; unit tests alone do not establish design, visual or accessibility acceptance.

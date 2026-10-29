@@ -10,6 +10,7 @@ import { runRelease } from "./release.ts";
 import { runContracts } from "./contracts.ts";
 import { runQueryCommand } from "./queries.ts";
 import { runRegistryCommand } from "./registry.ts";
+import { runTagCommand } from "./tags.ts";
 import { doctor } from "./doctor.ts";
 import { parseCli } from "./parser.ts";
 
@@ -18,9 +19,17 @@ export interface CliResult {
   readonly stdout: string;
   readonly stderr: string;
 }
-const help = `governator registry inspect --story-map PATH --story ID --component ID [--root PATH] [--registry PATH] [--working-dir PATH]
+const help = `governator registry plan --fields PATH [--root PATH] [--registry PATH]
+governator registry register --fields PATH --revision SHA256 [--root PATH] [--registry PATH]
+governator mapping plan --component ID --files PATH [--root PATH] [--mapping PATH] [--registry PATH]
+governator mapping update --component ID --files PATH --revision SHA256 [--root PATH] [--mapping PATH] [--registry PATH]
+governator tags inspect --story-path PATH [--root PATH] [--adapter PACKAGE]
+governator tags plan --story-path PATH --tags PATH [--root PATH] [--adapter PACKAGE]
+governator tags update --story-path PATH --tags PATH --revision SHA256 [--root PATH] [--adapter PACKAGE]
+governator snapshot refresh --mapping PATH --out artifacts/NEW.json [--root PATH] [--target stable]
+governator registry inspect --story-map PATH --story ID --component ID [--root PATH] [--registry PATH] [--working-dir PATH]
 governator registry update --story-map PATH --story ID --component ID --revision SHA256 --fields PATH [--root PATH] [--registry PATH] [--working-dir PATH]
-governator doctor [--root PATH] [--format json|text]
+governator doctor [--root PATH] [--format json|text] [--report PATH] [--snapshot PATH]
 governator validate [--root PATH]
 governator snapshot export --report PATH --out artifacts/NAME.json [--root PATH] [--release PATH --config PATH]
 governator query --snapshot PATH --tool NAME [--args JSON] [--root PATH]
@@ -42,10 +51,13 @@ export async function executeCli(args: readonly string[]): Promise<CliResult> {
   const parsed = await parseCli(args);
   if (parsed.kind === "help") return { code: 0, stdout: parsed.text, stderr: "" };
   const { command, values, demo } = parsed;
-  if (command.startsWith("registry.")) return runRegistryCommand(command, values);
+  if (command.startsWith("tags.")) return runTagCommand(command, values);
+  if (command.startsWith("registry.") || command.startsWith("mapping."))
+    return runRegistryCommand(command, values);
   if (command === "doctor")
-    return doctor(resolve(values.get("--root") ?? "."), values.get("--format") ?? "text");
-  if (command === "snapshot.export" || command === "query") return runQueryCommand(command, values);
+    return doctor(resolve(values.get("--root") ?? "."), values.get("--format") ?? "text", values);
+  if (command === "snapshot.export" || command === "snapshot.refresh" || command === "query")
+    return runQueryCommand(command, values);
   if (command.startsWith("release."))
     return runRelease(command.slice("release.".length), values, demo);
   if (command.startsWith("contracts."))

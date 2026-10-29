@@ -29,7 +29,7 @@ export function inspectAddon(
           (ts.isImportDeclaration(node) && node.importClause?.isTypeOnly) ||
           (ts.isExportDeclaration(node) && node.isTypeOnly);
         if (
-          /^\.\/(?:tag-(?:storage|csf|editor-server)|registry-editor|registry-source)(?:\.|$)/.test(
+          /^\.\/(?:tag-(?:storage|csf|editor-server)|registry-editor|registry-source|authoring)(?:\.|$)/.test(
             name,
           )
         )
@@ -65,6 +65,7 @@ export function inspectEditor(sources: readonly string[]): string[] {
     "node:module",
     "node:util",
     "yaml",
+    "@governator/operations",
     "storybook/internal/csf-tools",
     "storybook/internal/types",
   ]);
@@ -102,7 +103,7 @@ if (import.meta.main) {
   ).scan("."))
     if (!path.endsWith("/generated-validator.mjs")) {
       if (
-        /\/(?:tag-storage|tag-csf|tag-editor-server|registry-editor\.|registry-source\.|story-index|preset|tag-editor\.(?:mjs|d\.mts))/.test(
+        /\/(?:tag-storage|tag-csf|tag-editor-server|authoring\.|registry-editor\.|registry-source\.|story-index|preset|tag-editor\.(?:mjs|d\.mts))/.test(
           path,
         )
       )

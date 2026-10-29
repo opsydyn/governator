@@ -1,19 +1,19 @@
 # Governator Governance addon
 
-Storybook governance panel and opt-in local metadata editor. A 0.1.0 release candidate; unpublished.
+Storybook governance panel and opt-in local metadata editor. Published as 0.1.0 on npm.
 
 ## Addon-only quick start
 
-Use an existing Storybook React/Vite project. The declared and qualified Storybook peer is exactly `10.6.4`. Other renderers and versions have not been qualified. Independent npm and strict-peer pnpm consumers installed and built a local packed addon using reconstructed cache archives with lifecycle scripts disabled. This local evidence does not establish registry availability or original package integrity.
+Use an existing Storybook React/Vite project. The declared and qualified Storybook peer is exactly `10.6.4`. Other renderers and versions have not been qualified. Published 0.1.0 was installed and built in the repository demo. Earlier packed-consumer records describe their own historical qualification conditions.
 
-The package is prepared for a public `0.1.0` release but is not yet published; registry installation is unverified. Given an actual locally packed addon tarball, install it in your consumer project (replace the illustrative path):
+Install the published addon in your consumer project:
 
 ```sh
-npm install --save-dev /absolute/path/to/opsydyn-storybook-addon-governator-0.1.0.tgz
-# Or: pnpm add --save-dev /absolute/path/to/opsydyn-storybook-addon-governator-0.1.0.tgz
+npm install --save-dev @opsydyn/storybook-addon-governator@0.1.0
+# Or: pnpm add --save-dev @opsydyn/storybook-addon-governator@0.1.0
 ```
 
-These commands still require an available source for your project's Storybook dependencies. Local-cache or reconstructed-source qualification does not establish registry availability.
+Your project must also install the supported Storybook peer. See the development workflow documentation for features added after 0.1.0.
 
 Add the package to your existing `.storybook/main.ts` configuration:
 
@@ -99,3 +99,5 @@ The browser bundle has no runtime dependency on the CLI, engine, Effect, Node or
 The addon accepts strict schema 1 and schema 2 reports. Schema 2 shows each selected evidence ID with its reported producer and provenance, canonical UTC observation time, age in seconds at report evaluation, and optional source. Schema 1 details and missing sources are explicitly unknown. Reported metadata does not authenticate producers, and age at evaluation is not a live freshness guarantee. Existing report expiry and reload behavior applies to both versions.
 
 Source references are displayed as text except absolute HTTP(S) URLs without credentials, which are keyboard-accessible links. Relative artifact paths and unsafe schemes remain escaped text. The addon does not fetch evidence sources. Older schema-1-only readers reject schema 2; generate schema 1 for those consumers (the CLI defaults to schema 1; use `--report-schema 2` to opt in).
+
+The development source adds an optional `./authoring` API-1 adapter for CLI tag inspection, plans and updates. It reuses the local editor parser and revision checks. This adapter is not included in published 0.1.0.

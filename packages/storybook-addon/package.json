@@ -29,7 +29,8 @@
     "./preset": "./dist/preset.mjs",
     "./manager": "./dist/manager.js",
     "./tag-editor": "./dist/tag-editor.mjs",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./authoring": "./dist/authoring.mjs"
   },
   "publishConfig": {
     "access": "public",

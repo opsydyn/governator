@@ -19,7 +19,7 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 test.each([1, 2] as const)(
-  "all fourteen tools preserve schema %i release, report and consumer scope without producer activity",
+  "all discovered tools preserve schema %i release, report and consumer scope without producer activity",
   async (version) => {
     const root = await releaseProject();
     roots.push(root);
@@ -82,6 +82,7 @@ test.each([1, 2] as const)(
       evaluate_component: { ...base, targetLifecycle: "stable" },
       explain_governance_failure: { ...base, targetLifecycle: "stable" },
       get_design_system_report: {},
+      list_ready_components: {},
       list_approved_components: {},
       get_component_contract: base,
       diff_component_contract: { ...base, fromVersion: "1.0.0", toVersionOrCandidate: "candidate" },

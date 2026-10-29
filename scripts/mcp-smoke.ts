@@ -82,6 +82,7 @@ const requests: Record<string, Record<string, unknown>> = {
   evaluate_component: { ...base, targetLifecycle: "stable" },
   explain_governance_failure: { ...base, targetLifecycle: "stable" },
   get_design_system_report: {},
+  list_ready_components: {},
   list_approved_components: {},
   get_component_contract: base,
   diff_component_contract: {
