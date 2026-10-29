@@ -160,10 +160,17 @@ test("workflow defaults to manual rehearsal, pins inputs and isolates the npm to
   expect(Object.keys(workflow.on)).toEqual(["workflow_dispatch"]);
   expect(workflow.on.workflow_dispatch.inputs.mode.default).toBe("rehearse");
   expect(workflow.jobs.release.if).toContain("refs/heads/main");
+  expect(workflow.jobs.fetch.permissions.contents).toBe("write");
+  expect(workflow.jobs.release.permissions.contents).toBe("read");
+  expect(workflow.jobs.release.needs).toBe("fetch");
+  expect(JSON.stringify(workflow.jobs.fetch)).not.toMatch(
+    /checkout@|publish-retained|secrets.NPM_TOKEN|id-token/,
+  );
+  expect(JSON.stringify(workflow.jobs.release)).toContain("needs.fetch.outputs.artifact-id");
   expect(text).toContain("governator-v0.2.0-candidate");
   expect(text).toContain("publish-retained.ts");
   expect(text).not.toMatch(/npm pack|changeset publish|bun install|npm install|12892062222/);
-  for (const step of workflow.jobs.release.steps) {
+  for (const step of Object.values<any>(workflow.jobs).flatMap((job) => job.steps)) {
     if (step.uses) expect(step.uses).toMatch(/@[a-f0-9]{40}$/);
     if (JSON.stringify(step).includes("secrets.NPM_TOKEN"))
       expect(step.if).toContain("inputs.mode == 'publish'");

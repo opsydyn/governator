@@ -21,8 +21,34 @@ permissions:
   contents: read
 
 jobs:
+  fetch:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      # GitHub requires push access to see draft releases. This job executes no repository code.
+      contents: write
+    outputs:
+      artifact-id: ${{ steps.transfer.outputs.artifact-id }}
+    steps:
+      - name: Download retained draft candidate assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release download governator-v0.2.0-candidate --repo "$GITHUB_REPOSITORY" --dir candidate \
+            --pattern opsydyn-governator-cli-0.2.0.tgz \
+            --pattern opsydyn-governator-mcp-0.2.0.tgz \
+            --pattern opsydyn-storybook-addon-governator-0.2.0.tgz
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: transfer
+        with:
+          name: retained-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: candidate/*.tgz
+          if-no-files-found: error
+          retention-days: 14
   release:
     if: ${{ github.ref == 'refs/heads/main' }}
+    needs: fetch
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -34,16 +60,13 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24.15.0"
-      - name: Download retained candidate assets
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          gh release download governator-v0.2.0-candidate --repo "$GITHUB_REPOSITORY" --dir candidate \
-            --pattern opsydyn-governator-cli-0.2.0.tgz \
-            --pattern opsydyn-governator-mcp-0.2.0.tgz \
-            --pattern opsydyn-storybook-addon-governator-0.2.0.tgz
-          node scripts/publish-retained.ts verify candidate
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          artifact-ids: ${{ needs.fetch.outputs.artifact-id }}
+          merge-multiple: true
+          path: candidate
+      - name: Verify retained archive hashes
+        run: node scripts/publish-retained.ts verify candidate
       - name: Rehearse archive commands without publication
         if: ${{ inputs.mode == 'rehearse' }}
         run: node scripts/publish-retained.ts rehearse candidate
