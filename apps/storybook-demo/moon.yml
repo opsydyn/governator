@@ -1,4 +1,4 @@
-dependsOn: ["demo-ui", "storybook-addon"]
+dependsOn: ["demo-ui"]
 tasks:
   dev:
     command: "bun run dev"

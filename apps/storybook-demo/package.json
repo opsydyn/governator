@@ -5,11 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "bun --bun storybook dev -p 6006 --host 127.0.0.1 --no-open --disable-telemetry",
-    "build": "bun --bun storybook build --disable-telemetry --output-dir storybook-static"
+    "build": "bun --bun storybook build --disable-telemetry --output-dir storybook-static",
+    "governator:npm": "bun node_modules/governator-npm-cli/dist/main.mjs",
+    "mcp:npm": "bun node_modules/governator-npm-mcp/dist/main.mjs"
   },
   "dependencies": {
     "@example/ui": "workspace:*",
-    "@opsydyn/storybook-addon-governator": "workspace:*",
+    "governator-npm-addon": "npm:@opsydyn/storybook-addon-governator@0.1.0",
+    "governator-npm-cli": "npm:@opsydyn/governator-cli@0.1.0",
+    "governator-npm-mcp": "npm:@opsydyn/governator-mcp@0.1.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
