@@ -154,6 +154,42 @@ jobs:
           done
           echo 'Verified archive attestations for this repository, workflow, branch and source commit.' >> "$GITHUB_STEP_SUMMARY"
 
+  custody:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs: build
+    environment: release-qualification
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24.15.0"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
+          merge-multiple: true
+          path: candidate
+      - name: Exercise sealed archives with loopback-only npm
+        env:
+          CANDIDATE_DIGEST: ${{ needs.build.outputs.candidate-digest }}
+        run: |
+          set -euo pipefail
+          npm_path=$(command -v npm)
+          node_path=$(command -v node)
+          sudo unshare --net --fork /bin/sh -c 'set -eu; /usr/sbin/ip link set lo up; exec /usr/bin/python3 "$1" fixture "$2" "$3" "$4" "$5" "$6"' sh "$GITHUB_WORKSPACE/scripts/qualify-linux-custody.py" "$GITHUB_WORKSPACE/candidate" "$CANDIDATE_DIGEST" "$GITHUB_SHA" "$npm_path" "$node_path" > "$RUNNER_TEMP/sealed-custody.json"
+          echo 'Sealed archive fixture passed. This is not a real npm publication.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: governator-sealed-custody-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/sealed-custody.json
+          if-no-files-found: error
+          retention-days: 30
+
   authentication:
     if: ${{ github.ref == 'refs/heads/main' }}
     environment: release-qualification

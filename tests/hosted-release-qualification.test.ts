@@ -28,6 +28,8 @@ describe("hosted release qualification workflow", () => {
     const value = workflow();
     expect(JSON.stringify(value.jobs.build)).not.toContain("secrets.NPM_TOKEN");
     expect(JSON.stringify(value.jobs.attest)).not.toContain("secrets.NPM_TOKEN");
+    expect(JSON.stringify(value.jobs.custody)).not.toContain("secrets.NPM_TOKEN");
+    expect(JSON.stringify(value.jobs.custody)).toContain("unshare --net --fork");
     expect(JSON.stringify(value.jobs.authentication)).toContain("secrets.NPM_TOKEN");
     expect(value.jobs.authentication.environment).toBe("release-qualification");
     expect(value.jobs.attest.permissions["id-token"]).toBe("write");
