@@ -1,0 +1,24 @@
+# Production release path review
+
+This review covers the 0.1.0 candidate from commit `bcd9f8b34cbcead77f696e06b3867ee0ae5cc6e6` and the non-publishing [hosted qualification run](https://github.com/opsydyn/governator/actions/runs/40844090645). The intended packages are `@opsydyn/governator-cli`, `@opsydyn/governator-mcp`, and `@opsydyn/storybook-addon-governator`. The reviewed candidate digest is `56de4c58f63abddd512054c049b6a43bfb77a222d372ae65c497d3ffeebd1962`.
+
+The release command and release workflow are disabled. No part of this review authorizes a registry write. Changesets continues to prepare version intent; it must not repack the selected archives for publication.
+
+## Established evidence
+
+- The hosted run captured three archives, verified their digests after artifact transfer, attested them, and verified the attestation identity. The source-build claim is limited to the hosted workflow and is not an independent reproducible-build claim.
+- The retained addon archive with SHA-256 `dc10d06cfff219ae9f17d4e308041b5e42d1b92174eb9b598062023b4b061ffa` passed independent npm and pnpm installs and no-report Storybook builds using reconstructed dependency archives from a local cache. The local evidence is `artifacts/addon-consumer-no3l4a9_/summary.json` (ignored by Git and must be preserved separately); browser interactions and configured-report builds were not exercised.
+- The Linux fixture used a fresh loopback-only network namespace, sealed memory files and an unprivileged npm child with dummy credentials. Its fake registry received the selected bytes. This qualifies the fixture, not a real npm transport.
+- The injected coordinator checks all packages before sending, stops on conflicts or unknown outcomes, and checks registry readback before declaring a fixture package verified. Its in-memory receipts are not a durable production journal.
+- The npm token authenticated in the hosted job; the owner reported that the account has permission for `@opsydyn`. Authentication does not establish that the token can create these specific packages, bypass required 2FA, or publish with provenance.
+
+## Production gaps
+
+1. Build a single production controller that binds the selected artifact run and digest to the authorized release decision and validates the exact archive set and embedded package manifests before a registry operation. The current release workflow does not do this.
+2. Integrate the Linux sealed-descriptor boundary with the real npm transport and the coordinator; the existing mutable-file npm transport accepts only a loopback registry and rejects provenance; its child network boundary comes from the fixture sandbox. Prove that the unprivileged npm process receives those sealed descriptors and cannot replace paths or modify bytes under the production runner's actual privileges. Do not silently fall back to writable files.
+3. Qualify authenticated npm metadata and archive readback, size limits, redirects, registry identity and exact bytes. A 404 may also mean an inaccessible private package, so do not treat an unauthenticated 404 alone as proof that publishing a name is safe. A preflight does not reserve a version atomically.
+4. Persist a non-secret per-package journal that distinguishes not attempted, verified, conflict and unknown outcomes. After an interrupted send, independently read back before retrying and stop on conflicts or ambiguity. A three-package release is not atomic.
+5. Establish provenance for the actual publish environment and be explicit that publisher-run provenance alone is not proof that a separate workflow reproducibly built the archives. Preserve the archive attestations, run IDs, candidate record, operator decision and registry readback with the release evidence.
+6. Verify actual token restrictions and npm requirements at the release gate. npm says non-interactive direct token publishing requires suitable package/scope write permissions and bypass-2FA settings; npm also states direct publishing with granular tokens will be removed in January 2027. See [npm token documentation](https://docs.npmjs.com/about-access-tokens/) and [npm 2FA requirements](https://docs.npmjs.com/requiring-2fa-for-package-publishing-and-settings-modification/). Trusted publishing is a possible longer-term alternative, but its npm-side configuration and first-release bootstrap are not established here; see [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/).
+
+Qualify the complete controller against a confined fake registry, including mutation attempts, interrupted transfers, conflicting existing versions and retry. Then review its workflow and real credential/provenance configuration before any separately authorized live release. Do not report a fixture pass as production publication evidence.

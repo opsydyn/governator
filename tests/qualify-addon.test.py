@@ -2,6 +2,7 @@
 import importlib.util
 from pathlib import Path
 import tempfile
+import hashlib
 import sys
 sys.dont_write_bytecode = True
 import unittest
@@ -68,6 +69,33 @@ class QualificationSafety(unittest.TestCase):
             qualification.validate_candidate_file('file:../candidate.tgz', root / 'consumer', candidate)
             with self.assertRaises(ValueError):
                 qualification.validate_candidate_file('file:../other.tgz', root / 'consumer', candidate)
+
+    def test_retained_archive_snapshot_requires_exact_digest_and_regular_input(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source, target = root / 'source.tgz', root / 'retained.tgz'
+            source.write_bytes(b'exact reviewed bytes')
+            digest = hashlib.sha256(source.read_bytes()).hexdigest()
+            qualification.snapshot_retained_archive(source, target, digest)
+            self.assertEqual(target.read_bytes(), source.read_bytes())
+            with self.assertRaises(ValueError):
+                qualification.snapshot_retained_archive(source, root / 'wrong.tgz', '0' * 64)
+            link = root / 'link.tgz'
+            link.symlink_to(source)
+            with self.assertRaises(ValueError):
+                qualification.snapshot_retained_archive(link, root / 'link-copy.tgz', digest)
+            with self.assertRaises(FileExistsError):
+                qualification.snapshot_retained_archive(source, target, digest)
+
+    def test_retained_digest_is_rechecked_against_selected_hash(self):
+        with tempfile.TemporaryDirectory() as directory:
+            archive = Path(directory) / 'archive.tgz'
+            archive.write_bytes(b'approved')
+            digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+            qualification.verify_retained_digest(archive, digest)
+            archive.write_bytes(b'changed')
+            with self.assertRaises(ValueError):
+                qualification.verify_retained_digest(archive, digest)
 
     def test_internal_pnpm_symlinks_allowed(self):
         with tempfile.TemporaryDirectory() as directory:

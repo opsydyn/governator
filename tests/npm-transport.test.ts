@@ -92,7 +92,7 @@ test("rejects archive publishConfig routing before starting npm", async () => {
       await writeFile(join(dir, "package", name), "test");
     await create({ gzip: true, cwd: dir, file: join(dir, "candidate.tgz") }, ["package"]);
     const port = npmTransport({
-      registry: new URL("https://registry.npmjs.org/"),
+      registry: new URL("http://127.0.0.1:12345/"),
       npmPath: "/nonexistent/npm",
       token: "dummy",
       provenance: false,
@@ -104,4 +104,35 @@ test("rejects archive publishConfig routing before starting npm", async () => {
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("refuses to construct the mutable-file transport for the public npm registry", () => {
+  expect(() =>
+    npmTransport({
+      registry: new URL("https://registry.npmjs.org/"),
+      npmPath: "/nonexistent/npm",
+      token: "dummy",
+      provenance: false,
+      path: "/usr/bin:/bin",
+    }),
+  ).toThrow(/fixture|loopback/i);
+});
+
+test("fixture transport rejects provenance and non-loopback registries", () => {
+  const options = {
+    npmPath: "/nonexistent/npm",
+    token: "dummy",
+    provenance: true,
+    path: "/usr/bin:/bin",
+    provenanceEnv: {
+      ACTIONS_ID_TOKEN_REQUEST_URL: "https://example.invalid",
+      ACTIONS_ID_TOKEN_REQUEST_TOKEN: "dummy",
+    },
+  };
+  expect(() => npmTransport({ ...options, registry: new URL("http://127.0.0.1:12345/") })).toThrow(
+    /provenance/i,
+  );
+  expect(() =>
+    npmTransport({ ...options, provenance: false, registry: new URL("http://example.com:12345/") }),
+  ).toThrow(/loopback/i);
 });

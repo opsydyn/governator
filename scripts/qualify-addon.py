@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Independent npm/pnpm addon qualification. Local reconstructed cache only; never publish.
-Usage: python3 scripts/qualify-addon.py [extracted-cache] [copied-v2-report]
+Usage: python3 scripts/qualify-addon.py [extracted-cache] [copied-v2-report] [--archive PATH --sha256 DIGEST]
 Package-manager and build commands are OS-confined to loopback, after positive/negative probes.
 No existing files or directories are removed. Failed attempts remain available.
 """
+import argparse
 import hashlib
+import stat
 import json
 import os
 import re
@@ -79,6 +81,33 @@ def stage_candidate(package, output, destination):
     safe_output(destination / 'dist')
 
 
+def snapshot_retained_archive(source, target, digest):
+    if not re.fullmatch(r'[a-f0-9]{64}', digest):
+        raise ValueError('Invalid archive digest')
+    try:
+        fd = os.open(source, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError as error:
+        raise ValueError('Archive must be a regular file, not a symlink') from error
+    try:
+        meta = os.fstat(fd)
+        if not stat.S_ISREG(meta.st_mode) or not 0 < meta.st_size <= 16 * 1024 * 1024:
+            raise ValueError('Invalid archive')
+        with os.fdopen(fd, 'rb', closefd=False) as stream:
+            data = stream.read(16 * 1024 * 1024 + 1)
+        if len(data) != meta.st_size or hashlib.sha256(data).hexdigest() != digest:
+            raise ValueError('Retained archive digest mismatch')
+    finally:
+        os.close(fd)
+    with open(target, 'xb') as stream:
+        stream.write(data)
+    return digest
+
+
+def verify_retained_digest(archive, digest):
+    if hashlib.sha256(archive.read_bytes()).hexdigest() != digest:
+        raise ValueError('Candidate archive changed during consumer qualification')
+
+
 def assert_no_ancestor_modules(root):
     for ancestor in root.parents:
         if (ancestor / 'node_modules').exists():
@@ -86,6 +115,14 @@ def assert_no_ancestor_modules(root):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('cache', nargs='?')
+    parser.add_argument('report', nargs='?')
+    parser.add_argument('--archive', type=Path)
+    parser.add_argument('--sha256')
+    args = parser.parse_args()
+    if bool(args.archive) != bool(args.sha256):
+        parser.error('--archive and --sha256 must be provided together')
     repo = Path(__file__).resolve().parent.parent
     evidence = Path(tempfile.mkdtemp(prefix='addon-consumer-', dir=repo / 'artifacts'))
     home = Path(tempfile.mkdtemp(prefix='governator-addon-', dir='/private/tmp')).resolve()
@@ -109,7 +146,7 @@ def main():
 
     try:
         summary['sourceCommit'] = run('source-commit', ['git', '-C', repo, 'rev-parse', 'HEAD']).stdout.decode().strip()
-        registry_process = subprocess.Popen(['/usr/bin/sandbox-exec', '-p', PROFILE, 'python3', str(repo / 'scripts/local-cache-registry.py'), '--cache', str(Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path.home() / '.bun/install/cache'), '--evidence', str(evidence / 'selected-local-packages.json')], stdout=subprocess.PIPE, stderr=open(evidence / 'registry.stderr', 'wb'), env=env)
+        registry_process = subprocess.Popen(['/usr/bin/sandbox-exec', '-p', PROFILE, 'python3', str(repo / 'scripts/local-cache-registry.py'), '--cache', str(Path(args.cache).resolve() if args.cache else Path.home() / '.bun/install/cache'), '--evidence', str(evidence / 'selected-local-packages.json')], stdout=subprocess.PIPE, stderr=open(evidence / 'registry.stderr', 'wb'), env=env)
         registry = json.loads(registry_process.stdout.readline())['registry']
         summary['registry'] = registry
         port = int(registry.rsplit(':', 1)[1])
@@ -122,43 +159,55 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
         if probe.returncode:
             raise RuntimeError('OS network confinement probe failed; package managers not run')
         summary['networkConfinement'] = 'sandbox-exec network deny, localhost outbound exception; positive loopback connect and negative external EPERM proven before package managers'
-        before = source_hashes(repo)
-        package = repo / 'packages/storybook-addon'
-        repo_dist = directory_hashes(package / 'dist')
-        fresh_dist = home / 'fresh-addon-dist'
-        assert not fresh_dist.exists(), 'Addon build output must be fresh'
-        safe_output(fresh_dist)
-        rebuilt = run('addon-build', ['bun', '--bun', 'tsdown', '--out-dir', fresh_dist, '--no-clean'], package)
-        if rebuilt.returncode:
-            raise RuntimeError('Current-source addon build failed')
-        editor = run('addon-editor-build', ['bun', '--bun', 'tsdown', '--config', 'tsdown.tag-editor.config.ts', '--out-dir', fresh_dist, '--no-clean'], package)
-        if editor.returncode:
-            raise RuntimeError('Current-source addon editor build failed')
-        after = source_hashes(repo)
-        assert before == after, 'Addon source changed during build'
-        assert directory_hashes(package / 'dist') == repo_dist, 'Repository addon dist changed during fresh build'
-        summary['repositoryDistBefore'] = repo_dist
-        summary['repositoryDistAfter'] = directory_hashes(package / 'dist')
-        summary['buildSourceBefore'] = before
-        summary['buildSourceAfter'] = after
-        summary['builtOutput'] = directory_hashes(fresh_dist)
-        staged = home / 'staged-addon-package'
-        stage_candidate(package, fresh_dist, staged)
-        summary['stagedPackage'] = str(staged)
         packed = evidence / 'addon.tgz'
-        result = run('bun-pack', ['bun', 'pm', 'pack', '--ignore-scripts', '--filename', packed], staged)
-        if result.returncode:
-            raise RuntimeError('Bun pack failed')
+        if args.archive:
+            snapshot_retained_archive(args.archive, packed, args.sha256)
+            summary['archiveSource'] = str(args.archive.absolute())
+            summary['archiveMode'] = 'retained exact archive'
+            summary['checkoutContext'] = 'Runner checkout metadata only; it does not establish archive provenance'
+        else:
+            before = source_hashes(repo)
+            package = repo / 'packages/storybook-addon'
+            repo_dist = directory_hashes(package / 'dist')
+            fresh_dist = home / 'fresh-addon-dist'
+            assert not fresh_dist.exists(), 'Addon build output must be fresh'
+            safe_output(fresh_dist)
+            rebuilt = run('addon-build', ['bun', '--bun', 'tsdown', '--out-dir', fresh_dist, '--no-clean'], package)
+            if rebuilt.returncode:
+                raise RuntimeError('Current-source addon build failed')
+            editor = run('addon-editor-build', ['bun', '--bun', 'tsdown', '--config', 'tsdown.tag-editor.config.ts', '--out-dir', fresh_dist, '--no-clean'], package)
+            if editor.returncode:
+                raise RuntimeError('Current-source addon editor build failed')
+            after = source_hashes(repo)
+            assert before == after, 'Addon source changed during build'
+            assert directory_hashes(package / 'dist') == repo_dist, 'Repository addon dist changed during fresh build'
+            summary['repositoryDistBefore'] = repo_dist
+            summary['repositoryDistAfter'] = directory_hashes(package / 'dist')
+            summary['buildSourceBefore'] = before
+            summary['buildSourceAfter'] = after
+            summary['builtOutput'] = directory_hashes(fresh_dist)
+            staged = home / 'staged-addon-package'
+            stage_candidate(package, fresh_dist, staged)
+            summary['stagedPackage'] = str(staged)
+            packed = evidence / 'addon.tgz'
+            result = run('bun-pack', ['bun', 'pm', 'pack', '--ignore-scripts', '--filename', packed], staged)
+            if result.returncode:
+                raise RuntimeError('Bun pack failed')
+
         extracted = run('packed-manifest', ['tar', '-xOf', str(packed), 'package/package.json'])
         assert extracted.returncode == 0, 'Packed manifest read failed'
         candidate = extracted.stdout
         manifest = json.loads(candidate)
+        assert manifest['name'] == '@opsydyn/storybook-addon-governator'
+        assert manifest['version'] == ('0.1.0' if args.archive else json.loads((repo / 'packages/storybook-addon/package.json').read_text())['version'])
         assert manifest['peerDependencies'] == {'storybook': '10.6.4'}
         assert not manifest.get('dependencies')
         assert manifest['storybook']['supportedFrameworks'] == ['react']
         summary['candidate'] = {'sha256': hashlib.sha256(packed.read_bytes()).hexdigest(), 'manifest': manifest}
         summary['runnerSha256'] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
         summary['sourceFiles'] = {str(p.relative_to(repo)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted((repo / 'packages/storybook-addon/src').rglob('*')) if p.is_file()}
+        archive_sha256 = args.sha256 if args.archive else hashlib.sha256(packed.read_bytes()).hexdigest()
+        verify_retained_digest(packed, archive_sha256)
         for manager in ['npm', 'pnpm']:
             root = home / manager
             root.mkdir()
@@ -180,9 +229,11 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
                 (root / '.storybook/preview.ts').write_text("export default {parameters:{governance:{registryEditor:true}}};\n")
                 (root / 'src/Button.stories.tsx').write_text("import React from 'react'; const Button=()=> <button>Independent consumer</button>; export default {title:'Button',component:Button,parameters:{governance:{componentId:'ui.button'}}}; export const Default={};\n")
                 pnpm = Path.home() / '.cache/node/corepack/v1/pnpm/11.9.0/bin/pnpm.cjs'
-                args = ([manager] if manager == 'npm' else ['node', str(pnpm)]) + ['install', '--ignore-scripts', '--registry', registry]
-                args += ['--strict-peer-deps', '--no-audit', '--no-fund'] if manager == 'npm' else ['--strict-peer-dependencies', '--store-dir', str(root / 'pnpm-store'), '--config.manage-package-manager-versions=false']
-                installed = run(manager + '-install', args, root)
+                command = ([manager] if manager == 'npm' else ['node', str(pnpm)]) + ['install', '--ignore-scripts', '--registry', registry]
+                command += ['--strict-peer-deps', '--no-audit', '--no-fund'] if manager == 'npm' else ['--strict-peer-dependencies', '--store-dir', str(root / 'pnpm-store'), '--config.manage-package-manager-versions=false']
+                verify_retained_digest(packed, archive_sha256)
+                installed = run(manager + '-install', command, root)
+                verify_retained_digest(packed, archive_sha256)
                 case['install'] = 'passed' if installed.returncode == 0 else 'blocked-or-failed'
                 if installed.returncode:
                     continue
@@ -207,8 +258,9 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
                 case['lockSha256'] = hashlib.sha256(lock.read_bytes()).hexdigest()
                 case['links'] = 'all symlinks remain within independent consumer'
                 built = run(manager + '-build-no-report', ['node', str(root / 'node_modules/storybook/dist/bin/dispatcher.js'), 'build', '--disable-telemetry', '--output-dir', str(root / 'storybook-static')], root)
+                verify_retained_digest(packed, archive_sha256)
                 case['buildNoReport'] = 'passed' if built.returncode == 0 else 'blocked-or-failed'
-                report_path = Path(sys.argv[2]).resolve() if len(sys.argv) > 2 else None
+                report_path = Path(args.report).resolve() if args.report else None
                 if report_path and built.returncode == 0:
                     report_data = report_path.read_bytes()
                     report = json.loads(report_data)
@@ -221,6 +273,7 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
                     with (root / 'src/Button.stories.tsx').open('a') as story:
                         story.write("export const Configured={parameters:{governance:{componentId:'ui.button',reportUrl:'/governance.json'}}};\n")
                     configured = run(manager + '-build-configured-report', ['node', str(root / 'node_modules/storybook/dist/bin/dispatcher.js'), 'build', '--disable-telemetry', '--output-dir', str(root / 'storybook-configured-static')], root)
+                    verify_retained_digest(packed, archive_sha256)
                     case['buildConfiguredReport'] = 'passed' if configured.returncode == 0 else 'blocked-or-failed'
 
             except Exception as error:
@@ -233,7 +286,7 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
             registry_process.wait(timeout=10)
         (evidence / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
         print(json.dumps(summary, indent=2))
-    passed = len(summary['cases']) == 2 and all(c.get('buildNoReport') == 'passed' and (len(sys.argv) <= 2 or c.get('buildConfiguredReport') == 'passed') for c in summary['cases'].values())
+    passed = len(summary['cases']) == 2 and all(c.get('buildNoReport') == 'passed' and (not args.report or c.get('buildConfiguredReport') == 'passed') for c in summary['cases'].values())
     return 0 if passed else 1
 
 

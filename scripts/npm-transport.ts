@@ -1,4 +1,4 @@
-/* Unwired npm transport. A trusted isolated runner and separately approved workflow are required. */
+/* Fixture-only npm transport. Mutable staging is not suitable for production archive custody. */
 /* oxlint-disable linteffect/no-string-sentinel-const, linteffect/no-return-in-arrow, linteffect/no-try-catch, linteffect/no-if-statement, linteffect/no-magic-domain-string, linteffect/no-process-env-direct-read, linteffect/no-boundary-try-catch-without-effect-map, linteffect/no-naked-object-state-update */
 import { spawn } from "node:child_process";
 import { mkdtemp, open, readFile, rm, writeFile } from "node:fs/promises";
@@ -84,33 +84,14 @@ export function npmTransport(options: {
   token: string;
   provenance: boolean;
   path: string;
-  provenanceEnv?: Readonly<Record<string, string>>;
 }): RegistryPort {
-  ensure(validRegistry(options.registry), "Unsupported registry");
+  ensure(
+    validRegistry(options.registry) && options.registry.protocol === "http:",
+    "Fixture transport requires a loopback registry",
+  );
   ensure(isAbsolute(options.npmPath), "npm executable must be absolute");
   ensure(/^[\x21-\x7e]+$/.test(options.token), "Invalid npm token");
-  const provenanceKeys = [
-    "ACTIONS_ID_TOKEN_REQUEST_URL",
-    "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
-    "GITHUB_ACTIONS",
-    "GITHUB_REPOSITORY",
-    "GITHUB_SHA",
-    "GITHUB_REF",
-    "GITHUB_RUN_ID",
-    "GITHUB_RUN_ATTEMPT",
-    "GITHUB_SERVER_URL",
-    "GITHUB_WORKFLOW_REF",
-  ] as const;
-  if (options.provenance)
-    ensure(
-      provenanceKeys.slice(0, 2).every((key) => Boolean(options.provenanceEnv?.[key])),
-      "OIDC environment is required for provenance",
-    );
-  const provenanceEnv: Record<string, string> = {};
-  for (const key of provenanceKeys) {
-    const value = options.provenanceEnv?.[key];
-    if (value) provenanceEnv[key] = value;
-  }
+  ensure(options.provenance === false, "Fixture transport cannot enable provenance");
   const registry = new URL(options.registry.href);
   return {
     read: (name, version) => readNpmVersion(registry, name, version),
@@ -161,7 +142,6 @@ export function npmTransport(options: {
             {
               cwd: dir,
               env: {
-                ...provenanceEnv,
                 PATH: options.path,
                 HOME: dir,
                 TMPDIR: dir,
