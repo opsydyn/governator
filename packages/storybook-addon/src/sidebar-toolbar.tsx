@@ -1,6 +1,7 @@
 /** @jsxRuntime classic */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParameter, useStorybookApi, useStorybookState } from "storybook/manager-api";
+import { WithTooltip } from "storybook/internal/components";
 import { STORY_INDEX_INVALIDATED } from "storybook/internal/core-events";
 import { useTheme } from "storybook/theming";
 import {
@@ -267,39 +268,27 @@ export function GovernanceSidebarFilter() {
         <option value="ready">Ready</option>
       </select>
       {!available && (
-        <span style={{ position: "relative" }}>
-          <button
-            type="button"
-            aria-label="Readiness filter help"
-            aria-expanded={helpOpen}
-            onClick={() => setHelpOpen((open) => !open)}
-          >
-            Status
-          </button>
-          {helpOpen && (
-            <span
+        <WithTooltip
+          trigger="click"
+          placement="bottom-end"
+          closeOnOutsideClick
+          interactive
+          hasChrome
+          onVisibleChange={setHelpOpen}
+          tooltip={({ onHide }) => (
+            <div
               role="status"
-              style={{
-                position: "absolute",
-                zIndex: 10,
-                top: "calc(100% + 6px)",
-                right: 0,
-                width: 260,
-                whiteSpace: "normal",
-                lineHeight: 1.4,
-                padding: 10,
-                color: theme.color.defaultText,
-                background: theme.background.content,
-                border: "1px solid currentColor",
-                boxShadow: "0 4px 16px rgba(0,0,0,.2)",
-              }}
+              aria-live="polite"
+              style={{ width: 260, padding: 10, whiteSpace: "normal", lineHeight: 1.4 }}
             >
-              {reason}
+              <strong style={{ display: "block", marginBottom: 4 }}>Readiness unavailable</strong>
+              <span>{reason}</span>
               {!composed && (
                 <button
                   type="button"
                   aria-label="Retry readiness filter"
                   onClick={() => {
+                    onHide();
                     setError(false);
                     setMapRetry((value) => value + 1);
                     setRetry((value) => value + 1);
@@ -309,9 +298,13 @@ export function GovernanceSidebarFilter() {
                   Retry
                 </button>
               )}
-            </span>
+            </div>
           )}
-        </span>
+        >
+          <button type="button" aria-label="Readiness filter help" aria-expanded={helpOpen}>
+            Status
+          </button>
+        </WithTooltip>
       )}
     </div>
   );

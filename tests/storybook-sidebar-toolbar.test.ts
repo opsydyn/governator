@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { stubStorybookGlobal } from "./storybook-static-fetch.ts";
 import React, { act } from "react";
+import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { expect, test, vi } from "vitest";
 import { evaluate } from "../packages/core/src/index.ts";
@@ -36,6 +37,33 @@ const api = {
   },
   experimental_setFilters: sb.set,
 };
+function WithTooltipTestDouble({
+  children,
+  tooltip,
+  onVisibleChange,
+}: {
+  children: React.ReactNode;
+  tooltip: React.ReactNode | ((controls: { onHide: () => void }) => React.ReactNode);
+  onVisibleChange?: (visible: boolean) => void;
+}) {
+  // oxlint-disable-next-line linteffect/no-react-state -- the test double mirrors Storybook's local disclosure state
+  const [open, setOpen] = React.useState(false);
+  const setVisible = (visible: boolean) => {
+    setOpen(visible);
+    onVisibleChange?.(visible);
+  };
+  return React.createElement(
+    React.Fragment,
+    null,
+    React.createElement("span", { onClick: () => setVisible(!open) }, children),
+    open
+      ? createPortal(
+          typeof tooltip === "function" ? tooltip({ onHide: () => setVisible(false) }) : tooltip,
+          document.body,
+        )
+      : null,
+  );
+}
 vi.mock("storybook/manager-api", () => ({
   useStorybookApi: () => api,
   useStorybookState: () => ({ index: sb.index, refs: sb.refs }),
@@ -48,6 +76,7 @@ vi.mock("storybook/theming", () => ({
     background: { content: "white" },
   }),
 }));
+vi.mock("storybook/internal/components", () => ({ WithTooltip: WithTooltipTestDouble }));
 import { GovernanceSidebarFilter } from "../packages/storybook-addon/src/sidebar-toolbar.tsx";
 
 test("applies the named filter, preserves unknown entries, and clears on report expiry", async () => {
@@ -165,7 +194,9 @@ test("no report keeps the sidebar unfiltered and the control unavailable", async
   const help = el.querySelector<HTMLButtonElement>('[aria-label="Readiness filter help"]');
   expect(help).not.toBeNull();
   await act(async () => help!.click());
-  expect(el.textContent).toContain("governance report not configured");
+  expect(document.body.querySelector('[role="status"]')?.textContent).toContain(
+    "governance report not configured",
+  );
   await act(async () => root.unmount());
   el.remove();
   sb.params = { reportUrl: "/report.json" };
@@ -385,7 +416,7 @@ test("enabled local source verification keeps a mismatched report from filtering
   await act(async () =>
     el.querySelector<HTMLButtonElement>('button[aria-label="Readiness filter help"]')!.click(),
   );
-  expect(el.textContent).toContain(
+  expect(document.body.querySelector('[role="status"]')?.textContent).toContain(
     "Report does not match this checkout. Regenerate the report, then retry.",
   );
   await act(async () => root.unmount());
@@ -819,8 +850,12 @@ test("explains a missing story map and can retry after it becomes available", as
   await act(async () =>
     el.querySelector<HTMLButtonElement>('button[aria-label="Readiness filter help"]')!.click(),
   );
-  expect(el.textContent).toMatch(/story mapping.*unavailable/i);
-  const retry = el.querySelector<HTMLButtonElement>('button[aria-label="Retry readiness filter"]')!;
+  expect(document.body.querySelector('[role="status"]')?.textContent).toMatch(
+    /story mapping.*unavailable/i,
+  );
+  const retry = document.body.querySelector<HTMLButtonElement>(
+    'button[aria-label="Retry readiness filter"]',
+  )!;
   expect(retry).not.toBeNull();
   available = true;
   await act(async () => {
@@ -858,7 +893,10 @@ test("explains a failed configured report instead of asking to select a story", 
   await act(async () =>
     el.querySelector<HTMLButtonElement>('button[aria-label="Readiness filter help"]')!.click(),
   );
-  expect(el.textContent).toContain("governance report unavailable (HTTP 404)");
+  expect(el.querySelector('[role="status"]')).toBeNull();
+  expect(document.body.querySelector('[role="status"]')?.textContent).toContain(
+    "governance report unavailable (HTTP 404)",
+  );
   await act(async () => root.unmount());
   el.remove();
   sb.params = { reportUrl: "/report.json" };
@@ -910,7 +948,9 @@ test("retry publishes the refreshed report for sidebar labels", async () => {
     el.querySelector<HTMLButtonElement>('button[aria-label="Readiness filter help"]')!.click();
   });
   await act(async () => {
-    el.querySelector<HTMLButtonElement>('button[aria-label="Retry readiness filter"]')!.click();
+    document.body
+      .querySelector<HTMLButtonElement>('button[aria-label="Retry readiness filter"]')!
+      .click();
     for (let i = 0; i < 20; i++) await Promise.resolve();
   });
   expect(events).toContain("ready");
