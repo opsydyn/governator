@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "mode": "local-candidate-inventory",
+  "repository": "https://github.com/opsydyn/governator",
+  "sourceCommit": "cfd81a9f7a2285a42ad850498071693b8d8cbf7a",
+  "version": "0.2.0",
+  "packages": [
+    {
+      "name": "@opsydyn/governator-cli",
+      "version": "0.2.0",
+      "archive": "opsydyn-governator-cli-0.2.0.tgz",
+      "size": 263529,
+      "sha256": "9446366783b9731914b72b4f4c51dd1c781f76fccb5e06bf542d721c9e82d629",
+      "integrity": "sha512-RXOebpp1btE3YEM2mF5e7wDoGmmWxqFKtWvydH7/lhOtFjU5Nz6ySdNrf9bH+dfixnMse1GdBZwJym8iPJ5d7Q=="
+    },
+    {
+      "name": "@opsydyn/governator-mcp",
+      "version": "0.2.0",
+      "archive": "opsydyn-governator-mcp-0.2.0.tgz",
+      "size": 287139,
+      "sha256": "2fa7837b2be01e43d22cf088e43e0c73ba4316c5b0d1ddb3206dd1d6dcfe6901",
+      "integrity": "sha512-P5AwNL0Phr/81nivRcXuUoR2ByXv+kMp4vmkg8eCvjTr8+idw5jyuxEOmEBSB+iv9PhVEjLycjNUA5U2k+a4XQ=="
+    },
+    {
+      "name": "@opsydyn/storybook-addon-governator",
+      "version": "0.2.0",
+      "archive": "opsydyn-storybook-addon-governator-0.2.0.tgz",
+      "size": 161836,
+      "sha256": "fbb4050b2d970a755bc0c9e9e407f068c932af437fb4f05f2379ae7976e00639",
+      "integrity": "sha512-wUDUzrkU3j8fBgQajYPfDjBFExGERTNn3BCYaNPWG8GpUOeJTXpggotPDIu7OV3mxlCl9YlYFX1VOpBMlLZNHA=="
+    }
+  ],
+  "publication": "disabled",
+  "manualAcceptance": "deferred",
+  "publishingAdapter": "historical 0.1.0 workflow not qualified for this candidate"
+}
