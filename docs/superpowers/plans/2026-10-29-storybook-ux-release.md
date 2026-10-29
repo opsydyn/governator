@@ -48,12 +48,12 @@
 - Produces: `readinessView(gate)` returning shared label, tone and accessible description; `componentStatusForStory(storyId, storyMap, report)` returning a decision only for validated mapped identities; selected-report status context keyed by report URL and verification mode.
 - Consumes: existing `storiesByComponent`, report observations, story index invalidation and source/freshness verification.
 
-- [ ] **Step 1: Write failing tests** for shared Ready / Blocked / Missing evidence vocabulary, validated mapped-story decisions, unloaded stories in the selected report, unknown mappings and invalidated maps.
-- [ ] **Step 2: Run focused tests and confirm RED** with mismatched labels and no shared mapped-status helper.
-- [ ] **Step 3: Implement the browser-safe status view model** and use it in finder, panel and sidebar without weakening source/freshness checks.
-- [ ] **Step 4: Make sidebar scope explicit** for the selected report; aggregate parents only when descendants are unambiguous, otherwise show Unknown or Mixed rather than a false decision.
-- [ ] **Step 5: Run focused tests and confirm GREEN**, then run all Storybook filter/navigation tests.
-- [ ] **Step 6: Commit** as `feat: unify Storybook governance status`.
+- [x] **Step 1: Write failing tests** for shared Ready / Blocked / Missing evidence vocabulary, validated mapped-story decisions, unloaded stories in the selected report, unknown mappings and invalidated maps.
+- [x] **Step 2: Run focused tests and confirm RED** with mismatched labels and no shared mapped-status helper.
+- [x] **Step 3: Implement the browser-safe status view model** and use it in finder, panel and sidebar without weakening source/freshness checks.
+- [x] **Step 4: Make sidebar scope explicit** for the selected report; aggregate parents only when descendants are unambiguous, otherwise show Unknown or Mixed rather than a false decision.
+- [x] **Step 5: Run focused tests and confirm GREEN**, then run all Storybook filter/navigation tests.
+- [x] **Step 6: Commit** as `feat: unify Storybook governance status`.
 
 ### Task 2: Decision-first panel, explicit modes and responsive brand system
 

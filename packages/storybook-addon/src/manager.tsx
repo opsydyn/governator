@@ -1,6 +1,6 @@
 /** @jsxRuntime classic */
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import type { API, HashEntry } from "storybook/manager-api";
+import type { HashEntry } from "storybook/manager-api";
 import {
   addons,
   types,
@@ -15,7 +15,6 @@ import { useTheme } from "storybook/theming";
 import {
   loadReport,
   publishReportObservation,
-  subscribeReportObservations,
   reportExpiry,
   revalidateReport,
   watchReportSource,
@@ -28,6 +27,12 @@ import { Discovery } from "./discovery.tsx";
 import { GovernanceSidebarFilter } from "./sidebar-toolbar.tsx";
 import { brandCss } from "./brand.ts";
 import { governatorLogo } from "./logo.ts";
+import {
+  readinessView,
+  selectedReportStatus,
+  sidebarStatus,
+  subscribeSelectedReportStatus,
+} from "./status-view.ts";
 
 // Storybook may unmount the panel while the manager stays open.
 const tagDrafts = new Map<string, TagDraft>();
@@ -555,123 +560,23 @@ function Panel() {
     </FocusRecovery>
   );
 }
-const sidebarReports = new Map<string, { at: number; promise: Promise<ReportState> }>();
-const sidebarLoadingObservations = new WeakSet<object>();
-function sidebarReport(url: string, verifySource: boolean): Promise<ReportState> {
-  const key = `${url}|${verifySource}`;
-  const cached = sidebarReports.get(key);
-  if (cached && Date.now() - cached.at < 30_000) return cached.promise;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10_000);
-  const promise = loadReport(
-    url,
-    window.location.href,
-    Date.now,
-    fetch,
-    controller.signal,
-    verifySource,
-  ).finally(() => clearTimeout(timeout));
-  sidebarReports.set(key, { at: Date.now(), promise });
-  return promise;
-}
-function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: React.ReactNode }) {
-  const id = item.type === "component" ? item.children[0] : item.id;
-  const params: unknown = id ? api.getParameters(id, "governance") : undefined;
-  const componentId =
-    params &&
-    typeof params === "object" &&
-    "componentId" in params &&
-    typeof params.componentId === "string"
-      ? params.componentId
-      : undefined;
-  const url =
-    params &&
-    typeof params === "object" &&
-    "reportUrl" in params &&
-    typeof params.reportUrl === "string"
-      ? params.reportUrl
-      : undefined;
-  const verifySource = !!(
-    params &&
-    typeof params === "object" &&
-    "registryEditor" in params &&
-    params.registryEditor === true
-  );
-  const [state, setState] = useState<ReportState>({ status: "empty", message: "Unverified" });
-  const [stateKey, setStateKey] = useState({ url, verified: verifySource });
-  useFreshness(state, setState);
-  useEffect(() => {
-    let active = true;
-    let generation = 0;
-    const update = () => {
-      const request = ++generation;
-      if (url)
-        void sidebarReport(url, verifySource).then((value) => {
-          if (active && request === generation) {
-            setStateKey({ url, verified: verifySource });
-            setState(revalidateReport(value));
-          }
-        });
-      else setState({ status: "empty", message: "Unverified" });
-    };
-    update();
-    const invalidate = () => {
-      generation++;
-      sidebarReports.clear();
-      setState({ status: "error", message: "Registry changed; regenerate the report." });
-    };
-    window.addEventListener("governator:registry-changed", invalidate);
-    const unsubscribe = subscribeReportObservations((observedUrl, observed, verified) => {
-      if (!active || observedUrl !== url || verified !== verifySource) return;
-      generation++;
-      const next = revalidateReport(observed);
-      if (url) {
-        if (next.status === "loading") {
-          if (!sidebarLoadingObservations.has(observed)) {
-            sidebarLoadingObservations.add(observed);
-            sidebarReports.delete(`${url}|${verifySource}`);
-          }
-        } else
-          sidebarReports.set(`${url}|${verifySource}`, {
-            at: Date.now(),
-            promise: Promise.resolve(next),
-          });
-      }
-      setStateKey({ url, verified: verifySource });
-      setState(next);
-      if (next.status === "loading") update();
-    });
-    const interval = setInterval(update, 60_000);
-    return () => {
-      active = false;
-      unsubscribe();
-      clearInterval(interval);
-      window.removeEventListener("governator:registry-changed", invalidate);
-    };
-  }, [url, componentId, verifySource]);
-  const currentState =
-    stateKey.url === url && stateKey.verified === verifySource
-      ? revalidateReport(state)
-      : { status: "empty" as const, message: "Unverified" };
-  const component =
-    currentState.status === "ready"
-      ? currentState.report.decisions.find((c) => c.componentId === componentId)
-      : undefined;
+function SidebarLabel({ item, label }: { item: HashEntry; label: React.ReactNode }) {
+  const [selected, setSelected] = useState(selectedReportStatus());
+  useEffect(() => subscribeSelectedReportStatus(setSelected), []);
+  const status = selected ? sidebarStatus(item, selected) : { kind: "unknown" as const };
+  const component = status.kind === "decision" ? status.decision : undefined;
+  const gate = component ? readinessView(component.gate) : undefined;
   const title = component
-    ? `Report snapshot. Lifecycle: ${component.lifecycle}; readiness gate: ${component.gate}; release gate: ${currentState.status === "ready" ? (currentState.report.release?.gate ?? "unknown") : "unknown"}`
-    : "Governance unverified: identity or current report unavailable";
+    ? `Selected report. Lifecycle: ${component.lifecycle}; readiness: ${gate?.label}. ${gate?.description}`
+    : status.kind === "mixed"
+      ? "Selected report has multiple component identities below this item."
+      : "Selected report has no verified component identity for this item.";
   const gateColors =
-    component?.gate === "ready"
+    gate?.tone === "success"
       ? ["#174d32", "#e3ffeb"]
-      : component?.gate === "blocked"
+      : gate?.tone === "danger"
         ? ["#751e2d", "#fff2f2"]
         : ["#654300", "#fff4d5"];
-  const gateLabel =
-    component?.gate === "ready"
-      ? "Ready"
-      : component?.gate === "blocked"
-        ? "Blocked"
-        : "Missing evidence";
   return (
     <span style={{ display: "flex", gap: 6, alignItems: "center", minWidth: 0 }}>
       <span>{label}</span>
@@ -703,12 +608,12 @@ function SidebarLabel({ item, api, label }: { item: HashEntry; api: API; label: 
                 fontWeight: 700,
               }}
             >
-              {gateLabel}
+              {gate?.label}
             </span>
           </>
         ) : (
           <span style={{ border: "1px solid currentColor", borderRadius: 3, padding: "1px 4px" }}>
-            Unverified
+            {status.kind === "mixed" ? "Mixed" : "Unknown"}
           </span>
         )}
       </small>
@@ -723,7 +628,7 @@ addons.register("governator", () => {
       renderLabel: (item, api) => {
         const label = previous?.renderLabel ? previous.renderLabel(item, api) : item.name;
         return ["story", "docs", "component"].includes(item.type) ? (
-          <SidebarLabel item={item} api={api} label={label} />
+          <SidebarLabel item={item} label={label} />
         ) : (
           label
         );

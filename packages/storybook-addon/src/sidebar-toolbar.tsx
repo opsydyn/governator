@@ -19,6 +19,7 @@ import {
   storyIndexSignature,
 } from "./sidebar-filter.ts";
 import type { ReadinessFilter } from "./sidebar-filter.ts";
+import { publishSelectedReportStatus } from "./status-view.ts";
 
 /** A separate manager tool keeps the sidebar selection alive when the panel is hidden. */
 export function GovernanceSidebarFilter() {
@@ -186,6 +187,15 @@ export function GovernanceSidebarFilter() {
       ? map.value
       : undefined;
   const available = !!report && !!mapped && !composed && !error;
+  useEffect(() => {
+    publishSelectedReportStatus({
+      reportUrl: url,
+      verifySource,
+      report: available ? report : undefined,
+      index,
+      mapping: available ? mapped : undefined,
+    });
+  }, [url, verifySource, report, index, mapped, available]);
   safety.current = { enabled: available, deadline: report ? reportExpiry(report) : 0 };
   useEffect(() => {
     if (!available) setMode("all");

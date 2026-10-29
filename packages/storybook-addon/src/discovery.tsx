@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import type { GovernanceReport } from "@governator/protocol";
 import type { StoryLink } from "./story-navigation.ts";
+import { readinessView } from "./status-view.ts";
 
 type Decision = Pick<
   GovernanceReport["decisions"][number],
@@ -84,8 +85,11 @@ export function Discovery({
           <li key={item.componentId}>
             <div>
               <code>{item.componentId}</code>{" "}
-              <span className={`gn-gate gn-gate-${item.gate}`}>
-                {item.gate.replaceAll("_", " ")}
+              <span
+                className={`gn-gate gn-gate-${item.gate}`}
+                aria-label={readinessView(item.gate).description}
+              >
+                {readinessView(item.gate).label}
               </span>
             </div>
             <span className="gn-small">
