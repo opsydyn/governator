@@ -1,13 +1,18 @@
 /* oxlint-disable linteffect/no-if-statement, linteffect/no-try-catch, linteffect/no-return-in-arrow, linteffect/no-string-sentinel-const, linteffect/no-naked-object-state-update, linteffect/no-boundary-try-catch-without-effect-map -- Read-only diagnostic boundary, executed inside the CLI Effect runtime. */
-import { lstat } from "node:fs/promises";
-import { resolve } from "node:path";
+import { lstat, realpath } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
 import { readFile } from "node:fs/promises";
 import { decodeReport } from "@governator/core";
 import { loadSnapshot } from "@governator/query";
 import { loadProject, containedFile } from "./files.ts";
 import type { CliResult } from "./commands.ts";
 
-type Finding = { id: string; status: "ok" | "attention"; message: string; nextAction?: string };
+type Finding = {
+  id: string;
+  status: "ok" | "attention" | "optional" | "unassessed";
+  message: string;
+  nextAction?: string;
+};
 
 /** Working-tree diagnostics do not produce evidence or evaluate readiness. */
 export async function doctor(
@@ -16,6 +21,9 @@ export async function doctor(
   selection: Map<string, string> = new Map(),
 ): Promise<CliResult> {
   if (!["json", "text"].includes(format)) throw new Error("doctor format must be json or text");
+  const workflow = selection.get("--workflow") ?? "cli";
+  if (!["cli", "evidence", "storybook", "mcp"].includes(workflow))
+    throw new Error("Unknown diagnostic workflow");
   const findings: Finding[] = [];
   for (const path of [
     "package.json",
@@ -23,6 +31,10 @@ export async function doctor(
     "governance/policy.yaml",
     "governance/tests.json",
   ]) {
+    const required =
+      path === "package.json" ||
+      (workflow !== "storybook" && path !== "governance/tests.json") ||
+      (workflow === "evidence" && path === "governance/tests.json");
     try {
       const stat = await lstat(resolve(root, path));
       findings.push({
@@ -37,7 +49,7 @@ export async function doctor(
     } catch {
       findings.push({
         id: path,
-        status: "attention",
+        status: required ? "attention" : "optional",
         message: "File missing or inaccessible",
         nextAction: "Configure this input using the onboarding guide",
       });
@@ -53,7 +65,7 @@ export async function doctor(
   } catch (error) {
     findings.push({
       id: "configuration",
-      status: "attention",
+      status: workflow === "storybook" ? "optional" : "attention",
       message: String(error),
       nextAction: "Correct configuration, then run governator validate",
     });
@@ -80,17 +92,23 @@ export async function doctor(
     "@opsydyn/governator-mcp",
     "@opsydyn/storybook-addon-governator",
     "vitest",
+    "storybook",
   ]) {
+    const required =
+      (workflow === "evidence" && dependency === "vitest") ||
+      (workflow === "storybook" &&
+        ["storybook", "@opsydyn/storybook-addon-governator"].includes(dependency)) ||
+      (workflow === "mcp" && dependency === "@opsydyn/governator-mcp");
     try {
       findings.push({
         id: `dependency:${dependency}`,
         status: "ok",
-        message: `Resolvable at ${Bun.resolveSync(dependency, root)}`,
+        message: `Installed at ${await installedDependency(root, dependency)}`,
       });
     } catch {
       findings.push({
         id: `dependency:${dependency}`,
-        status: "attention",
+        status: required ? "attention" : "optional",
         message: "Not resolvable from project root (may be installed in a child workspace)",
         nextAction: `Install ${dependency} if required by the selected workflow, or select its workspace as --root`,
       });
@@ -101,7 +119,7 @@ export async function doctor(
     if (!selected) {
       findings.push({
         id: kind,
-        status: "attention",
+        status: workflow === "mcp" && kind === "snapshot" ? "attention" : "unassessed",
         message: "No artifact selected; freshness was not assessed",
         nextAction: `Pass --${kind} with a contained artifact path`,
       });
@@ -140,6 +158,7 @@ export async function doctor(
     }
   }
   const result = {
+    workflow,
     sourceCommit,
     schemaVersion: 1,
     scope: "working-tree-diagnostics",
@@ -148,11 +167,26 @@ export async function doctor(
     findings: findings.map((finding) => ({
       ...finding,
       remediation:
-        finding.status === "ok"
+        finding.status === "ok" || finding.status === "optional" || finding.status === "unassessed"
           ? []
           : [
               {
-                kind: "manual-action",
+                kind: ["source", "configuration"].includes(finding.id)
+                  ? "command"
+                  : "manual-action",
+                ...(finding.id === "source"
+                  ? {
+                      executable: "git",
+                      args: ["-C", root, "status", "--short"],
+                      effects: ["read"],
+                    }
+                  : finding.id === "configuration"
+                    ? {
+                        executable: "governator",
+                        args: ["validate", "--root", root],
+                        effects: ["read"],
+                      }
+                    : {}),
                 description: finding.nextAction ?? "Inspect this diagnostic",
               },
             ],
@@ -166,4 +200,25 @@ export async function doctor(
         : findings.map((item) => `${item.status}: ${item.id}: ${item.message}`).join("\n") + "\n",
     stderr: "",
   };
+}
+
+// Inspect the selected project's Node resolution ancestry, not this executable's workspace aliases.
+async function installedDependency(root: string, name: string): Promise<string> {
+  let current = root;
+  while (true) {
+    const manifest = join(current, "node_modules", name, "package.json");
+    try {
+      const stat = await lstat(manifest);
+      if (!stat.isFile() || stat.size > 1024 * 1024) throw new Error("Invalid installed manifest");
+      const value = JSON.parse(await readFile(manifest, "utf8"));
+      if (value.name !== name || typeof value.version !== "string")
+        throw new Error("Installed package identity mismatch");
+      return await realpath(manifest);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+    const parent = dirname(current);
+    if (parent === current) throw new Error("Dependency not installed in project ancestry");
+    current = parent;
+  }
 }

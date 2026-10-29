@@ -283,6 +283,102 @@ async function main() {
     ]);
     assert.equal((await run("git-clean-before", ["git", "status", "--porcelain"])).stdout, "");
     const cli = [process.execPath, join(consumer, "node_modules/.bin/governator")];
+    const discovered = JSON.parse(
+      (await run("capabilities", [...cli, "capabilities", "--root", consumer, "--format", "json"]))
+        .stdout,
+    );
+    assert(
+      discovered.commands.some((entry: { command: string }) => entry.command === "init.apply"),
+    );
+    assert(discovered.mcp.tools.includes("list_ready_components"));
+    await run("doctor-cli-only", [...cli, "doctor", "--root", consumer, "--format", "json"]);
+    await run("skill-export", [
+      ...cli,
+      "skill",
+      "export",
+      "--root",
+      consumer,
+      "--out",
+      "artifacts/onboarding-skill",
+    ]);
+    assert(
+      (await readFile(join(consumer, "artifacts/onboarding-skill/SKILL.md"), "utf8")).includes(
+        "name: governator-onboarding",
+      ),
+    );
+    assert(
+      (
+        await readFile(join(consumer, "artifacts/onboarding-skill/references/setup.md"), "utf8")
+      ).includes("Setup reference"),
+    );
+    await run(
+      "skill-overwrite-rejected",
+      [...cli, "skill", "export", "--root", consumer, "--out", "artifacts/onboarding-skill"],
+      [2],
+    );
+    const onboardingRoot = join(consumer, "artifacts/onboarding-project");
+    await mkdir(onboardingRoot, { recursive: true });
+    const selection = {
+      registry: JSON.parse(await readFile(join(consumer, "governance/components.yaml"), "utf8")),
+      policy: JSON.parse(await readFile(join(consumer, "governance/policy.yaml"), "utf8")),
+      mapping: JSON.parse(await readFile(join(consumer, "governance/tests.json"), "utf8")),
+    };
+    await writeFile(
+      join(onboardingRoot, "package.json"),
+      '{"name":"onboarding-consumer","type":"module"}',
+    );
+    for (const path of new Set<string>([
+      ...selection.registry.components.flatMap((entry: { source: string; stories: string[] }) => [
+        entry.source,
+        ...entry.stories,
+      ]),
+      ...selection.mapping.mappings.flatMap((entry: { files: string[] }) => entry.files),
+    ])) {
+      await mkdir(dirname(join(onboardingRoot, path)), { recursive: true });
+      await copyFile(join(consumer, path), join(onboardingRoot, path));
+    }
+    await writeFile(join(onboardingRoot, "setup.json"), JSON.stringify(selection));
+    const plan = JSON.parse(
+      (
+        await run("init-plan", [
+          ...cli,
+          "init",
+          "plan",
+          "--root",
+          onboardingRoot,
+          "--config",
+          "setup.json",
+        ])
+      ).stdout,
+    );
+    await run("init-apply", [
+      ...cli,
+      "init",
+      "apply",
+      "--root",
+      onboardingRoot,
+      "--config",
+      "setup.json",
+      "--revision",
+      plan.revision,
+    ]);
+    await run("init-validate", [...cli, "validate", "--root", onboardingRoot]);
+    await run(
+      "init-overwrite-rejected",
+      [
+        ...cli,
+        "init",
+        "apply",
+        "--root",
+        onboardingRoot,
+        "--config",
+        "setup.json",
+        "--revision",
+        plan.revision,
+      ],
+      [2],
+    );
+
     const evaluate = await run(
       "evaluate",
       [...cli, "evaluate", "--root", consumer, "--format", "json", "--report-schema", "2"],

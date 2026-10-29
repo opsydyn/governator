@@ -16,3 +16,5 @@ The agent should inspect your project before proposing configuration and ask abo
 A blocked component is a valid governance result. Ask for its missing checks and a concrete next action; do not substitute an easier policy just to change the badge.
 
 Continue with [Storybook setup](../storybook-addon/) and [MCP snapshots](../mcp-snapshots/).
+
+Development packages after 0.1.0 bundle the skill. Use `governator skill export --out .agents/skills/governator-onboarding` to copy it to an explicit new project-local destination; choose the directory your agent supports. New setup can use `init plan/apply` with explicit component owners, policy and mappings. See [agent workflow interfaces](../../reference/agent-workflow/) for the input contract and capability discovery.

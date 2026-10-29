@@ -11,6 +11,8 @@ import { runContracts } from "./contracts.ts";
 import { runQueryCommand } from "./queries.ts";
 import { runRegistryCommand } from "./registry.ts";
 import { runTagCommand } from "./tags.ts";
+import { runInit, runSkillExport } from "./onboarding.ts";
+import { capabilities } from "./capabilities.ts";
 import { doctor } from "./doctor.ts";
 import { parseCli } from "./parser.ts";
 
@@ -19,7 +21,11 @@ export interface CliResult {
   readonly stdout: string;
   readonly stderr: string;
 }
-const help = `governator registry plan --fields PATH [--root PATH] [--registry PATH]
+const help = `governator init plan --config PATH [--root PATH]
+governator init apply --config PATH --revision DIGEST [--root PATH]
+governator skill export --out PATH [--root PATH]
+governator capabilities [--root PATH] [--format json|text]
+governator registry plan --fields PATH [--root PATH] [--registry PATH]
 governator registry register --fields PATH --revision SHA256 [--root PATH] [--registry PATH]
 governator mapping plan --component ID --files PATH [--root PATH] [--mapping PATH] [--registry PATH]
 governator mapping update --component ID --files PATH --revision SHA256 [--root PATH] [--mapping PATH] [--registry PATH]
@@ -29,7 +35,7 @@ governator tags update --story-path PATH --tags PATH --revision SHA256 [--root P
 governator snapshot refresh --mapping PATH --out artifacts/NEW.json [--root PATH] [--target stable]
 governator registry inspect --story-map PATH --story ID --component ID [--root PATH] [--registry PATH] [--working-dir PATH]
 governator registry update --story-map PATH --story ID --component ID --revision SHA256 --fields PATH [--root PATH] [--registry PATH] [--working-dir PATH]
-governator doctor [--root PATH] [--format json|text] [--report PATH] [--snapshot PATH]
+governator doctor [--root PATH] [--format json|text] [--report PATH] [--snapshot PATH] [--workflow cli|evidence|storybook|mcp]
 governator validate [--root PATH]
 governator snapshot export --report PATH --out artifacts/NAME.json [--root PATH] [--release PATH --config PATH]
 governator query --snapshot PATH --tool NAME [--args JSON] [--root PATH]
@@ -51,6 +57,9 @@ export async function executeCli(args: readonly string[]): Promise<CliResult> {
   const parsed = await parseCli(args);
   if (parsed.kind === "help") return { code: 0, stdout: parsed.text, stderr: "" };
   const { command, values, demo } = parsed;
+  if (command === "capabilities") return capabilities(values);
+  if (command.startsWith("init.")) return runInit(command, values);
+  if (command === "skill.export") return runSkillExport(values);
   if (command.startsWith("tags.")) return runTagCommand(command, values);
   if (command.startsWith("registry.") || command.startsWith("mapping."))
     return runRegistryCommand(command, values);

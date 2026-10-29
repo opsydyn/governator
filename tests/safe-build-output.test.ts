@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { expect, test } from "vitest";
-import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import cli from "../packages/cli/tsdown.config.ts";
 import mcp from "../packages/mcp/tsdown.config.ts";
 
@@ -39,6 +39,19 @@ for (const [name, config] of [
         expect(await readFile(`${root}/retained/sentinel`, "utf8")).toBe("retained");
       }
       expect(await readFile(`${root}/retained/sentinel`, "utf8")).toBe("retained");
+      if (name === "cli") {
+        const output = join(await realpath(root), "safe-output");
+        const built = Bun.spawnSync([process.execPath, "run", "build", "--out-dir", output], {
+          cwd: `${process.cwd()}/packages/cli`,
+          stdout: "pipe",
+          stderr: "pipe",
+        });
+        expect(built.exitCode, built.stderr.toString()).toBe(0);
+        expect(await Bun.file(join(output, "main.mjs")).exists()).toBe(true);
+        expect(
+          await Bun.file(join(output, "skills/governator-onboarding/SKILL.md")).text(),
+        ).toContain("name: governator-onboarding");
+      }
     })().finally(() => rm(root, { recursive: true, force: true }));
   });
 }

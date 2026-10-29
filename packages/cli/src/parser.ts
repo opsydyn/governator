@@ -8,7 +8,10 @@ import { GovernanceError, ensure } from "@governator/core";
 type Selected = { kind: "command"; command: string; values: Map<string, string>; demo: boolean };
 export type ParsedCli = Selected | { kind: "help"; text: string };
 
-export async function parseCli(args: readonly string[]): Promise<ParsedCli> {
+export async function parseCli(
+  args: readonly string[],
+  describe?: (definition: { command: string; options: string[]; demo: boolean }) => void,
+): Promise<ParsedCli> {
   // Effect 4.0.6 currently accepts duplicate flag occurrences, but Governator rejects them.
   const seen = new Set<string>();
   const normalized: string[] = [];
@@ -49,6 +52,7 @@ export async function parseCli(args: readonly string[]): Promise<ParsedCli> {
     },
   });
   const leaf = (name: string, command: string, keys: readonly string[], allowDemo = false) => {
+    describe?.({ command, options: keys.map((key) => `--${key}`), demo: allowDemo });
     const strings: Record<string, Flag.Flag<Option.Option<string>>> = Object.fromEntries(
       keys.map((key) => [key, Flag.String(key).pipe(Flag.optional)]),
     );
@@ -72,7 +76,17 @@ export async function parseCli(args: readonly string[]): Promise<ParsedCli> {
   };
   const root = Command.make("governator").pipe(
     Command.withSubcommands([
-      leaf("doctor", "doctor", ["root", "format", "report", "snapshot"]),
+      leaf("capabilities", "capabilities", ["root", "format"]),
+      Command.make("init").pipe(
+        Command.withSubcommands([
+          leaf("plan", "init.plan", ["root", "config"]),
+          leaf("apply", "init.apply", ["root", "config", "revision"]),
+        ]),
+      ),
+      Command.make("skill").pipe(
+        Command.withSubcommands([leaf("export", "skill.export", ["root", "out"])]),
+      ),
+      leaf("doctor", "doctor", ["root", "format", "report", "snapshot", "workflow"]),
       Command.make("registry").pipe(
         Command.withSubcommands([
           leaf("plan", "registry.plan", ["root", "registry", "fields"]),

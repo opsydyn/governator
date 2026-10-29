@@ -9,17 +9,21 @@ Help the user reach a first understandable governance result in their actual rep
 
 ## Choose the smallest useful setup
 
-- Addon only: install `@opsydyn/storybook-addon-governator@0.1.0` and register it with Storybook. A report is optional. React/Vite with Storybook 10.6.4 is the qualified setup; report other frameworks as unqualified.
-- Local governance: also install `@opsydyn/governator-cli@0.1.0`. Bun >=1.4.2 is required to execute the CLI, even when npm or pnpm installs dependencies.
-- Agent queries: optionally install `@opsydyn/governator-mcp@0.1.0`, export a snapshot and configure the user's selected MCP client. Client activation is a separate user preference; do not modify global client configuration implicitly.
+- Addon only: install `@opsydyn/storybook-addon-governator` at the explicitly selected released version and register it with Storybook. A report is optional. React/Vite with Storybook 10.6.4 is the qualified setup; report other frameworks as unqualified.
+- Local governance: also install `@opsydyn/governator-cli` at the explicitly selected released version. Bun >=1.4.2 is required to execute the CLI, even when npm or pnpm installs dependencies.
+- Agent queries: optionally install `@opsydyn/governator-mcp` at the explicitly selected released version, export a snapshot and configure the user's selected MCP client. Client activation is a separate user preference; do not modify global client configuration implicitly.
 
-Read [setup](references/setup.md) for the file and command sequence. Use locally installed commands; avoid downloading an unpinned executable for each invocation. Prefer command discovery from the installed version: development-only commands may be absent in 0.1.0.
+Reuse existing compatible installations; do not downgrade an installed release to match an older documentation example. Resolve new installation versions from the user's choice and the current release documentation. Read [setup](references/setup.md) for the file and command sequence. Use locally installed commands; avoid downloading an unpinned executable for each invocation. Prefer command discovery from the installed version: development-only commands may be absent in 0.1.0.
 
 ## Development capability discovery
 
-Discover commands from the installed version before using development additions. If available, use `doctor --format json` with selected report and snapshot paths to inspect setup and remediation without executing producers. Use registration/mapping/tag plans to review source changes, then their revision-checked apply operations. The tag adapter must be installed in the chosen project and explicitly exposes API 1. If these commands are absent, use the published 0.1.0 file setup flow; do not assume a repository document upgrades an installed package.
+Prefer `capabilities --format json` when available to discover accepted/required options, command effects and schemas; otherwise use installed `--help`. If available, use `doctor --format json` with selected report and snapshot paths to inspect setup and remediation without executing producers. Use registration/mapping/tag plans to review source changes, then their revision-checked apply operations. The tag adapter must be installed in the chosen project and explicitly exposes API 1. If these commands are absent, use the published 0.1.0 file setup flow; do not assume a repository document upgrades an installed package.
 
 Only invoke `snapshot refresh` when producer execution is authorized; it runs tests. Otherwise explain the pending work. Restart MCP with the newly returned snapshot path. Use `list_ready_components` when discovery exposes it; its legacy approved-components alias does not establish approval.
+
+For first-project setup, use `init plan --config PATH` with the selected registry, explicit maintainer policy and test mapping. Show the proposed file contents, then use the returned revision with `init apply` within the approved scope. Existing destinations are never replaced. Ensure artifacts are ignored; setup does not commit, install or run tests. If an interrupted write leaves partial configuration, inspect it before cleanup rather than retrying over it.
+
+When available, `skill export --out PATH` copies this skill and its reference to a new project-local destination supported by the selected client. It does not activate or configure that client. Do not assume this feature is available in published 0.1.0.
 
 ## Establish real inputs
 

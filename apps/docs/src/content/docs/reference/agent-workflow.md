@@ -59,3 +59,46 @@ Refresh executes tests. When test execution is deferred, stop before this comman
 Snapshot creation success does not mean every component is ready. Query the resulting decisions, then restart MCP with the returned path. Existing MCP sessions keep their original immutable view. Snapshot export alone never refreshes evidence or extends its original lifetime.
 
 The development MCP exposes `list_ready_components`; `list_approved_components` remains a compatibility alias with identical data and `approvalVerified: false`. Source edits, readiness, human approval and publication are separate decisions.
+
+## Start a new project
+
+`init plan --config setup.json` takes an explicit JSON setup selection with exactly three fields:
+
+| Field      | Contract                                                                                                               |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `registry` | Schema-1 component registry, with at least one explicit owner per component and existing contained source/story paths. |
+| `policy`   | The maintainer's explicit policy document; no permissive policy is inferred.                                           |
+| `mapping`  | Schema-1 nonempty test mapping referencing registered components and existing test files.                              |
+
+These are the same canonical documents described in the CLI quick start. Existing configuration should use the authoring commands instead of init.
+
+```sh
+bun run governator init plan --config setup.json
+bun run governator init apply --config setup.json --revision DIGEST_FROM_PLAN
+```
+
+The plan contains the exact proposed contents of `governance/components.yaml`, `governance/policy.yaml` and `governance/tests.json`. Apply recomputes and verifies the root-bound plan digest. Existing destination files are rejected; parents must be real directories. Neither command invents ownership, installs dependencies, changes Git ignores, commits source or runs tests. Ensure generated `artifacts/` is ignored before evidence production.
+
+Creation uses exclusive file writes. It is not a multi-file transaction: a permission or disk failure can leave a partial setup. Inspect those files before cleanup or resuming; repeated init does not overwrite them. The checks do not claim isolation from another process modifying paths concurrently.
+
+## Export the bundled onboarding skill
+
+The development CLI package bundles the skill and its setup reference, so export works without a repository checkout or network access:
+
+```sh
+bun run governator skill export --out .agents/skills/governator-onboarding
+```
+
+Choose the location supported by your agent client. The destination must be a new contained directory below `--root`; existing destinations and symlinked parents are rejected. Export does not activate the skill or change global client settings. Like setup, a disk failure may leave partially created files for inspection.
+
+## Discover installed capabilities
+
+```sh
+bun run governator capabilities --format json
+```
+
+The schema-1 response lists package version, command names, accepted options, required options, supported data-schema versions, MCP tools, authoring adapter requirements and command effects. Command names/options are collected from the same Effect command tree used by the parser. Effect labels distinguish read operations, source edits, artifact writes and producer execution. Discovery does not execute those commands or assess project readiness; installed optional adapter presence is checked when a tag command is invoked.
+
+Doctor supports `--workflow cli` (default), `evidence`, `storybook` or `mcp`. Missing optional integrations are `optional`; omitted optional artifact selections are `unassessed`. Neither status causes exit 1. Evidence requires Vitest, Storybook requires its addon and peer, and MCP requires its server package and selected snapshot. Dependency manifests are inspected only in the selected project's dependency ancestry, avoiding aliases from the CLI's own workspace. Resolution alone does not prove executable compatibility.
+
+Attention findings include remediation descriptions. When an exact read-only command is appropriate, they include an `executable`, argument array and effects; consumers should pass arguments directly, not construct shell commands. Suggestions are never executed automatically. Source edits, dependency installation and producer execution still follow the user's authorization.

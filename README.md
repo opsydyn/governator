@@ -83,3 +83,5 @@ M3d models a signed two-owner policy lifecycle with synthetic witnesses and in-m
 ## Agent-assisted governance
 
 Use the [onboarding skill](skills/governator-onboarding/SKILL.md) for published 0.1.0 setup. The [development agent workflow](apps/docs/src/content/docs/reference/agent-workflow.md) documents diagnostics, source editing and explicit snapshot refresh. These source additions require a future release and behavioral qualification before use as a release gate.
+
+The next CLI release also provides previewable `init plan/apply`, `skill export`, and machine-readable `capabilities`. These commands are in development source; published 0.1.0 does not include them.
