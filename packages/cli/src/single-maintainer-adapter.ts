@@ -22,12 +22,13 @@ const registryRead = Schema.Union([
   Schema.Struct({ status: Schema.Literal("absent") }),
   Schema.Struct({ status: Schema.Literal("present"), bytes: Schema.Uint8Array }),
 ]);
+export function decodeRegistryRead(value: unknown): RegistryRead {
+  return Schema.decodeUnknownSync(registryRead, { onExcessProperty: "error" })(value);
+}
 async function safeRead(port: RegistryPort, entry: Candidate["packages"][number]) {
   const attempt = Effect.tryPromise({
     try: async () => {
-      const value = Schema.decodeUnknownSync(registryRead, { onExcessProperty: "error" })(
-        await port.read(entry.name, entry.version),
-      );
+      const value = decodeRegistryRead(await port.read(entry.name, entry.version));
       if (value.status === "present") {
         ensure(value.bytes.byteLength <= 16 * 1024 * 1024, "Registry response exceeds size limit");
         return { status: "present" as const, bytes: Uint8Array.from(value.bytes) };
