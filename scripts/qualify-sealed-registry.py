@@ -6,6 +6,7 @@ import http.server
 import importlib.util
 import json
 import os
+import signal
 from pathlib import Path
 import subprocess
 import sys
@@ -35,11 +36,15 @@ class RegistryStore:
         with self.lock:
             return self.uploads.get(name)
 
+    def reset(self):
+        with self.lock:
+            self.uploads.clear()
+
 
 def main():
-    if sys.platform != 'linux' or os.geteuid() != 0 or len(sys.argv) != 8:
-        raise RuntimeError('Linux root fixture requires DIR DIGEST COMMIT NPM NODE BUN SCRIPT')
-    directory, digest, commit, npm, node, bun, coordinator = sys.argv[1:]
+    if sys.platform != 'linux' or os.geteuid() != 0 or len(sys.argv) != 9:
+        raise RuntimeError('Linux root fixture requires DIR DIGEST COMMIT NPM NODE BUN SCRIPT ARTIFACT_ID')
+    directory, digest, commit, npm, node, bun, coordinator, artifact_id = sys.argv[1:]
     if not all(os.path.isabs(path) for path in (directory, npm, node, bun, coordinator)):
         raise ValueError('Absolute paths required')
     spec = importlib.util.spec_from_file_location('custody', Path(__file__).with_name('qualify-linux-custody.py'))
@@ -55,6 +60,8 @@ def main():
         os.chmod(root, 0o755)
         staging = root / 'sealed'
         staging.mkdir(mode=0o755)
+        journal_dir = root / 'journal'
+        journal_dir.mkdir(mode=0o700)
         home = root / 'home'
         home.mkdir(mode=0o700)
         os.chown(home, 65534, 65534)
@@ -91,6 +98,7 @@ def main():
             def do_POST(self):
                 if self.path != '/__sealed_send__': self.respond(404); return
                 fd = None
+                ok = False
                 link = staging / 'candidate.tgz'
                 try:
                     length = int(self.headers.get('Content-Length', '0'))
@@ -109,12 +117,13 @@ def main():
                     if check.returncode: raise RuntimeError('mutation probe failed')
                     run = subprocess.run([npm, 'publish', str(link), '--registry', registry, f'--@opsydyn:registry={registry}', '--ignore-scripts', '--access=public', '--provenance=false'], cwd=str(home), env=env, user=65534, group=65534, extra_groups=[], pass_fds=(fd,), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=90)
                     if run.returncode or store.read(request['name']) != data: raise RuntimeError('fixture upload failed')
-                    self.respond(200, b'{"ok":true}')
+                    ok = True
                 except (OSError, ValueError, KeyError, TypeError, RuntimeError, subprocess.SubprocessError):
-                    self.respond(400)
+                    pass
                 finally:
                     if fd is not None: os.close(fd)
                     if link.is_symlink(): link.unlink()
+                self.respond(200, b'{"ok":true}') if ok else self.respond(400)
         server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Handler)
         registry = f'http://127.0.0.1:{server.server_port}/'
         config = home / 'npmrc'
@@ -130,11 +139,37 @@ def main():
         thread.start()
         try:
             # The root coordinator can read the dummy fixture token; it runs in this namespace.
-            child = subprocess.run([bun, coordinator, directory, digest, commit, str(server.server_port)], env={'PATH': f'{os.path.dirname(bun)}:/usr/bin:/bin', 'HOME': str(home)}, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
+            child_env = {'PATH': f'{os.path.dirname(bun)}:/usr/bin:/bin', 'HOME': str(home)}
+            command = [bun, coordinator, directory, digest, commit, str(server.server_port)]
+            interrupted = subprocess.run(command + ['interrupt', str(journal_dir), artifact_id], env=child_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
+            if interrupted.returncode != -signal.SIGKILL:
+                raise RuntimeError('fixture process was not killed after upload: ' + interrupted.stderr.decode(errors='replace')[-2000:])
+            journal_file = journal_dir / 'journal.json'
+            journal_before = json.loads(journal_file.read_bytes())
+            if journal_before.get('sourceCommit') != commit or journal_before.get('candidateDigest') != digest or journal_before.get('artifactId') != artifact_id or [p['status'] for p in journal_before.get('packages', [])] != ['verified', 'unknown', 'not_attempted']:
+                raise RuntimeError('interrupted durable journal mismatch')
+            if set(store.uploads) != {snapshots[0][0], snapshots[1][0]}:
+                raise RuntimeError('unexpected uploads before interruption')
+            # This fixture owns the process and has observed its termination and completed npm child.
+            # Production stale-lock recovery requires separate operator reconciliation.
+            (journal_dir / 'journal.lock').rmdir()
+            journal_fd = os.open(journal_dir, os.O_RDONLY)
+            try: os.fsync(journal_fd)
+            finally: os.close(journal_fd)
+            resumed = subprocess.run(command + ['resume', str(journal_dir), artifact_id], env=child_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
+            if resumed.returncode:
+                raise RuntimeError('durable fixture recovery failed: ' + resumed.stderr.decode(errors='replace')[-2000:])
+            resume_result = json.loads(resumed.stdout)
+            journal_after = json.loads(journal_file.read_bytes())
+            if resume_result.get('status') != 'complete' or [p['status'] for p in journal_after.get('packages', [])] != ['verified', 'verified', 'verified'] or set(store.uploads) != set(store.expected):
+                raise RuntimeError('durable recovery verification failed')
+            durable = {'interruptedBy': 'SIGKILL', 'journalBefore': journal_before, 'resume': resume_result, 'journalAfter': journal_after, 'uploads': {name: hashlib.sha256(data).hexdigest() for name, data in store.uploads.items()}}
+            store.reset()
+            child = subprocess.run(command, env=child_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
             if child.returncode: raise RuntimeError('integrated coordinator failed: ' + child.stderr.decode(errors='replace')[-2000:])
             receipt = json.loads(child.stdout)
             if set(store.uploads) != set(store.expected): raise RuntimeError('missing uploads')
-            receipt.update({'sourceCommit': commit, 'candidateDigest': digest, 'uploads': {name: hashlib.sha256(data).hexdigest() for name, data in store.uploads.items()}})
+            receipt.update({'durable': durable, 'sourceCommit': commit, 'candidateDigest': digest, 'uploads': {name: hashlib.sha256(data).hexdigest() for name, data in store.uploads.items()}})
             print(json.dumps(receipt))
         finally:
             server.shutdown()

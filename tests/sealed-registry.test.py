@@ -21,5 +21,7 @@ class RegistryTests(unittest.TestCase):
         self.assertEqual(store.read(name), b'approved')
         with self.assertRaises(ValueError):
             store.accept(name, upload(b'approved'))
+        store.reset()
+        self.assertIsNone(store.read(name))
 
 if __name__ == '__main__': unittest.main()

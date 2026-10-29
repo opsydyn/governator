@@ -7,6 +7,8 @@ import type { Archive } from "../packages/cli/src/first-release-rehearsal.ts";
 import { loadArchives, readRegular } from "./rehearse-single-maintainer.ts";
 import { readNpmVersion } from "./npm-transport.ts";
 import { join } from "node:path";
+import { runDurableRelease } from "./durable-release.ts";
+import { withJournalLock } from "./release-journal.ts";
 
 export async function exerciseSealedCoordinator(
   candidate: unknown,
@@ -71,8 +73,39 @@ export async function exerciseSealedCoordinator(
   return { interrupted, retry, conflict };
 }
 
+export async function exerciseDurablePhase(
+  candidate: unknown,
+  digest: string,
+  commit: string,
+  archives: Archive[],
+  port: RegistryPort,
+  journalDirectory: string,
+  artifactId: string,
+  phase: "interrupt" | "resume",
+  interrupt: () => never,
+) {
+  let sends = 0;
+  const guarded: RegistryPort = {
+    read: (name, version) => port.read(name, version),
+    async send(name, version, bytes) {
+      await port.send(name, version, bytes);
+      sends++;
+      if (phase === "interrupt" && sends === 2) interrupt();
+    },
+  };
+  return withJournalLock(journalDirectory, (store) =>
+    runDurableRelease(
+      { candidate, digest, sourceCommit: commit, artifactId },
+      archives,
+      store,
+      guarded,
+    ),
+  );
+}
+
 if (import.meta.main) {
-  const [directory, digest, commit, portNumber] = process.argv.slice(2);
+  const [directory, digest, commit, portNumber, phase, journalDirectory, artifactId] =
+    process.argv.slice(2);
   ensure(
     Boolean(directory && digest && commit && portNumber && /^[0-9]{1,5}$/.test(portNumber)),
     "Invalid fixture arguments",
@@ -99,6 +132,28 @@ if (import.meta.main) {
       ensure(response.ok, "Sealed fixture send failed");
     },
   };
+  if (phase !== undefined) {
+    ensure(
+      (phase === "interrupt" || phase === "resume") && Boolean(journalDirectory && artifactId),
+      "Invalid durable fixture arguments",
+    );
+    const result = await exerciseDurablePhase(
+      candidate,
+      digest!,
+      commit!,
+      archives,
+      port,
+      journalDirectory!,
+      artifactId!,
+      phase as "interrupt" | "resume",
+      () => {
+        process.kill(process.pid, "SIGKILL");
+        throw new Error("Unable to interrupt fixture process");
+      },
+    );
+    console.log(JSON.stringify(result));
+    process.exit(result.status === "complete" ? 0 : 1);
+  }
   const result = await exerciseSealedCoordinator(candidate, digest!, commit!, archives, port);
   console.log(
     JSON.stringify({ mode: "sealed-coordinator-fixture", publishable: false, ...result }),
