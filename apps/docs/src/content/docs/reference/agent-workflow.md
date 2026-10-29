@@ -3,7 +3,7 @@ title: Agent workflow interfaces
 description: Discover setup, plan source edits, collect evidence and refresh an agent's governance context.
 ---
 
-These interfaces are source additions after the published 0.1.0 release. Build the source packages to use them. The published demo remains pinned to 0.1.0 and does not acquire new behavior from workspace builds. Behavioral qualification of the additions is deferred.
+These interfaces are source additions after the published 0.1.0 release. Build the source packages to use them. The published demo remains pinned to 0.1.0 and does not acquire new behavior from workspace builds. Automated source and packed-consumer qualification has passed for the local 0.2.0 candidate; manual first-user acceptance and npm publication remain separate, open gates.
 
 ## Diagnose the project
 

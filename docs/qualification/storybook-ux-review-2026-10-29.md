@@ -2,6 +2,8 @@
 
 Date: 29 October 2026. Scope: the next UX release, including Storybook acceptance. Status: assessment and proposed direction; implementation is not approved by this document.
 
+Follow-up status: the approved implementation phase addressed the source-level findings below and was qualified in the [Storybook UX candidate acceptance record](storybook-ux-acceptance.md). That record keeps named human, VoiceOver, wide-desktop/right-panel, light-theme and true 200% zoom acceptance open. The findings remain here as dated review evidence rather than being rewritten as if they were never observed.
+
 Governator has a useful governance model and careful handling of uncertain evidence. Its largest UX obstacle is translating that model into an immediate answer: **what is this component's readiness, why, and what should I do next?** The current panel prioritizes editing and technical detail, while different navigation surfaces can disagree about the same component. A focused UX release is warranted before adding more capabilities.
 
 The recommended direction is a compact, branded Storybook addon that leads with decisions and next actions, supports deliberate local authoring, and provides understandable recovery. Preserve the existing artwork and the distinctions between readiness, release eligibility and publication. Complete human Storybook acceptance within this phase.

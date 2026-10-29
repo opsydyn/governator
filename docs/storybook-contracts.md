@@ -20,6 +20,8 @@ The report URL must use same-origin HTTP(S), with no credentials, credentials om
 
 `bun run addon:validator` regenerates the validator from the plain protocol schema. `bun run addon:check` checks freshness, source/shipped imports, no runtime dependencies, sole Storybook peer and a 128 KiB raw / 16 KiB gzip manager budget. The generated Ajv source uses a compile-time helper that tsdown bundles; the shipped bundle may not require that helper externally.
 
-## Remaining work
+## Current status and remaining acceptance
 
-Changesets intent validation and source-bound exact packed candidate checks are implemented locally, including migration requirements and explicitly simulated review in demo mode. The [release runbook](release-candidates.md) describes their scope. The [read-only MCP adapter](mcp.md) queries exported local snapshots. Authenticated published baselines, trusted external approval, hosted CI and required checks, actual publication and deployment remain unqualified. Native Storybook story tags are present; governance-derived sidebar filtering is deferred.
+Changesets intent validation and source-bound exact packed candidate checks are implemented, including migration requirements and explicitly simulated review in demo mode. The [release runbook](release-candidates.md) describes their scope. The [read-only MCP adapter](mcp.md) queries exported local snapshots. The CLI, MCP and addon are publicly available at 0.1.0; the source checkout and retained archives identify the not-yet-published 0.2.0 candidate.
+
+Native Storybook tags, governance-derived readiness filtering, decision-first status, local metadata/tag editing and draft-preserving conflict recovery are implemented. Exact-archive npm/pnpm builds and bounded scripted-browser tasks passed for the retained Storybook candidate. Named human, VoiceOver, wide-desktop/right-panel, light-theme and true 200% zoom acceptance remain open; see the [acceptance record](qualification/storybook-ux-acceptance.md). Other renderers, wider Storybook-version support, a new npm publication and deployment remain separate work or decisions.

@@ -72,7 +72,7 @@ See [architecture](docs/architecture.md), [dogfood and API runbook](docs/storybo
 
 Local release enforcement: `bun run release:plan` blocks the deliberately insufficient patch; `bun run release:demo` exercises blocked patch/minor and an explicitly simulated reviewed major. Storybook includes release details and lifecycle/readiness sidebar markers. See the [release runbook](docs/release-candidates.md). A separate [single-maintainer local rehearsal](docs/qualification/single-maintainer-release-rehearsal.md) records reviewed first-release archive hashes and simulates transfer without publishing.
 
-Targeted local browser checks and reconstructed-cache consumer tests are recorded in [qualification](docs/qualification/consumer-distribution-verification.md); these do not establish screen-reader or human acceptance. Hosted CI/required-check configuration and authenticated published baselines remain unverified. M2 introduced local read-only MCP; see the [launch and snapshot runbook](docs/mcp.md) and [M2 verification](docs/m2-verification.md). External approvals, publication and deployment need trusted adapters.
+Targeted local browser checks and reconstructed-cache consumer tests are recorded in [qualification](docs/qualification/consumer-distribution-verification.md). The current [Storybook UX acceptance record](docs/qualification/storybook-ux-acceptance.md) adds exact-archive npm/pnpm builds and bounded scripted-browser tasks; named human, VoiceOver, wide-desktop/right-panel, light-theme and true 200% zoom acceptance remain open. M2 introduced local read-only MCP; see the [launch and snapshot runbook](docs/mcp.md) and [M2 verification](docs/m2-verification.md). External approvals, a new npm publication and deployment remain separate observations.
 
 M3a introduces a private synthetic review-evidence evaluator for testing exact candidate, policy, reviewer-role and freshness bindings. Its results are fixtures only; normal release review stays unconfigured. See [M3a evidence and verification](docs/m3a-verification.md).
 
@@ -82,6 +82,6 @@ M3d models a signed two-owner policy lifecycle with synthetic witnesses and in-m
 
 ## Agent-assisted governance
 
-Use the [onboarding skill](skills/governator-onboarding/SKILL.md) for published 0.1.0 setup. The [development agent workflow](apps/docs/src/content/docs/reference/agent-workflow.md) documents diagnostics, source editing and explicit snapshot refresh. These source additions require a future release and behavioral qualification before use as a release gate.
+Use the [onboarding skill](skills/governator-onboarding/SKILL.md) for published 0.1.0 setup. The [development agent workflow](apps/docs/src/content/docs/reference/agent-workflow.md) documents diagnostics, source editing and explicit snapshot refresh. The local 0.2.0 candidate has automated source and packed-consumer qualification; manual first-user acceptance and npm publication remain separate gates.
 
 The next CLI release also provides previewable `init plan/apply`, `skill export`, and machine-readable `capabilities`. These commands are in development source; published 0.1.0 does not include them.

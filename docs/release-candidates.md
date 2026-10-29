@@ -39,7 +39,7 @@ Explicit simulated review must match source commit, exact tarball digest and inp
 
 This first exact archive analyzer supports one root exports types entrypoint, plus an optional package.json export. Additional entrypoints, declaration wildcards, local file/workspace runtime links, symlink/hardlink/special archive entries, duplicate file entries and unsafe paths fail closed. Limits: 4 MiB compressed archive, 4 MiB per file, 16 MiB expanded file contents, 2,048 entries and bounded metadata/decompression ratio. Larger or more complex packages need a deliberate adapter extension.
 
-Reports in schema 1 or 2 can optionally include a release summary. Storybook shows the CLI's release eligibility, digests and reasons beside independent readiness/API state; stale or mismatched source release summaries are rejected. Sidebar labels show lifecycle (L) and readiness gate (G) using official manager customization, preserving existing labels. A question mark means identity/report is not yet available (for example an unprepared story); it never implies approval. Readiness markers do not represent release authorization.
+Reports in schema 1 or 2 can optionally include a release summary. Storybook shows the CLI's release eligibility, digests and reasons beside independent readiness/API state; stale or mismatched source release summaries are rejected. Sidebar pills spell out lifecycle and readiness using official manager customization while preserving existing labels. **Unknown** means identity/report is not yet available (for example an unprepared story); it never implies approval. Readiness labels do not represent release authorization.
 
 ## CI boundary
 
