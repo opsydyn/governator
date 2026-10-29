@@ -228,10 +228,10 @@ export function GovernanceSidebarFilter() {
   useEffect(() => {
     if (!helpOpen) return;
     const restoreFocus = (event: KeyboardEvent) => {
-      if (event.key === "Escape") queueMicrotask(() => helpButton.current?.focus());
+      if (event.key === "Escape") setTimeout(() => helpButton.current?.focus(), 0);
     };
-    document.addEventListener("keydown", restoreFocus);
-    return () => document.removeEventListener("keydown", restoreFocus);
+    document.addEventListener("keydown", restoreFocus, true);
+    return () => document.removeEventListener("keydown", restoreFocus, true);
   }, [helpOpen]);
   const reason = composed
     ? "Unavailable when composed Storybooks are present."

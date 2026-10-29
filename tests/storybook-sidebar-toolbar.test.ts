@@ -446,6 +446,7 @@ test("enabled local source verification keeps a mismatched report from filtering
   await act(async () => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     await Promise.resolve();
+    vi.advanceTimersByTime(0);
   });
   expect(document.body.querySelector('[role="dialog"]')).toBeNull();
   expect(document.activeElement).toBe(help);
