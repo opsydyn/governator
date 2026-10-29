@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "mode": "local-candidate-inventory",
   "repository": "https://github.com/opsydyn/governator",
-  "sourceCommit": "cfd81a9f7a2285a42ad850498071693b8d8cbf7a",
+  "sourceCommit": "16bb3c282eee517176d3c259d8cd1bc13ad0f447",
   "version": "0.2.0",
   "packages": [
     {
@@ -25,9 +25,9 @@
       "name": "@opsydyn/storybook-addon-governator",
       "version": "0.2.0",
       "archive": "opsydyn-storybook-addon-governator-0.2.0.tgz",
-      "size": 161836,
-      "sha256": "fbb4050b2d970a755bc0c9e9e407f068c932af437fb4f05f2379ae7976e00639",
-      "integrity": "sha512-wUDUzrkU3j8fBgQajYPfDjBFExGERTNn3BCYaNPWG8GpUOeJTXpggotPDIu7OV3mxlCl9YlYFX1VOpBMlLZNHA=="
+      "size": 163395,
+      "sha256": "4dfe18ac89e447e279daeebda3a5c8602fd5124147dba73f2b346fde2ea02c3d",
+      "integrity": "sha512-bdNVHzNY9KQb/+b/T3cbDPh//1ZdmlE7M+3BdOBUpLSA+mfsJ3guxGiLxFi+VXgN86gy4cJQ1ePtGhhdjnbYlQ=="
     }
   ],
   "publication": "disabled",

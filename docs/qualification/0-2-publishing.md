@@ -1,12 +1,12 @@
 # Retained 0.2.0 publishing adapter
 
-This prepares the single-maintainer workflow locally. It does not publish, stage a GitHub release, upload assets, dispatch Actions or push main. Manual acceptance remains last. The [candidate qualification](0-2-candidate.md) still describes the selected source and exact retained bytes.
+This documents the single-maintainer workflow. The [original candidate qualification](0-2-candidate.md) and [hosted rehearsal](0-2-hosted-rehearsal.md) are historical evidence for the superseded archive set. The [release-day candidate](0-2-final-candidate.md) describes the selected source and exact retained bytes.
 
-Subsequent authorized [remote staging and hosted rehearsal](0-2-hosted-rehearsal.md) succeeded with the same archives. The local preparation below remains a historical record; manual acceptance and npm publication are still pending.
+Subsequent authorized [remote staging and hosted rehearsal](0-2-hosted-rehearsal.md) succeeded with the original archives. The Storybook UX work then changed package source, so that candidate was retired. The [release-day candidate](0-2-final-candidate.md) replaces it and is the only candidate selected by the tracked inventory.
 
 ## Prepared path
 
-The tracked `governance/publishing/0.2.0.json` pins the three archives from source `cfd81a9f7a2285a42ad850498071693b8d8cbf7a`, including their names, sizes, SHA-256 and SHA-512 integrity. The private Node 24 adapter `scripts/publish-retained.ts` reads those pins from the checkout. A downloaded record cannot replace them.
+The tracked `governance/publishing/0.2.0.json` pins the three archives from source `16bb3c282eee517176d3c259d8cd1bc13ad0f447`, including their names, sizes, SHA-256 and SHA-512 integrity. The private Node 24 adapter `scripts/publish-retained.ts` reads those pins from the checkout. A downloaded record cannot replace them.
 
 The manual, main-only release workflow downloads three assets from the draft release `governator-v0.2.0-candidate`. The release tag locates bytes; the tracked hashes select them. The workflow never builds, packs or installs project dependencies. Rehearsal defaults to npm dry runs, without NPM_TOKEN. Live publishing requires mode publish and the literal confirmation `publish-governator-0.2.0`; NPM_TOKEN is exposed only to that step.
 
@@ -21,8 +21,8 @@ Staging uses private temporary files and checks their hashes before and after np
 From the repository root, these commands require no publication credentials:
 
 ```sh
-node scripts/publish-retained.ts verify artifacts/governator-0.2.0-t2XKLi
-node scripts/publish-retained.ts rehearse artifacts/governator-0.2.0-t2XKLi
+node scripts/publish-retained.ts verify artifacts/governator-0.2.0-current-Lv0mFc
+node scripts/publish-retained.ts rehearse artifacts/governator-0.2.0-current-Lv0mFc
 ```
 
 The second command runs npm publish --dry-run on each retained tarball with scripts disabled and provenance disabled. Successful dry runs do not establish live npm permissions or OIDC/provenance behavior.
@@ -35,16 +35,16 @@ Fresh read-only review found no Critical or Important blockers and independently
 
 ## Remaining remote and manual steps
 
-After separate authorization for remote staging, push the reviewed main branch and stage the already retained archives. Do not rebuild, repack or use --clobber. Check existing release assets before retrying a partial staging command.
+After authorization for remote staging, push the reviewed main branch and stage the already retained archives. Do not rebuild or repack. The existing draft contains the superseded archive set, so update its target and replace all three assets together with `--clobber`; the tracked inventory remains the authority after replacement.
 
 ```sh
-gh release create governator-v0.2.0-candidate --repo opsydyn/governator --draft \
-  --target cfd81a9f7a2285a42ad850498071693b8d8cbf7a \
-  --title 'Governator 0.2.0 candidate' --notes 'Retained local candidate; publication pending.'
-gh release upload governator-v0.2.0-candidate --repo opsydyn/governator \
-  artifacts/governator-0.2.0-t2XKLi/opsydyn-governator-cli-0.2.0.tgz \
-  artifacts/governator-0.2.0-t2XKLi/opsydyn-governator-mcp-0.2.0.tgz \
-  artifacts/governator-0.2.0-t2XKLi/opsydyn-storybook-addon-governator-0.2.0.tgz
+gh release edit governator-v0.2.0-candidate --repo opsydyn/governator \
+  --target 16bb3c282eee517176d3c259d8cd1bc13ad0f447 \
+  --title 'Governator 0.2.0 candidate'
+gh release upload governator-v0.2.0-candidate --repo opsydyn/governator --clobber \
+  artifacts/governator-0.2.0-current-Lv0mFc/opsydyn-governator-cli-0.2.0.tgz \
+  artifacts/governator-0.2.0-current-Lv0mFc/opsydyn-governator-mcp-0.2.0.tgz \
+  artifacts/governator-0.2.0-current-Lv0mFc/opsydyn-storybook-addon-governator-0.2.0.tgz
 ```
 
 Then run the workflow in rehearsal mode and inspect the downloaded bytes and result. These GitHub commands, draft-asset access, Linux execution, current npm token permissions, hosted OIDC/provenance and live npm propagation have not been exercised in this local preparation. Preserve the exact archives until those steps complete.
