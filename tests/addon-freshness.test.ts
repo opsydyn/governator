@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { evaluate } from "../packages/core/src/index.ts";
 import { at, evaluation } from "./fixtures.ts";
-import { publishReportObservation } from "../packages/storybook-addon/src/report.ts";
+import { publishSelectedReportStatus } from "../packages/storybook-addon/src/status-view.ts";
 
 const storybook = vi.hoisted(() => ({
   params: { componentId: "ui.button", reportUrl: "/one.json" },
@@ -41,6 +41,33 @@ vi.mock("storybook/theming", () => ({
 import "../packages/storybook-addon/src/manager.tsx";
 
 const snapshot = () => evaluate(evaluation());
+const publishSidebar = (report = snapshot()) =>
+  publishSelectedReportStatus({
+    reportUrl: storybook.params.reportUrl,
+    verifySource: false,
+    report,
+    index: {
+      story: {
+        type: "story",
+        id: "story",
+        title: "Components/Button",
+        name: "Button",
+        importPath: "./Button.stories.tsx",
+        exportName: "Primary",
+      },
+    },
+    mapping: {
+      version: 1,
+      stories: [
+        {
+          id: "story",
+          componentId: "ui.button",
+          importPath: "./Button.stories.tsx",
+          exportName: "Primary",
+        },
+      ],
+    },
+  });
 const deadline = Date.parse(at) + 24 * 60 * 60 * 1000;
 const response = (body = snapshot()) => new Response(JSON.stringify(body));
 let testIndex = 0;
@@ -65,6 +92,13 @@ beforeEach(() => {
   vi.setSystemTime(deadline - 10);
   testIndex++;
   storybook.params = { componentId: "ui.button", reportUrl: caseUrl("one") };
+  publishSelectedReportStatus({
+    reportUrl: storybook.params.reportUrl,
+    verifySource: false,
+    report: undefined,
+    index: undefined,
+    mapping: undefined,
+  });
   stubStorybookGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   stubStorybookGlobal(
     "fetch",
@@ -85,13 +119,13 @@ describe("mounted freshness", () => {
   test("panel expires at the first millisecond after 24 hours", async () => {
     await act(async () => root.render(renderPanel()));
     await flush();
-    expect(container.textContent).toContain("Gate:");
+    expect(container.textContent).toContain("Required readiness evidence is complete.");
     expect(container.textContent).toContain("Find components");
     await act(async () => vi.advanceTimersByTime(10));
-    expect(container.textContent).toContain("Gate:");
+    expect(container.textContent).toContain("Required readiness evidence is complete.");
     await act(async () => vi.advanceTimersByTime(1));
     expect(container.textContent).toContain("older than 24 hours");
-    expect(container.textContent).not.toContain("Gate:");
+    expect(container.textContent).not.toContain("Required readiness evidence is complete.");
     expect(container.textContent).not.toContain("Find components");
   });
   test("expiry recovers focus from a discovery control", async () => {
@@ -106,19 +140,6 @@ describe("mounted freshness", () => {
     expect(container.textContent).not.toContain("Find components");
     expect(document.activeElement).toBe(container.querySelector("[data-reload]"));
   });
-  test("sidebar revalidates a cached observation before showing it", async () => {
-    await act(async () => root.render(renderLabel()));
-    await flush();
-    expect(container.textContent).toContain("Candidate");
-    expect(fetch).toHaveBeenCalledTimes(2);
-    await act(async () => root.render(null));
-    vi.setSystemTime(deadline + 1);
-    await act(async () => root.render(renderLabel()));
-    await flush();
-    expect(container.textContent).toContain("Unverified");
-    expect(container.textContent).not.toContain("Candidate");
-    expect(fetch).toHaveBeenCalledTimes(2);
-  });
   test.each(["visibilitychange", "focus"])(
     "%s revalidates after timers are suspended",
     async (event) => {
@@ -126,13 +147,13 @@ describe("mounted freshness", () => {
         root.render(React.createElement(React.Fragment, null, renderPanel(), renderLabel())),
       );
       await flush();
-      expect(container.textContent).toContain("Gate:");
-      expect(fetch).toHaveBeenCalledTimes(4);
+      expect(container.textContent).toContain("Required readiness evidence is complete.");
+      expect(fetch).toHaveBeenCalledTimes(2);
       vi.setSystemTime(deadline + 1);
       await act(async () =>
         (event === "focus" ? window : document).dispatchEvent(new Event(event)),
       );
-      expect(container.textContent).not.toContain("Gate:");
+      expect(container.textContent).not.toContain("Required readiness evidence is complete.");
       expect(container.textContent).toContain("Unverified");
     },
   );
@@ -153,9 +174,9 @@ describe("mounted freshness", () => {
     storybook.params = { ...storybook.params, reportUrl: caseUrl("two") };
     await act(async () => root.render(renderPanel()));
     await flush();
-    expect(container.textContent).toContain("Gate:");
+    expect(container.textContent).toContain("Required readiness evidence is complete.");
     await act(async () => finish(new Response("not JSON")));
-    expect(container.textContent).toContain("Gate:");
+    expect(container.textContent).toContain("Required readiness evidence is complete.");
   });
   test("panel and sidebar expire at the earlier release timestamp", async () => {
     const report = {
@@ -190,9 +211,9 @@ describe("mounted freshness", () => {
       root.render(React.createElement(React.Fragment, null, renderPanel(), renderLabel())),
     );
     await flush();
-    expect(container.textContent).toContain("Gate:");
+    expect(container.textContent).toContain("Required readiness evidence is complete.");
     await act(async () => vi.advanceTimersByTime(11));
-    expect(container.textContent).not.toContain("Gate:");
+    expect(container.textContent).not.toContain("Required readiness evidence is complete.");
     expect(container.textContent).toContain("release candidate snapshot");
     expect(container.textContent).toContain("Unverified");
   });
@@ -211,50 +232,9 @@ describe("mounted freshness", () => {
     await act(async () => vi.advanceTimersByTime(10_000));
     expect(container.textContent).toMatch(/could not be loaded|timed out/i);
     await act(async () => finish(response()));
-    expect(container.textContent).not.toContain("Gate:");
+    expect(container.textContent).not.toContain("Required readiness evidence is complete.");
   });
 
-  test("sidebar clears the old URL while its replacement is pending", async () => {
-    storybook.params = { ...storybook.params, reportUrl: caseUrl("initial") };
-    stubStorybookGlobal(
-      "fetch",
-      vi.fn((url: string) =>
-        url.endsWith("initial.json")
-          ? Promise.resolve(response())
-          : new Promise<Response>(() => {}),
-      ),
-    );
-    await act(async () => root.render(renderLabel()));
-    await flush();
-    expect(container.textContent).toContain("Candidate");
-    storybook.params = { ...storybook.params, reportUrl: caseUrl("pending") };
-    await act(async () => root.render(renderLabel()));
-    expect(container.textContent).not.toContain("Candidate");
-    expect(container.textContent).toContain("Unverified");
-  });
-
-  test("a superseded sidebar poll cannot replace the newer observation", async () => {
-    vi.setSystemTime(Date.parse(at));
-    storybook.params = { ...storybook.params, reportUrl: caseUrl("poll") };
-    let finish!: (response: Response) => void;
-    let calls = 0;
-    stubStorybookGlobal(
-      "fetch",
-      vi.fn(() =>
-        ++calls === 1
-          ? new Promise<Response>((resolve) => {
-              finish = resolve;
-            })
-          : Promise.resolve(response()),
-      ),
-    );
-    await act(async () => root.render(renderLabel()));
-    await act(async () => vi.advanceTimersByTime(60_000));
-    await flush();
-    expect(container.textContent).toContain("Candidate");
-    await act(async () => finish(new Response("failure", { status: 500 })));
-    expect(container.textContent).toContain("Candidate");
-  });
   test("reload ignores the older request after a newer response wins", async () => {
     let finish!: (response: Response) => void;
     let calls = 0;
@@ -275,9 +255,9 @@ describe("mounted freshness", () => {
     expect(button).toBeDefined();
     await act(async () => button?.click());
     await flush();
-    expect(container.textContent).toContain("Gate:");
+    expect(container.textContent).toContain("Required readiness evidence is complete.");
     await act(async () => finish(new Response("failure", { status: 500 })));
-    expect(container.textContent).toContain("Gate:");
+    expect(container.textContent).toContain("Required readiness evidence is complete.");
   });
   test("unmount aborts the request and ignores a late response", async () => {
     let finish!: (response: Response) => void;
@@ -294,18 +274,13 @@ describe("mounted freshness", () => {
   });
 });
 
-test("registry changes invalidate panel decisions and sidebar markers immediately", async () => {
+test("registry changes invalidate panel decisions immediately", async () => {
   await act(async () => root.render(renderPanel()));
   await flush();
-  expect(container.textContent).toContain("Gate:");
+  expect(container.textContent).toContain("Required readiness evidence is complete.");
   await act(async () => window.dispatchEvent(new Event("governator:registry-changed")));
-  expect(container.textContent).not.toContain("Gate:");
+  expect(container.textContent).not.toContain("Required readiness evidence is complete.");
   expect(container.textContent).toMatch(/registry changed/i);
-  await act(async () => root.render(renderLabel()));
-  await flush();
-  await act(async () => window.dispatchEvent(new Event("governator:registry-changed")));
-  expect(container.textContent).toContain("Unverified");
-  expect(container.textContent).not.toContain("Stable");
 });
 
 test("panel checks a locally verified report again when the window regains focus", async () => {
@@ -324,74 +299,27 @@ test("panel checks a locally verified report again when the window regains focus
     root.render(renderPanel());
     for (let i = 0; i < 20; i++) await Promise.resolve();
   });
-  expect(container.textContent).toContain("Gate:");
+  expect(container.textContent).toContain("Required readiness evidence is complete.");
   matches = false;
   await act(async () => {
     window.dispatchEvent(new Event("focus"));
     for (let i = 0; i < 20; i++) await Promise.resolve();
   });
-  expect(container.textContent).not.toContain("Gate:");
+  expect(container.textContent).not.toContain("Required readiness evidence is complete.");
   expect(container.textContent).toMatch(/registry changed/i);
 });
 
 test("sidebar uses readable, colour-coded readiness and the panel uses the supplied monogram", async () => {
+  publishSidebar();
   await act(async () =>
     root.render(React.createElement(React.Fragment, null, renderPanel(), renderLabel())),
   );
   await flush();
   const badge = container.querySelector<HTMLElement>('[data-governator-gate="ready"]');
   expect(badge?.textContent).toBe("Ready");
-  expect(badge?.style.backgroundColor).toBeTruthy();
+  expect(badge?.classList.contains("gn-sidebar-gate")).toBe(true);
   expect(container.textContent).toContain("Candidate");
   const logo = container.querySelector<HTMLImageElement>("img[data-governator-logo]");
-  expect(logo?.src).toMatch(/^data:image\/png;base64,/);
+  expect(logo?.src).toMatch(/^data:image\/svg\+xml,/);
   expect(logo?.getAttribute("alt")).toBe("");
-});
-
-test("sidebar follows a newly refreshed report instead of keeping a cached error", async () => {
-  stubStorybookGlobal(
-    "fetch",
-    vi.fn(async () => new Response("missing", { status: 404 })),
-  );
-  await act(async () => root.render(renderLabel()));
-  await flush();
-  expect(container.textContent).toContain("Unverified");
-  await act(async () =>
-    publishReportObservation(storybook.params.reportUrl, { status: "ready", report: snapshot() }),
-  );
-  expect(container.textContent).toContain("Candidate");
-});
-
-test("a transient loading observation triggers a fresh sidebar request", async () => {
-  let available = false;
-  stubStorybookGlobal(
-    "fetch",
-    vi.fn(async () => (available ? response() : new Response("missing", { status: 404 }))),
-  );
-  await act(async () => root.render(renderLabel()));
-  await flush();
-  expect(container.textContent).toContain("Unverified");
-  available = true;
-  await act(async () => {
-    publishReportObservation(storybook.params.reportUrl, { status: "loading", message: "Loading" });
-    for (let i = 0; i < 12; i++) await Promise.resolve();
-  });
-  expect(container.textContent).toContain("Candidate");
-});
-
-test("a loading observation shares one report request across sidebar labels", async () => {
-  const fetcher = vi.fn(async () => response());
-  stubStorybookGlobal("fetch", fetcher);
-  await act(async () =>
-    root.render(
-      React.createElement(React.Fragment, null, renderLabel(), renderLabel(), renderLabel()),
-    ),
-  );
-  await flush();
-  fetcher.mockClear();
-  await act(async () => {
-    publishReportObservation(storybook.params.reportUrl, { status: "loading", message: "Loading" });
-    for (let i = 0; i < 16; i++) await Promise.resolve();
-  });
-  expect(fetcher).toHaveBeenCalledTimes(1);
 });

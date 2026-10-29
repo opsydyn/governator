@@ -65,12 +65,11 @@ function useFreshness(
 }
 
 function sourceHref(source: string | undefined): string | undefined {
-  if (!source || !URL.canParse(source)) return undefined;
+  if (!source || !URL.canParse(source)) return;
   const url = new URL(source);
-  return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password
-    ? url.href
-    : undefined;
+  if (["http:", "https:"].includes(url.protocol) && !url.username && !url.password) return url.href;
 }
+
 function CopyId({ id }: { id: string }) {
   const [feedback, setFeedback] = useState("");
   const generation = useRef(0);
@@ -258,18 +257,6 @@ function Panel() {
       window.removeEventListener("governator:registry-changed", invalidate);
     };
   }, [reportUrl, refresh, params.reportUrl, verifySource]);
-  const color = (gate: string) =>
-    gate === "ready"
-      ? theme.base === "dark"
-        ? "#83dca8"
-        : "#16633b"
-      : gate === "blocked"
-        ? theme.base === "dark"
-          ? "#ffb09f"
-          : "#a82f24"
-        : theme.base === "dark"
-          ? "#f2cf7f"
-          : "#855800";
   const report = currentState.status === "ready" ? currentState.report : undefined;
   const component = report?.decisions.find((item) => item.componentId === componentId);
   const compatibility = component?.compatibility;
@@ -358,203 +345,96 @@ function Panel() {
           A report is optional. This panel never grants approval or infers production deployment.
         </p>
       ) : component ? (
-        <>
-          <div className="gn-split">
-            <div className="gn-card">
-              <h3>Versioned contracts</h3>
-              <div>
-                Component contract <strong>{component.contractVersion}</strong>
-              </div>
-              <div>
-                Package{" "}
-                <code>
-                  {component.package}@{component.packageVersion ?? "unknown"}
-                </code>
-              </div>
-              <p className="gn-small">
-                Component versions describe compatibility. The shared package is the installable
-                unit.
-              </p>
-            </div>
-            <div className="gn-card">
-              <h3>Snapshot provenance</h3>
-              <div>
-                Policy <code>{report.policyVersion}</code> · {report.assurance}
-              </div>
-              <div className="gn-small">
-                Source {report.commit.slice(0, 12)} ·{" "}
-                {new Date(report.evaluatedAt).toLocaleString()}
-              </div>
-              <p className="gn-small">
-                Publication {report.publication} · Deployment {report.deployment} · Adoption{" "}
-                {report.adoption}
-              </p>
-            </div>
-          </div>
+        <details className="gn-card gn-diagnostics">
+          <summary>Technical report details</summary>
+          <p>
+            Contract <strong>{component.contractVersion}</strong> · package{" "}
+            <code>
+              {component.package}@{component.packageVersion ?? "unknown"}
+            </code>
+          </p>
+          <p className="gn-small">
+            Policy {report.policyVersion} · {report.assurance} · source {report.commit.slice(0, 12)}{" "}
+            · {new Date(report.evaluatedAt).toLocaleString()}
+            <br />
+            Publication {report.publication} · deployment {report.deployment} · adoption{" "}
+            {report.adoption}
+          </p>
           {report.release && (
-            <div className="gn-card gn-note">
-              <h3 style={{ color: color(report.release.gate) }}>
-                Exact release candidate: {report.release.gate.replaceAll("_", " ")}
-              </h3>
-              <p>
-                Changeset <strong>{report.release.declaredBump}</strong> · required{" "}
-                <strong>{report.release.minimumBump}</strong> · {report.release.baselineVersion} →{" "}
-                {report.release.candidateVersion}
-              </p>
-              <p className="gn-small">
-                {report.release.status.replaceAll("_", " ")} · {report.release.assurance} ·
-                publication authorization unavailable
-              </p>
-              <ul>
-                {report.release.reasons.map((reason) => (
-                  <li key={reason}>{reason}</li>
-                ))}
-              </ul>
-              <details>
-                <summary>Candidate integrity and remediation</summary>
-                <p className="gn-small">
-                  Artifact {report.release.candidateDigest}
-                  <br />
-                  Source {report.release.sourceCommit}
-                  <br />
-                  Candidate manifest {report.release.candidateManifest}
-                </p>
-                <ul>
-                  {report.release.remediation.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </details>
-            </div>
+            <p className={`gn-status-text gn-status-${report.release.gate}`}>
+              <strong>Release candidate: {report.release.gate.replaceAll("_", " ")}</strong> ·{" "}
+              {report.release.baselineVersion} → {report.release.candidateVersion} · declared{" "}
+              {report.release.declaredBump}, required {report.release.minimumBump}.{" "}
+              {[...report.release.reasons, ...report.release.remediation].join(" ")}
+            </p>
           )}
           {compatibility && (
-            <div className="gn-card">
-              <h3 style={{ color: color(compatibility.gate) }}>
-                API compatibility: {compatibility.gate.replaceAll("_", " ")}
-              </h3>
-              <div>
-                Local baseline {compatibility.baselineVersion} → candidate{" "}
-                {compatibility.candidateVersion} · minimum bump{" "}
-                <strong>{compatibility.minimumBump}</strong>
-              </div>
-              <div className="gn-small">
-                Contract {compatibility.baselineContractVersion} → {component.contractVersion}
-              </div>
-              <ul>
-                {[...compatibility.changes, ...compatibility.reasons].map((reason, index) => (
-                  <li key={index}>{reason}</li>
-                ))}
-              </ul>
-              <details>
-                <summary>Scope and baseline digest</summary>
-                <p className="gn-small">{compatibility.baselineDigest}</p>
-                <ul>
-                  {compatibility.limitations.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </details>
-            </div>
+            <p className={`gn-status-text gn-status-${compatibility.gate}`}>
+              <strong>API compatibility: {compatibility.gate.replaceAll("_", " ")}</strong> ·{" "}
+              {compatibility.baselineVersion} → {compatibility.candidateVersion} · minimum bump{" "}
+              {compatibility.minimumBump}.{" "}
+              {[
+                ...compatibility.changes,
+                ...compatibility.reasons,
+                ...compatibility.limitations,
+              ].join(" ")}
+            </p>
           )}
-          <div className="gn-card">
-            <h3>Evidence and next actions</h3>
-            <p className="gn-small">
-              Producer and provenance are reported information, not authentication. Evidence age is
-              measured at report evaluation, not live freshness.
-            </p>
-            <div className="gn-table-wrap">
-              <table className="gn-table">
-                <thead>
-                  <tr>
-                    <th>Check</th>
-                    <th>Result</th>
-                    <th>Evidence</th>
-                    <th>Reason / next action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {component.checks.map((check) => (
-                    <tr key={check.check}>
-                      <td>{check.check}</td>
-                      <td>{check.result}</td>
-                      <td>
-                        {check.evidenceIds.length
-                          ? check.evidenceIds.map((id) => (
-                              <div key={id}>
-                                <code>{id}</code>
-                                {(() => {
-                                  const evidence =
-                                    report.schemaVersion === 2
-                                      ? report.decisions
-                                          .find(
-                                            (item) => item.componentId === component.componentId,
-                                          )
-                                          ?.checks.find((item) => item.check === check.check)
-                                          ?.evidence.find((item) => item.id === id)
-                                      : undefined;
-                                  const href = sourceHref(evidence?.sourceUrl);
-                                  return (
-                                    <div className="gn-small">
-                                      <div>
-                                        Producer (reported): {evidence?.producer ?? "unknown"}
-                                      </div>
-                                      <div>
-                                        Provenance (reported): {evidence?.provenance ?? "unknown"}
-                                      </div>
-                                      <div>
-                                        Observed:{" "}
-                                        {evidence ? (
-                                          <time dateTime={evidence.observedAt}>
-                                            {evidence.observedAt}
-                                          </time>
-                                        ) : (
-                                          "unknown"
-                                        )}
-                                      </div>
-                                      <div data-evidence-age>
-                                        Age at evaluation:{" "}
-                                        {evidence
-                                          ? `${Math.floor((Date.parse(report.evaluatedAt) - Date.parse(evidence.observedAt)) / 1000)} seconds`
-                                          : "unknown"}
-                                      </div>
-                                      <div>
-                                        Source:{" "}
-                                        {href ? (
-                                          <a href={href}>{evidence?.sourceUrl}</a>
-                                        ) : (
-                                          (evidence?.sourceUrl ?? "unknown")
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                            ))
-                          : "None"}
-                      </td>
-                      <td>{check.reason}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {component.reasons.length > 0 && (
-              <ul>
-                {component.reasons.map((reason) => (
-                  <li key={reason}>{reason}</li>
-                ))}
-              </ul>
-            )}
-            <p className="gn-small">
-              Active waivers:{" "}
-              {component.activeWaivers.length ? component.activeWaivers.join(", ") : "none"}
-            </p>
-          </div>
+          <p className="gn-small">
+            Producer and provenance are reported, not authenticated. Evidence age is fixed at report
+            evaluation.
+          </p>
+          <ul>
+            {component.checks.map((check) => (
+              <li key={check.check}>
+                <strong>
+                  {check.check}: {check.result}
+                </strong>{" "}
+                — {check.reason}
+                <div className="gn-small">Evidence: {check.evidenceIds.join(", ") || "None"}</div>
+                {report.schemaVersion === 2 ? (
+                  check.evidence.map((evidence) => {
+                    const href = sourceHref(evidence.sourceUrl);
+                    return (
+                      <details className="gn-small" key={evidence.id}>
+                        <summary>{evidence.id} details</summary>
+                        <div>Producer (reported): {evidence.producer}</div>
+                        <div>Provenance (reported): {evidence.provenance}</div>
+                        <div>Observed: {evidence.observedAt}</div>
+                        <div data-evidence-age>
+                          Age at evaluation:{" "}
+                          {Math.floor(
+                            (Date.parse(report.evaluatedAt) - Date.parse(evidence.observedAt)) /
+                              1000,
+                          )}{" "}
+                          seconds
+                        </div>
+                        <div>
+                          Source:{" "}
+                          {href ? (
+                            <a href={href}>{evidence.sourceUrl}</a>
+                          ) : (
+                            (evidence.sourceUrl ?? "unknown")
+                          )}
+                        </div>
+                      </details>
+                    );
+                  })
+                ) : (
+                  <div className="gn-small">Producer (reported): unknown · Source: unknown</div>
+                )}
+              </li>
+            ))}
+          </ul>
+          <p className="gn-small">
+            Reasons: {component.reasons.join(" ") || "none"} · active waivers:{" "}
+            {component.activeWaivers.join(", ") || "none"}
+          </p>
           <p className="gn-small gn-note">
             Readiness, API compatibility, publication and deployment are independent. This snapshot
             does not grant human approval or prove production use.
           </p>
-        </>
+        </details>
       ) : null}
     </FocusRecovery>
   );
@@ -570,50 +450,21 @@ function SidebarLabel({ item, label }: { item: HashEntry; label: React.ReactNode
     : status.kind === "mixed"
       ? "Selected report has multiple component identities below this item."
       : "Selected report has no verified component identity for this item.";
-  const gateColors =
-    gate?.tone === "success"
-      ? ["#174d32", "#e3ffeb"]
-      : gate?.tone === "danger"
-        ? ["#751e2d", "#fff2f2"]
-        : ["#654300", "#fff4d5"];
   return (
-    <span style={{ display: "flex", gap: 6, alignItems: "center", minWidth: 0 }}>
+    <span className="gn-sidebar-label">
       <span>{label}</span>
-      <small
-        title={title}
-        aria-label={title}
-        style={{
-          fontSize: 11,
-          fontFamily: "ui-sans-serif, system-ui, sans-serif",
-          lineHeight: 1.4,
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 4,
-          whiteSpace: "nowrap",
-        }}
-      >
+      <small className="gn-sidebar-status" title={title} aria-label={title}>
         {component ? (
           <>
-            <span style={{ border: "1px solid currentColor", borderRadius: 3, padding: "1px 4px" }}>
+            <span className="gn-sidebar-pill">
               {component.lifecycle.charAt(0).toUpperCase() + component.lifecycle.slice(1)}
             </span>
-            <span
-              data-governator-gate={component.gate}
-              style={{
-                backgroundColor: gateColors[0],
-                color: gateColors[1],
-                borderRadius: 3,
-                padding: "1px 5px",
-                fontWeight: 700,
-              }}
-            >
+            <span className="gn-sidebar-pill gn-sidebar-gate" data-governator-gate={component.gate}>
               {gate?.label}
             </span>
           </>
         ) : (
-          <span style={{ border: "1px solid currentColor", borderRadius: 3, padding: "1px 4px" }}>
-            {status.kind === "mixed" ? "Mixed" : "Unknown"}
-          </span>
+          <span className="gn-sidebar-pill">{status.kind === "mixed" ? "Mixed" : "Unknown"}</span>
         )}
       </small>
     </span>

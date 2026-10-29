@@ -99,14 +99,12 @@ export function tagEditor(options?: { registry?: { root: string; path: string } 
             };
             if (req.method === "GET") {
               const url = new URL(req.url ?? "", "http://localhost");
-              send(
-                200,
-                await readRegistryEditor(
-                  editor,
-                  url.searchParams.get("storyId") ?? "",
-                  url.searchParams.get("componentId") ?? "",
-                ),
+              const record = await readRegistryEditor(
+                editor,
+                url.searchParams.get("storyId") ?? "",
+                url.searchParams.get("componentId") ?? "",
               );
+              send(200, { ...record, registryPath: config.path });
               return;
             }
             let body = "";
@@ -129,16 +127,14 @@ export function tagEditor(options?: { registry?: { root: string; path: string } 
               typeof data.component !== "object"
             )
               throw new Error("Invalid request");
-            send(
-              200,
-              await saveRegistryEditor(
-                editor,
-                data.storyId,
-                data.componentId,
-                data.revision,
-                data.component as Component,
-              ),
+            const record = await saveRegistryEditor(
+              editor,
+              data.storyId,
+              data.componentId,
+              data.revision,
+              data.component as Component,
             );
+            send(200, { ...record, registryPath: config.path });
           };
           void execute().catch((error: unknown) =>
             send(error instanceof Error && error.message.includes("changed") ? 409 : 400, {

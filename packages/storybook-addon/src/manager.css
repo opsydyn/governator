@@ -199,6 +199,64 @@
 .gn-registry {
   margin-bottom: 12px;
 }
+.gn-registry-group {
+  margin: 0 0 14px;
+}
+.gn-registry-group > summary {
+  cursor: pointer;
+  font-weight: 750;
+  margin-bottom: 10px;
+}
+.gn-field-error {
+  color: var(--gn-chip);
+  font-size: 12px;
+}
+.gn-status-ready,
+.gn-status-pass {
+  color: var(--gn-success);
+}
+.gn-status-blocked,
+.gn-status-fail {
+  color: var(--gn-danger);
+}
+.gn-status-text:not(.gn-status-ready, .gn-status-pass, .gn-status-blocked, .gn-status-fail) {
+  color: var(--gn-warning);
+}
+.gn-sidebar-label {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+.gn-sidebar-status {
+  align-items: center;
+  display: inline-flex;
+  font:
+    11px/1.4 ui-sans-serif,
+    system-ui,
+    sans-serif;
+  gap: 4px;
+  white-space: nowrap;
+}
+.gn-sidebar-pill {
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.gn-sidebar-gate {
+  background: #654300;
+  color: #fff4d5;
+  font-weight: 700;
+  padding-inline: 5px;
+}
+.gn-sidebar-gate[data-governator-gate="ready"] {
+  background: #174d32;
+  color: #e3ffeb;
+}
+.gn-sidebar-gate[data-governator-gate="blocked"] {
+  background: #751e2d;
+  color: #fff2f2;
+}
 .gn-discovery-controls {
   display: flex;
   gap: 12px;

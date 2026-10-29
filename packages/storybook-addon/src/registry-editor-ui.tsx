@@ -1,37 +1,21 @@
 /** @jsxRuntime classic */
 import React, { useEffect, useRef, useState } from "react";
+import {
+  buildRegistryComponent,
+  registryArrays,
+  registryFields,
+  valuesOfRegistryComponent,
+} from "./registry-form.ts";
+import type { RegistryFields } from "./registry-form.ts";
 
-type Fields = Record<string, unknown> & { id: string };
-type Draft = { revision: string; original: Fields; values: Record<string, string> };
+type Draft = {
+  revision: string;
+  original: RegistryFields;
+  values: Record<string, string>;
+  requiresReview?: boolean;
+  reviewLoaded?: boolean;
+};
 const drafts = new Map<string, Draft>();
-const fields = [
-  ["name", "Name"],
-  ["package", "Package"],
-  ["owners", "Owners, one per line"],
-  ["lifecycle", "Lifecycle"],
-  ["source", "Source path"],
-  ["stories", "Story paths, one per line"],
-  ["contractVersion", "Contract version"],
-  ["exportPath", "Export path"],
-  ["packageVersion", "Package version (optional)"],
-  ["replacementId", "Replacement ID (optional)"],
-  ["documentationUrl", "Documentation URL (optional)"],
-  ["figmaUrl", "Figma URL (optional)"],
-] as const;
-const arrays = new Set(["owners", "stories"]);
-const optional = new Set(["packageVersion", "replacementId", "documentationUrl", "figmaUrl"]);
-function valuesOf(component: Fields): Record<string, string> {
-  return Object.fromEntries(
-    fields.map(([key]) => [
-      key,
-      arrays.has(key) && Array.isArray(component[key])
-        ? (component[key] as string[]).join("\n")
-        : typeof component[key] === "string"
-          ? component[key]
-          : "",
-    ]),
-  );
-}
 function endpoint(storyId: string, componentId: string): URL {
   const url = new URL("/__governator/registry-editor", window.location.href);
   url.searchParams.set("storyId", storyId);
@@ -52,14 +36,27 @@ export function RegistryEditor({
   const [saving, setSaving] = useState(false);
   const [conflict, setConflict] = useState(false);
   const [reload, setReload] = useState(0);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [registryPath, setRegistryPath] = useState<string>();
   const section = useRef<HTMLElement>(null);
+  const latest = useRef<Draft>();
   const key = `${storyId}\0${componentId}`;
   const dirty =
-    !!draft && JSON.stringify(draft.values) !== JSON.stringify(valuesOf(draft.original));
+    !!draft &&
+    JSON.stringify(draft.values) !== JSON.stringify(valuesOfRegistryComponent(draft.original));
   useEffect(() => {
     onDirtyChange?.(dirty);
     return () => onDirtyChange?.(false);
   }, [dirty, onDirtyChange]);
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
   useEffect(() => {
     const abort = new AbortController();
     const timeout = setTimeout(() => {
@@ -68,6 +65,7 @@ export function RegistryEditor({
     }, 10_000);
     setDraft(undefined);
     setConflict(false);
+    setFieldErrors({});
     setMessage("Loading declared metadata…");
     void fetch(endpoint(storyId, componentId), {
       cache: "no-store",
@@ -91,16 +89,26 @@ export function RegistryEditor({
           value.component.id !== componentId
         )
           throw new Error("Invalid metadata response.");
-        const original = value.component as Fields;
-        const next = { revision: value.revision, original, values: valuesOf(original) };
+        const original = value.component as RegistryFields;
+        const next = {
+          revision: value.revision,
+          original,
+          values: valuesOfRegistryComponent(original),
+        };
+        latest.current = next;
+        if ("registryPath" in value && typeof value.registryPath === "string")
+          setRegistryPath(value.registryPath);
         if (abort.signal.aborted) return;
         const saved = drafts.get(key);
         if (saved) {
-          setDraft(saved);
-          setConflict(saved.revision !== next.revision);
+          const restored = saved.requiresReview ? { ...saved, reviewLoaded: true } : saved;
+          if (restored !== saved) drafts.set(key, restored);
+          setDraft(restored);
+          const changed = saved.revision !== next.revision || saved.requiresReview === true;
+          setConflict(changed);
           setMessage(
-            saved.revision !== next.revision
-              ? "Registry changed. Discard the draft and reload."
+            changed
+              ? "Registry changed or a previous save had an unknown outcome. Compare your draft with the current registry."
               : "Unsaved metadata draft restored.",
           );
         } else {
@@ -125,24 +133,26 @@ export function RegistryEditor({
     const next = { ...draft, values: { ...draft.values, [name]: value } };
     drafts.set(key, next);
     setDraft(next);
+    setFieldErrors((current) => {
+      if (!(name in current)) return current;
+      const nextErrors = { ...current };
+      delete nextErrors[name];
+      return nextErrors;
+    });
     setMessage("Unsaved declaration changes.");
   };
   const save = async () => {
     if (!draft || saving || conflict || !dirty) return;
-    const component: Fields = { ...draft.original };
-    const originalValues = valuesOf(draft.original);
-    for (const [name] of fields) {
-      const text = draft.values[name] ?? "";
-      if (text === originalValues[name]) continue;
-      if (arrays.has(name))
-        component[name] = text
-          .split("\n")
-          .map((part) => part.trim())
-          .filter(Boolean);
-      else if (optional.has(name) && !text.trim()) {
-        if (draft.original[name] !== null) delete component[name];
-      } else component[name] = text.trim();
+    const parsed = buildRegistryComponent(draft.original, draft.values);
+    if (!parsed.component) {
+      setFieldErrors(parsed.fieldErrors);
+      setMessage("Correct the highlighted metadata fields before saving.");
+      const first = Object.keys(parsed.fieldErrors)[0];
+      if (first) document.getElementById(`gn-registry-${first}`)?.focus({ preventScroll: false });
+      return;
     }
+    const component = parsed.component;
+    setFieldErrors({});
     setSaving(true);
     setMessage("Saving declaration…");
     window.dispatchEvent(new Event("governator:registry-changed"));
@@ -154,7 +164,12 @@ export function RegistryEditor({
       controller.abort();
       setSaving(false);
       setConflict(true);
-      setMessage("Save outcome is unknown. Discard the draft and reload to inspect the registry.");
+      const reviewDraft = { ...draft, requiresReview: true };
+      drafts.set(key, reviewDraft);
+      setDraft(reviewDraft);
+      setMessage(
+        "Save outcome is unknown. Load the current registry and compare it with your draft.",
+      );
     }, 10_000);
     try {
       const response = await fetch(endpoint(storyId, componentId), {
@@ -181,37 +196,87 @@ export function RegistryEditor({
         !("id" in result.component) ||
         result.component.id !== componentId
       ) {
-        if (response.status === 409) setConflict(true);
+        if (response.status === 409) {
+          const reviewDraft = { ...draft, requiresReview: true };
+          drafts.set(key, reviewDraft);
+          setDraft(reviewDraft);
+          setConflict(true);
+        }
         throw new Error(
           response.status === 409
-            ? "Registry changed. Discard the draft and reload."
-            : "Could not save metadata. Check values and paths.",
+            ? "Registry changed. Load the current registry and compare it with your draft."
+            : "Could not save metadata. Review the highlighted values and repository paths.",
         );
       }
       const saved = {
         revision: result.revision,
-        original: result.component as Fields,
-        values: valuesOf(result.component as Fields),
+        original: result.component as RegistryFields,
+        values: valuesOfRegistryComponent(result.component as RegistryFields),
       };
+      latest.current = saved;
+      if ("registryPath" in result && typeof result.registryPath === "string")
+        setRegistryPath(result.registryPath);
       if (drafts.get(key) === draft) drafts.delete(key);
       setDraft(saved);
       setMessage("Declaration saved. Commit the registry, regenerate and reload the report.");
     } catch (error) {
       if (!timedOut) {
+        const registryConflict =
+          error instanceof Error && error.message.startsWith("Registry changed");
+        const unknown = !definiteRejection && !registryConflict;
         if (!definiteRejection) setConflict(true);
+        if (unknown) {
+          const reviewDraft = { ...draft, requiresReview: true };
+          drafts.set(key, reviewDraft);
+          setDraft(reviewDraft);
+        }
         setMessage(
-          definiteRejection ||
-            (error instanceof Error && error.message.startsWith("Registry changed"))
+          definiteRejection || registryConflict
             ? error instanceof Error
               ? error.message
               : "Could not save metadata."
-            : "Save outcome is unknown. Discard the draft and reload to inspect the registry.",
+            : "Save outcome is unknown. Load the current registry and compare it with your draft.",
         );
       }
     } finally {
       clearTimeout(timeout);
       if (!timedOut) setSaving(false);
     }
+  };
+  const field = ([name, label]: (typeof registryFields)[number]) => {
+    const error = fieldErrors[name];
+    const common = {
+      id: `gn-registry-${name}`,
+      "aria-label": label,
+      "aria-invalid": error ? (true as const) : undefined,
+      "aria-describedby": error ? `gn-registry-${name}-error` : undefined,
+      disabled: saving,
+      value: draft?.values[name] ?? "",
+      onChange: (
+        event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+      ) => update(name, event.currentTarget.value),
+    };
+    return (
+      <label key={name}>
+        {label}
+        {name === "lifecycle" ? (
+          <select {...common}>
+            {["draft", "candidate", "stable", "deprecated", "retired"].map((value) => (
+              <option key={value}>{value}</option>
+            ))}
+          </select>
+        ) : registryArrays.has(name) ? (
+          <textarea {...common} />
+        ) : (
+          <input {...common} />
+        )}
+        {error && (
+          <span id={`gn-registry-${name}-error`} className="gn-field-error">
+            {error}
+          </span>
+        )}
+      </label>
+    );
   };
   return (
     <section
@@ -223,46 +288,105 @@ export function RegistryEditor({
       <h3>Declared governance metadata</h3>
       <p className="gn-small">
         Declarations require review and do not grant readiness or release approval. Component ID:{" "}
-        <code>{componentId}</code>.
+        <code>{componentId}</code>. Saving updates one declaration in{" "}
+        <code>{registryPath ?? "configured registry file"}</code>.
       </p>
       {draft && (
         <>
+          {Object.keys(fieldErrors).length > 0 && (
+            <div role="alert" className="gn-note">
+              <strong>Correct {Object.keys(fieldErrors).length} metadata fields</strong>
+              <ul>
+                {Object.entries(fieldErrors).map(([name, error]) => (
+                  <li key={name}>
+                    <a href={`#gn-registry-${name}`}>{error}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="gn-split gn-registry">
-            {fields.map(([name, label]) => (
-              <label key={name}>
-                {label}
-                {name === "lifecycle" ? (
-                  <select
-                    aria-label={label}
-                    disabled={saving}
-                    value={draft.values[name]}
-                    onChange={(event) => update(name, event.currentTarget.value)}
-                  >
-                    {["draft", "candidate", "stable", "deprecated", "retired"].map((value) => (
-                      <option key={value}>{value}</option>
-                    ))}
-                  </select>
-                ) : arrays.has(name) ? (
-                  <textarea
-                    aria-label={label}
-                    disabled={saving}
-                    value={draft.values[name]}
-                    onChange={(event) => update(name, event.currentTarget.value)}
-                  />
-                ) : (
-                  <input
-                    aria-label={label}
-                    disabled={saving}
-                    value={draft.values[name]}
-                    onChange={(event) => update(name, event.currentTarget.value)}
-                  />
-                )}
-              </label>
-            ))}
+            {registryFields.filter((entry) => entry[2] === "basic").map(field)}
+            {registryFields.filter((entry) => entry[2] === "ownership").map(field)}
           </div>
+          <details
+            className="gn-registry-group"
+            open={
+              registryFields.some(
+                ([name, _label, group]) =>
+                  (group === "contracts" || group === "links") && name in fieldErrors,
+              ) || undefined
+            }
+          >
+            <summary>Contracts and paths</summary>
+            <div className="gn-split gn-registry">
+              {registryFields.filter((entry) => entry[2] === "contracts").map(field)}
+            </div>
+            <h4>Reference links</h4>
+            <div className="gn-split gn-registry">
+              {registryFields.filter((entry) => entry[2] === "links").map(field)}
+            </div>
+          </details>
           <button disabled={saving || conflict || !dirty} onClick={() => void save()}>
             Save metadata
           </button>
+          {conflict && (
+            <div className="gn-note">
+              <p>Your intended declaration is preserved for review.</p>
+              <details>
+                <summary>Compare intended and current declarations</summary>
+                <p>
+                  Intended: <code>{JSON.stringify(draft.values)}</code>
+                </p>
+                <p>
+                  Current: <code>{JSON.stringify(latest.current?.values ?? {})}</code>
+                </p>
+              </details>
+              <button
+                type="button"
+                onClick={() => {
+                  void Promise.resolve()
+                    .then(() => {
+                      if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+                      return navigator.clipboard.writeText(JSON.stringify(draft.values));
+                    })
+                    .then(
+                      () => setMessage("Intended declaration copied."),
+                      () => setMessage("Could not copy the intended declaration."),
+                    );
+                }}
+              >
+                Copy intended declaration
+              </button>{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  const current = latest.current;
+                  if (!current || (draft.requiresReview && !draft.reviewLoaded)) {
+                    setDraft(undefined);
+                    setReload((value) => value + 1);
+                    return;
+                  }
+                  const rebased = {
+                    ...current,
+                    values: draft.values,
+                    requiresReview: false,
+                  };
+                  drafts.set(key, rebased);
+                  setDraft(rebased);
+                  setConflict(false);
+                  setMessage(
+                    "Draft retained against the current registry. Review it before saving.",
+                  );
+                }}
+              >
+                {draft.reviewLoaded ||
+                (latest.current && latest.current.revision !== draft.revision)
+                  ? "Reapply draft to current registry"
+                  : "Load current registry and keep draft"}
+              </button>
+            </div>
+          )}
           {(dirty || conflict) && (
             <button
               disabled={saving}
@@ -270,6 +394,7 @@ export function RegistryEditor({
                 if (document.activeElement === event.currentTarget) section.current?.focus();
                 drafts.delete(key);
                 setDraft(undefined);
+                setFieldErrors({});
                 setReload((value) => value + 1);
               }}
             >

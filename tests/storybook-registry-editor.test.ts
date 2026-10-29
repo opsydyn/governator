@@ -236,7 +236,9 @@ test("the opt-in server resolves a story on the server before returning a regist
     );
   });
   expect(result.status).toBe(200);
-  expect(JSON.parse(result.body).component.id).toBe("ui.button");
+  const body = JSON.parse(result.body);
+  expect(body.component.id).toBe("ui.button");
+  expect(body.registryPath).toBe(options.registryPath);
 });
 
 test("concurrent saves from the same revision cannot silently overwrite one another", async () => {
