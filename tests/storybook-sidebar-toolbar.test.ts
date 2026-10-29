@@ -37,6 +37,7 @@ const api = {
   },
   experimental_setFilters: sb.set,
 };
+/* oxlint-disable linteffect/no-react-state, linteffect/no-return-in-callback -- this test double mirrors Storybook's local disclosure and Escape behavior */
 function WithTooltipTestDouble({
   children,
   tooltip,
@@ -46,8 +47,20 @@ function WithTooltipTestDouble({
   tooltip: React.ReactNode | ((controls: { onHide: () => void }) => React.ReactNode);
   onVisibleChange?: (visible: boolean) => void;
 }) {
-  // oxlint-disable-next-line linteffect/no-react-state -- the test double mirrors Storybook's local disclosure state
   const [open, setOpen] = React.useState(false);
+  React.useEffect(
+    function closeOnEscape() {
+      if (!open) return;
+      const close = (event: KeyboardEvent) => {
+        if (event.key === "Escape") setOpen(false);
+      };
+      document.addEventListener("keydown", close);
+      return function removeEscapeHandler() {
+        document.removeEventListener("keydown", close);
+      };
+    },
+    [open],
+  );
   const setVisible = (visible: boolean) => {
     setOpen(visible);
     onVisibleChange?.(visible);
@@ -64,6 +77,7 @@ function WithTooltipTestDouble({
       : null,
   );
 }
+/* oxlint-enable linteffect/no-react-state, linteffect/no-return-in-callback */
 vi.mock("storybook/manager-api", () => ({
   useStorybookApi: () => api,
   useStorybookState: () => ({ index: sb.index, refs: sb.refs }),
@@ -194,7 +208,7 @@ test("no report keeps the sidebar unfiltered and the control unavailable", async
   const help = el.querySelector<HTMLButtonElement>('[aria-label="Readiness filter help"]');
   expect(help).not.toBeNull();
   await act(async () => help!.click());
-  expect(document.body.querySelector('[role="status"]')?.textContent).toContain(
+  expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain(
     "governance report not configured",
   );
   await act(async () => root.unmount());
@@ -413,12 +427,28 @@ test("enabled local source verification keeps a mismatched report from filtering
   ).toBe(true);
   expect(sb.filters["governator/readiness"]!(sb.index["button--one"])).toBe(true);
   expect(el.textContent).not.toContain("Report does not match this checkout");
-  await act(async () =>
-    el.querySelector<HTMLButtonElement>('button[aria-label="Readiness filter help"]')!.click(),
+  const help = el.querySelector<HTMLButtonElement>('button[aria-label="Readiness filter help"]')!;
+  await act(async () => help.click());
+  const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+  expect(dialog).not.toBeNull();
+  expect(help.getAttribute("aria-haspopup")).toBe("dialog");
+  expect(help.getAttribute("aria-controls")).toBe(dialog!.id);
+  expect(dialog!.getAttribute("aria-labelledby")).not.toBeNull();
+  expect(document.getElementById(dialog!.getAttribute("aria-labelledby")!)?.textContent).toBe(
+    "Readiness unavailable",
   );
-  expect(document.body.querySelector('[role="status"]')?.textContent).toContain(
+  expect(dialog?.textContent).toContain(
     "Report does not match this checkout. Regenerate the report, then retry.",
   );
+  expect(document.activeElement).toBe(
+    dialog!.querySelector('button[aria-label="Retry readiness filter"]'),
+  );
+  await act(async () => {
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    await Promise.resolve();
+  });
+  expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+  expect(document.activeElement).toBe(help);
   await act(async () => root.unmount());
   el.remove();
   sb.params = { reportUrl: "/report.json" };
@@ -850,7 +880,7 @@ test("explains a missing story map and can retry after it becomes available", as
   await act(async () =>
     el.querySelector<HTMLButtonElement>('button[aria-label="Readiness filter help"]')!.click(),
   );
-  expect(document.body.querySelector('[role="status"]')?.textContent).toMatch(
+  expect(document.body.querySelector('[role="dialog"]')?.textContent).toMatch(
     /story mapping.*unavailable/i,
   );
   const retry = document.body.querySelector<HTMLButtonElement>(
@@ -893,8 +923,8 @@ test("explains a failed configured report instead of asking to select a story", 
   await act(async () =>
     el.querySelector<HTMLButtonElement>('button[aria-label="Readiness filter help"]')!.click(),
   );
-  expect(el.querySelector('[role="status"]')).toBeNull();
-  expect(document.body.querySelector('[role="status"]')?.textContent).toContain(
+  expect(el.querySelector('[role="dialog"]')).toBeNull();
+  expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain(
     "governance report unavailable (HTTP 404)",
   );
   await act(async () => root.unmount());

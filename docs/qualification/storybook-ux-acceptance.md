@@ -11,7 +11,7 @@ This record separates source tests, packed-consumer builds, scripted browser obs
 | Field                | Value                                                                                 |
 | -------------------- | ------------------------------------------------------------------------------------- |
 | Package              | `@opsydyn/storybook-addon-governator`                                                 |
-| Published comparison | `0.1.0`; repository demo and hosted demo remain pinned to this release                |
+| Published comparison | `0.1.0`; at record time the repository and hosted demos were pinned to this release   |
 | Candidate manifest   | local `0.2.0`; not published by this record                                           |
 | Archive              | `artifacts/storybook-addon-governator-0.2.0-storybook-ux-4b7da5a.tgz`                 |
 | Archive SHA-256      | `8e35c14c53b4d82c275227f3d6256523d22a45d004fc5274cec4d53ce4190672`                    |

@@ -1,5 +1,5 @@
 /** @jsxRuntime classic */
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useParameter, useStorybookApi, useStorybookState } from "storybook/manager-api";
 import { WithTooltip } from "storybook/internal/components";
 import { STORY_INDEX_INVALIDATED } from "storybook/internal/core-events";
@@ -42,6 +42,9 @@ export function GovernanceSidebarFilter() {
   const [mapRetry, setMapRetry] = useState(0);
   const [error, setError] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const helpButton = useRef<HTMLButtonElement>(null);
+  const helpId = useId();
+  const helpHeadingId = useId();
   const signature = storyIndexSignature(index);
   const latestIndex = useRef(index);
   latestIndex.current = index;
@@ -222,6 +225,14 @@ export function GovernanceSidebarFilter() {
     },
     [controller],
   );
+  useEffect(() => {
+    if (!helpOpen) return;
+    const restoreFocus = (event: KeyboardEvent) => {
+      if (event.key === "Escape") queueMicrotask(() => helpButton.current?.focus());
+    };
+    document.addEventListener("keydown", restoreFocus);
+    return () => document.removeEventListener("keydown", restoreFocus);
+  }, [helpOpen]);
   const reason = composed
     ? "Unavailable when composed Storybooks are present."
     : error
@@ -277,16 +288,20 @@ export function GovernanceSidebarFilter() {
           onVisibleChange={setHelpOpen}
           tooltip={({ onHide }) => (
             <div
-              role="status"
-              aria-live="polite"
+              id={helpId}
+              role="dialog"
+              aria-labelledby={helpHeadingId}
               style={{ width: 260, padding: 10, whiteSpace: "normal", lineHeight: 1.4 }}
             >
-              <strong style={{ display: "block", marginBottom: 4 }}>Readiness unavailable</strong>
+              <strong id={helpHeadingId} style={{ display: "block", marginBottom: 4 }}>
+                Readiness unavailable
+              </strong>
               <span>{reason}</span>
               {!composed && (
                 <button
                   type="button"
                   aria-label="Retry readiness filter"
+                  autoFocus
                   onClick={() => {
                     onHide();
                     setError(false);
@@ -301,7 +316,14 @@ export function GovernanceSidebarFilter() {
             </div>
           )}
         >
-          <button type="button" aria-label="Readiness filter help" aria-expanded={helpOpen}>
+          <button
+            ref={helpButton}
+            type="button"
+            aria-label="Readiness filter help"
+            aria-expanded={helpOpen}
+            aria-haspopup="dialog"
+            aria-controls={helpOpen ? helpId : undefined}
+          >
             Status
           </button>
         </WithTooltip>
