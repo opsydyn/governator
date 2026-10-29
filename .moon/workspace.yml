@@ -10,6 +10,7 @@ projects:
   demo-ui: "packages/demo-ui"
   storybook-addon: "packages/storybook-addon"
   storybook: "apps/storybook-demo"
+  operations: "packages/operations"
   query: "packages/query"
   mcp: "packages/mcp"
   github-review: "packages/github-review"

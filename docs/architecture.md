@@ -2,7 +2,7 @@
 
 The core evaluates validated data against an explicit policy, source identity and clock. It imports no Storybook, MCP or GitHub SDK. Pure evaluation does not read the filesystem, spawn processes or obtain current time. Canonical hashing uses Bun's compatible `node:crypto` implementation; it is deterministic for JSON inputs.
 
-The CLI is the application boundary. It loads YAML/JSON, resolves symlinks, checks files, obtains Git HEAD and injects time. Effect maps application failures into typed errors and CLI exit codes. Protocol serialization is JSON only. The read-only Storybook addon imports neither the engine nor Effect; it consumes the generated JSON protocol.
+The CLI is the application boundary. It loads YAML/JSON, resolves symlinks, checks files, obtains Git HEAD and injects time. Effect maps application failures into typed errors and CLI exit codes. Protocol serialization is JSON only. The Storybook manager consumes the generated JSON protocol without importing the engine or Effect. Its opt-in Vite development-server integration can edit registry metadata and descriptive tags locally; that server boundary validates inputs and writes files. Static builds provide viewing only.
 
 ## Wire contract
 

@@ -72,6 +72,29 @@ export async function parseCli(args: readonly string[]): Promise<ParsedCli> {
   };
   const root = Command.make("governator").pipe(
     Command.withSubcommands([
+      leaf("doctor", "doctor", ["root", "format"]),
+      Command.make("registry").pipe(
+        Command.withSubcommands([
+          leaf("inspect", "registry.inspect", [
+            "root",
+            "registry",
+            "story-map",
+            "working-dir",
+            "story",
+            "component",
+          ]),
+          leaf("update", "registry.update", [
+            "root",
+            "registry",
+            "story-map",
+            "working-dir",
+            "story",
+            "component",
+            "revision",
+            "fields",
+          ]),
+        ]),
+      ),
       leaf("validate", "validate", [
         "root",
         "target",

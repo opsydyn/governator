@@ -63,6 +63,7 @@
       "devDependencies": {
         "@effect/platform-bun": "4.0.6",
         "@governator/core": "workspace:*",
+        "@governator/operations": "workspace:*",
         "@governator/protocol": "workspace:*",
         "@governator/query": "workspace:*",
         "@governator/versioning": "workspace:*",
@@ -120,6 +121,14 @@
         "effect": "4.0.6",
       },
     },
+    "packages/operations": {
+      "name": "@governator/operations",
+      "version": "0.1.0",
+      "dependencies": {
+        "@governator/core": "workspace:*",
+        "yaml": "2.9.1",
+      },
+    },
     "packages/protocol": {
       "name": "@governator/protocol",
       "version": "0.1.0",
@@ -141,6 +150,7 @@
       "name": "@opsydyn/storybook-addon-governator",
       "version": "0.1.0",
       "devDependencies": {
+        "@governator/operations": "workspace:*",
         "yaml": "2.9.1",
       },
       "peerDependencies": {
@@ -323,6 +333,8 @@
     "@governator/fixture-policy": ["@governator/fixture-policy@workspace:packages/fixture-policy"],
 
     "@governator/github-review": ["@governator/github-review@workspace:packages/github-review"],
+
+    "@governator/operations": ["@governator/operations@workspace:packages/operations"],
 
     "@governator/protocol": ["@governator/protocol@workspace:packages/protocol"],
 

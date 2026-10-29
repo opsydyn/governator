@@ -40,6 +40,7 @@
     "prepack": "bun run build"
   },
   "devDependencies": {
+    "@governator/operations": "workspace:*",
     "yaml": "2.9.1"
   },
   "peerDependencies": {

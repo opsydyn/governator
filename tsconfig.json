@@ -22,7 +22,8 @@
       "@governator/query/*": ["./packages/query/src/*.ts"],
       "@governator/fixture-attestation": ["./packages/fixture-attestation/src/index.ts"],
       "@governator/github-review": ["./packages/github-review/src/index.ts"],
-      "@governator/fixture-policy": ["./packages/fixture-policy/src/index.ts"]
+      "@governator/fixture-policy": ["./packages/fixture-policy/src/index.ts"],
+      "@governator/operations": ["./packages/operations/src/index.ts"]
     },
     "jsx": "react-jsx"
   },

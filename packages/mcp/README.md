@@ -1,13 +1,13 @@
 # Governator MCP adapter
 
-Bun stdio application for fourteen immutable governance queries. Unpublished `0.1.0` release candidate; registry installation is unverified. Requires Bun **>=1.4.2** and a source-bound snapshot exported by the `@opsydyn/governator-cli` package. Node runtime compatibility is not claimed.
+Bun stdio application for fourteen immutable governance queries. Published as `0.1.0` on npm. Requires Bun **>=1.4.2** and a source-bound snapshot exported by the `@opsydyn/governator-cli` package. Node runtime compatibility is not claimed.
 
 ## Consumer quick start
 
-Given an actual locally packed MCP tarball, install it in the consumer project (replace the illustrative path); declared runtime dependencies also need an available package source:
+Install the MCP package in the consumer project:
 
 ```sh
-bun add --dev /absolute/path/to/opsydyn-governator-mcp-0.1.0.tgz
+bun add --dev @opsydyn/governator-mcp@0.1.0
 bun ./node_modules/.bin/governator-mcp --root /absolute/path/to/consumer --snapshot artifacts/governance-snapshot.json
 ```
 

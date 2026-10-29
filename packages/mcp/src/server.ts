@@ -13,6 +13,7 @@ import {
 import { McpProtocol, McpSchema, McpServer } from "effect/ai";
 import {
   toolNames,
+  toolDescriptions,
   toolInputs,
   toolInputJsonSchema,
   queryJsonSchema,
@@ -101,7 +102,7 @@ export function createMcpServer(service: McpQueryService) {
           for (const name of toolNames) {
             const tool = new McpSchema.Tool({
               name,
-              description: `Read ${name.replaceAll("_", " ")} from the selected immutable local governance snapshot. Recorded results are unverified; no producer execution, edits or approvals.`,
+              description: toolDescriptions[name],
               inputSchema: toolInputJsonSchema(name) as McpSchema.ToolJson,
               outputSchema: queryJsonSchema().schema,
               annotations: {
