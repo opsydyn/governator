@@ -104,3 +104,11 @@ test("bounds arguments and never generates migration steps for unavailable compa
     ),
   ).toMatchObject({ data: { status: "not_configured", suggestions: [], documents: [] } });
 });
+
+test("ready-components alias preserves the legacy result without granting approval", async () => {
+  const f = await fixture();
+  const ready = f.service.query("list_ready_components", { limit: 1 }, f.now);
+  const legacy = f.service.query("list_approved_components", { limit: 1 }, f.now);
+  expect(ready).toEqual(legacy);
+  expect(ready).toMatchObject({ data: { approvalVerified: false } });
+});

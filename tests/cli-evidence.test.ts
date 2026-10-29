@@ -203,3 +203,61 @@ describe("local Vitest producer and gate", () => {
     ).toBe(2);
   });
 });
+
+test("snapshot refresh runs the configured producer, exports queryable evidence once and rejects overwrite", async () => {
+  const root = await project();
+  const refresh = [
+    "snapshot",
+    "refresh",
+    "--root",
+    root,
+    "--mapping",
+    "governance/tests.json",
+    "--out",
+    "artifacts/refreshed.json",
+  ];
+  const result = await runCli(refresh);
+  expect(result.code, result.stderr).toBe(0);
+  const reference = JSON.parse(result.stdout);
+  expect(reference.report).toMatch(/^artifacts\/refresh-/);
+  const queried = await runCli([
+    "query",
+    "--root",
+    root,
+    "--snapshot",
+    reference.path,
+    "--tool",
+    "get_component",
+    "--args",
+    '{"componentId":"ui.button"}',
+  ]);
+  expect(queried.code, queried.stderr).toBe(0);
+  expect(JSON.parse(queried.stdout).data.id).toBe("ui.button");
+  expect((await runCli(refresh)).code).toBe(2);
+  expect(
+    (
+      await runCli([
+        ...refresh.slice(0, -1),
+        "artifacts/other.json",
+        "--release",
+        "artifacts/release.json",
+      ])
+    ).code,
+  ).toBe(2);
+}, 30_000);
+
+test("snapshot refresh refuses a producer that mutates source and leaves no snapshot", async () => {
+  const root = await project("mutate");
+  const result = await runCli([
+    "snapshot",
+    "refresh",
+    "--root",
+    root,
+    "--mapping",
+    "governance/tests.json",
+    "--out",
+    "artifacts/rejected.json",
+  ]);
+  expect(result.code, result.stderr).toBe(2);
+  expect(await Bun.file(join(root, "artifacts/rejected.json")).exists()).toBe(false);
+}, 30_000);

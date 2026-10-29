@@ -142,6 +142,7 @@ test("matched fixture evidence cannot authorize a real candidate or saved MCP re
         "evaluate_component",
         "explain_governance_failure",
         "get_design_system_report",
+        "list_ready_components",
         "list_approved_components",
         "get_component_contract",
         "diff_component_contract",

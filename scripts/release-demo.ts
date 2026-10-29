@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { ensure } from "../packages/core/src/index.ts";
@@ -18,6 +18,18 @@ function git(args: string[], cwd = root) {
 git(["clone", "--quiet", "--no-hardlinks", source, root], source);
 git(["remote", "remove", "origin"]);
 await symlink(join(source, "node_modules"), join(root, "node_modules"));
+// Isolated Bun installs keep transitive package dependencies in package-local directories.
+for (const name of await readdir(join(source, "packages"))) {
+  const modules = join(source, "packages", name, "node_modules");
+  if (
+    await stat(modules).then(
+      (entry) => entry.isDirectory(),
+      () => false,
+    )
+  )
+    await symlink(modules, join(root, "packages", name, "node_modules"));
+}
+
 await writeFile(join(root, ".git/info/exclude"), "node_modules\n");
 // Remove real pending intents only in the disposable clone before adding simulated intent.
 for (const name of await readdir(join(root, ".changeset")))

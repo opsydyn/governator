@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "vitest";
-import { mkdtemp, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdtemp, readdir, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -18,9 +18,12 @@ test("release demo isolates its simulated changeset from a real pending changese
   await symlink(join(source, "node_modules"), join(root, "node_modules"));
   for (const name of await readdir(join(source, "packages"))) {
     const modules = join(source, "packages", name, "node_modules");
-    if (await Bun.file(join(modules, ".bin", "tsdown")).exists())
-      await symlink(modules, join(root, "packages", name, "node_modules"));
-    else if (await Bun.file(join(modules, "effect", "package.json")).exists())
+    if (
+      await stat(modules).then(
+        (entry) => entry.isDirectory(),
+        () => false,
+      )
+    )
       await symlink(modules, join(root, "packages", name, "node_modules"));
   }
   await writeFile(
