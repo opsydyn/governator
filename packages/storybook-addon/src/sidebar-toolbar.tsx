@@ -40,6 +40,7 @@ export function GovernanceSidebarFilter() {
   const [retry, setRetry] = useState(0);
   const [mapRetry, setMapRetry] = useState(0);
   const [error, setError] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const signature = storyIndexSignature(index);
   const latestIndex = useRef(index);
   latestIndex.current = index;
@@ -266,24 +267,51 @@ export function GovernanceSidebarFilter() {
         <option value="ready">Ready</option>
       </select>
       {!available && (
-        <>
-          <span role="status" style={{ maxWidth: 210, whiteSpace: "normal", lineHeight: 1.3 }}>
-            {reason}
-          </span>
-          {!composed && (
-            <button
-              type="button"
-              aria-label="Retry readiness filter"
-              onClick={() => {
-                setError(false);
-                setMapRetry((value) => value + 1);
-                setRetry((value) => value + 1);
+        <span style={{ position: "relative" }}>
+          <button
+            type="button"
+            aria-label="Readiness filter help"
+            aria-expanded={helpOpen}
+            onClick={() => setHelpOpen((open) => !open)}
+          >
+            Status
+          </button>
+          {helpOpen && (
+            <span
+              role="status"
+              style={{
+                position: "absolute",
+                zIndex: 10,
+                top: "calc(100% + 6px)",
+                right: 0,
+                width: 260,
+                whiteSpace: "normal",
+                lineHeight: 1.4,
+                padding: 10,
+                color: theme.color.defaultText,
+                background: theme.background.content,
+                border: "1px solid currentColor",
+                boxShadow: "0 4px 16px rgba(0,0,0,.2)",
               }}
             >
-              Retry
-            </button>
+              {reason}
+              {!composed && (
+                <button
+                  type="button"
+                  aria-label="Retry readiness filter"
+                  onClick={() => {
+                    setError(false);
+                    setMapRetry((value) => value + 1);
+                    setRetry((value) => value + 1);
+                  }}
+                  style={{ display: "block", marginTop: 8 }}
+                >
+                  Retry
+                </button>
+              )}
+            </span>
           )}
-        </>
+        </span>
       )}
     </div>
   );

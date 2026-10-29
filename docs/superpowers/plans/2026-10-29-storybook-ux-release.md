@@ -74,13 +74,13 @@
 - Consumes: Task 1 status view model.
 - Produces: component summary ordered as identity, readiness reason and next action; named Read-only snapshot / Local editing enabled mode; compact toolbar status with panel-oriented help; reusable `StatusBadge`; container-responsive cards and finder.
 
-- [ ] **Step 1: Write failing rendered tests** proving the summary precedes editing/detail, static mode is described as read-only, toolbar guidance is compact, finder navigation focuses the destination, and dirty-navigation copy names tags or metadata accurately.
-- [ ] **Step 2: Run focused tests and confirm RED** against the current order, unavailable copy and retained finder focus.
-- [ ] **Step 3: Implement the decision-first summary and staged disclosure** while retaining all release, compatibility, evidence and trust caveats.
-- [ ] **Step 4: Implement explicit mode presentation and compact toolbar recovery** using labelled native/Storybook-compatible controls and contextual help in the panel.
-- [ ] **Step 5: Implement destination focus and intrinsic/container-responsive layout** for short bottom and 320–400px side panels; preserve reduced-motion behavior and host themes.
-- [ ] **Step 6: Run focused tests and confirm GREEN**, then build the addon to enforce browser-boundary and size constraints.
-- [ ] **Step 7: Commit** as `feat: make Storybook governance decision first`.
+- [x] **Step 1: Write failing rendered tests** proving the summary precedes editing/detail, static mode is described as read-only, toolbar guidance is compact, finder navigation focuses the destination, and dirty-navigation copy names tags or metadata accurately.
+- [x] **Step 2: Run focused tests and confirm RED** against the current order, unavailable copy and retained finder focus.
+- [x] **Step 3: Implement the decision-first summary and staged disclosure** while retaining all release, compatibility, evidence and trust caveats.
+- [x] **Step 4: Implement explicit mode presentation and compact toolbar recovery** using labelled native/Storybook-compatible controls and contextual help in the panel.
+- [x] **Step 5: Implement destination focus and intrinsic/container-responsive layout** for short bottom and 320–400px side panels; preserve reduced-motion behavior and host themes.
+- [x] **Step 6: Run focused tests and confirm GREEN**, then build the addon to enforce browser-boundary and size constraints.
+- [x] **Step 7: Commit** as `feat: make Storybook governance decision first`.
 
 ### Task 3: Resilient and keyboard-efficient tag authoring
 

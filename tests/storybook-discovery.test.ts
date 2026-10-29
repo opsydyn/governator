@@ -161,3 +161,46 @@ test("announces when unsaved tag edits prevent opening another story", async () 
   expect(el.textContent).toContain("Save or discard your tag edits before opening another story");
   await act(async () => root.unmount());
 });
+
+test("names all dirty editors and moves focus to the opened component", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  const destination = document.createElement("h2");
+  destination.tabIndex = -1;
+  document.body.append(destination);
+  const focusDestination = vi.fn(() => destination.focus());
+  let blocked = true;
+  const el = document.createElement("div");
+  document.body.append(el);
+  const root = createRoot(el);
+  await act(async () =>
+    root.render(
+      React.createElement(Discovery, {
+        decisions: [
+          {
+            componentId: "ui.select",
+            package: "@example/ui",
+            gate: "blocked" as const,
+            lifecycle: "candidate" as const,
+            owners: [],
+            reasons: [],
+          },
+        ],
+        stories: { "ui.select": [{ id: "select--one", name: "Select / One" }] },
+        selectStory: () => (blocked ? { blockedBy: "both" as const } : true),
+        focusDestination,
+      }),
+    ),
+  );
+  const open = [...el.querySelectorAll("button")].find((item) =>
+    item.textContent?.includes("Select / One"),
+  )!;
+  await act(async () => open.click());
+  expect(el.textContent).toContain("Save or discard your tag and metadata edits");
+  expect(focusDestination).not.toHaveBeenCalled();
+  blocked = false;
+  await act(async () => open.click());
+  expect(focusDestination).toHaveBeenCalledOnce();
+  expect(document.activeElement).toBe(destination);
+  await act(async () => root.unmount());
+  destination.remove();
+});

@@ -161,6 +161,11 @@ test("no report keeps the sidebar unfiltered and the control unavailable", async
       ?.disabled,
   ).toBe(true);
   expect(sb.filters["governator/readiness"]!({ id: "x", type: "story" })).toBe(true);
+  expect(el.textContent).not.toContain("Select a story with a current governance report");
+  const help = el.querySelector<HTMLButtonElement>('[aria-label="Readiness filter help"]');
+  expect(help).not.toBeNull();
+  await act(async () => help!.click());
+  expect(el.textContent).toContain("governance report not configured");
   await act(async () => root.unmount());
   el.remove();
   sb.params = { reportUrl: "/report.json" };
@@ -804,6 +809,9 @@ test("explains a missing story map and can retry after it becomes available", as
     'select[aria-label="Filter sidebar by readiness"]',
   )!;
   expect(select.disabled).toBe(true);
+  await act(async () =>
+    el.querySelector<HTMLButtonElement>('button[aria-label="Readiness filter help"]')!.click(),
+  );
   expect(el.textContent).toMatch(/story mapping.*unavailable/i);
   const retry = el.querySelector<HTMLButtonElement>('button[aria-label="Retry readiness filter"]')!;
   expect(retry).not.toBeNull();
@@ -840,6 +848,9 @@ test("explains a failed configured report instead of asking to select a story", 
     root.render(React.createElement(GovernanceSidebarFilter));
     for (let i = 0; i < 12; i++) await Promise.resolve();
   });
+  await act(async () =>
+    el.querySelector<HTMLButtonElement>('button[aria-label="Readiness filter help"]')!.click(),
+  );
   expect(el.textContent).toContain("governance report unavailable (HTTP 404)");
   await act(async () => root.unmount());
   el.remove();
@@ -888,6 +899,9 @@ test("retry publishes the refreshed report for sidebar labels", async () => {
   });
   available = true;
   events.length = 0;
+  await act(async () => {
+    el.querySelector<HTMLButtonElement>('button[aria-label="Readiness filter help"]')!.click();
+  });
   await act(async () => {
     el.querySelector<HTMLButtonElement>('button[aria-label="Retry readiness filter"]')!.click();
     for (let i = 0; i < 20; i++) await Promise.resolve();

@@ -123,6 +123,19 @@ afterEach(async () => {
 });
 
 describe("panel interactions", () => {
+  test("puts the decision, reason, next action and explicit read-only mode before tools", async () => {
+    await act(async () => root.render(render()));
+    await flush();
+    const text = container.textContent ?? "";
+    expect(text).toContain("Read-only snapshot");
+    expect(text).toContain("Why this status");
+    expect(text).toContain("Next action");
+    expect(text.indexOf("Why this status")).toBeLessThan(text.indexOf("Find components"));
+    expect(container.querySelector("[data-gn-component-heading]")?.textContent).toContain(
+      "ui.button",
+    );
+  });
+
   test("offers descriptive tags even when governance identity is not configured", async () => {
     storybook.params = { componentId: "", reportUrl: "" };
     storybook.storyId = "button--primary";
@@ -159,7 +172,7 @@ describe("panel interactions", () => {
     );
     await act(async () => root.render(render()));
     await flush();
-    expect(container.textContent).toContain("Gate:");
+    expect(container.textContent).toContain("Ready");
     await pressEnter(button("Reload report"));
     expect(document.activeElement).toBe(button("Reload report"));
     expect(button("Reload report").disabled).toBe(false);
@@ -173,7 +186,7 @@ describe("panel interactions", () => {
     await act(async () => recovery.resolve(response()));
     await flush();
     expect(document.activeElement).toBe(button("Reload report"));
-    expect(container.textContent).toContain("Gate:");
+    expect(container.textContent).toContain("Ready");
     expect(liveText()).toMatch(/loaded|ready|current/i);
   });
 
@@ -272,7 +285,7 @@ describe("panel interactions", () => {
     expect(container.textContent).toContain("No registry decision");
     await pressEnter(button("Reload report"));
     await flush();
-    expect(container.textContent).toContain("Gate:");
+    expect(container.textContent).toContain("Ready");
     expect(container.textContent).toContain("ui.select");
     expect(document.activeElement).toBe(button("Reload report"));
   });
@@ -473,6 +486,7 @@ test("shows the registry editor when enabled for the selected story", async () =
     for (let i = 0; i < 15; i++) await Promise.resolve();
   });
   expect(container.textContent).toContain("Declared governance metadata");
+  expect(container.textContent).toContain("Local editing enabled");
   expect(container.querySelector<HTMLInputElement>('input[aria-label="Name"]')?.value).toBe(
     "Button",
   );

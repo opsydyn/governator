@@ -20,12 +20,11 @@ import {
   watchReportSource,
 } from "./report.ts";
 import type { ReportState } from "./report.ts";
+import type { TagDraft } from "./tag-editor-ui.tsx";
 import { TagEditor } from "./tag-editor-ui.tsx";
 import { RegistryEditor } from "./registry-editor-ui.tsx";
-import type { TagDraft } from "./tag-editor-ui.tsx";
 import { Discovery } from "./discovery.tsx";
 import { GovernanceSidebarFilter } from "./sidebar-toolbar.tsx";
-import { brandCss } from "./brand.ts";
 import { governatorLogo } from "./logo.ts";
 import {
   readinessView,
@@ -33,6 +32,8 @@ import {
   sidebarStatus,
   subscribeSelectedReportStatus,
 } from "./status-view.ts";
+import { PanelSummary } from "./panel-summary.tsx";
+import "./manager.css";
 
 // Storybook may unmount the panel while the manager stays open.
 const tagDrafts = new Map<string, TagDraft>();
@@ -63,7 +64,6 @@ function useFreshness(
   }, [state, monitorSource]);
 }
 
-const css = `.gn-panel{font:13px/1.5 ui-sans-serif,system-ui,sans-serif;padding:22px 26px;min-height:250px}.gn-panel *{box-sizing:border-box}.gn-panel h2{font-size:20px;letter-spacing:-.4px;margin:0}.gn-panel h3{font-size:13px;margin:0 0 9px}.gn-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.gn-small{font-size:12px;opacity:.9}.gn-chips{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:10px 0}.gn-chip{border:1px solid currentColor;border-radius:5px;padding:3px 8px;font-size:12px;font-weight:650}.gn-card{padding:15px 17px;margin-bottom:14px}.gn-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.gn-table{border-collapse:collapse;width:100%;font-size:12px}.gn-table th,.gn-table td{text-align:left;padding:10px 9px;border-bottom:1px solid color-mix(in srgb,currentColor 14%,transparent);vertical-align:top}.gn-table th{font-size:10px;text-transform:uppercase;letter-spacing:.7px;opacity:.7}.gn-table td:last-child{max-width:430px}.gn-panel code{font-size:11px}.gn-panel ul{padding-left:18px;margin:6px 0}.gn-panel button{cursor:pointer}.gn-note{border-left:3px solid #d79729;padding-left:12px}.gn-table-wrap{overflow-x:auto}@media(max-width:700px){.gn-split{grid-template-columns:1fr}.gn-panel{padding:16px}}`;
 function sourceHref(source: string | undefined): string | undefined {
   if (!source || !URL.canParse(source)) return undefined;
   const url = new URL(source);
@@ -140,6 +140,7 @@ function Panel() {
   const api = useStorybookApi();
   const tagEditsPending = useRef(false);
   const registryEditsPending = useRef(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const setTagEditsPending = useCallback((dirty: boolean) => {
     tagEditsPending.current = dirty;
   }, []);
@@ -277,7 +278,6 @@ function Panel() {
       mode={theme.base}
       style={{ color: theme.color.defaultText, background: theme.background.content }}
     >
-      <style>{css + brandCss}</style>
       <div className="gn-brand" aria-label="Governator design system governance">
         <img className="gn-brand-mark" src={governatorLogo} data-governator-logo alt="" />
         <span>
@@ -285,34 +285,17 @@ function Panel() {
           <small>DESIGN SYSTEM GOVERNANCE</small>
         </span>
       </div>
-      <div className="gn-top">
-        <div>
-          <h2>{component?.componentId ?? (report ? "Unverified component" : "Governance")}</h2>
-          {component ? (
-            <>
-              <div className="gn-chips">
-                <span className="gn-chip">{component.lifecycle}</span>
-                <span className="gn-chip" style={{ color: color(component.gate) }}>
-                  Gate: {component.gate.replaceAll("_", " ")}
-                </span>
-              </div>
-              <div className="gn-small">
-                Owners: {component.owners?.join(", ") || "not provided"} · Target:{" "}
-                {component.target}
-              </div>
-            </>
-          ) : (
-            !report && (
-              <p className="gn-small">{componentId ?? "No component identity configured"}</p>
-            )
-          )}
-        </div>
-        <div>
-          {component && <CopyId key={component.componentId} id={component.componentId} />}
-          <button data-reload onClick={() => setRefresh((value) => value + 1)}>
-            Reload report
-          </button>
-        </div>
+      <PanelSummary
+        component={component}
+        componentId={componentId}
+        mode={verifySource ? "local-editing" : "read-only"}
+        headingRef={headingRef}
+      />
+      <div className="gn-actions">
+        {component && <CopyId key={component.componentId} id={component.componentId} />}
+        <button data-reload onClick={() => setRefresh((value) => value + 1)}>
+          Reload report
+        </button>
       </div>
       <div role="status" aria-live="polite" className={report ? "gn-small" : "gn-card gn-note"}>
         {currentState.status !== "ready"
@@ -332,27 +315,43 @@ function Panel() {
           )}
           selectStory={(id) => {
             if (id !== storyId && (tagEditsPending.current || registryEditsPending.current))
-              return false;
+              return {
+                blockedBy:
+                  tagEditsPending.current && registryEditsPending.current
+                    ? "both"
+                    : tagEditsPending.current
+                      ? "tags"
+                      : "metadata",
+              };
             api.selectStory(id);
             return true;
           }}
+          focusDestination={() =>
+            requestAnimationFrame(() => {
+              headingRef.current?.focus();
+              headingRef.current?.scrollIntoView({ block: "nearest" });
+            })
+          }
         />
       )}
       {storyId && (
-        <TagEditor
-          key={storyId}
-          storyId={storyId}
-          onDirtyChange={setTagEditsPending}
-          drafts={tagDrafts}
-        />
-      )}
-      {verifySource && storyId && componentId && (
-        <RegistryEditor
-          key={`${storyId}:${componentId}`}
-          storyId={storyId}
-          componentId={componentId}
-          onDirtyChange={setRegistryEditsPending}
-        />
+        <details className="gn-authoring gn-card" open={verifySource || undefined}>
+          <summary>{verifySource ? "Edit story governance" : "Story governance metadata"}</summary>
+          <TagEditor
+            key={storyId}
+            storyId={storyId}
+            onDirtyChange={setTagEditsPending}
+            drafts={tagDrafts}
+          />
+          {verifySource && componentId && (
+            <RegistryEditor
+              key={`${storyId}:${componentId}`}
+              storyId={storyId}
+              componentId={componentId}
+              onDirtyChange={setRegistryEditsPending}
+            />
+          )}
+        </details>
       )}
       {!report ? (
         <p className="gn-small">

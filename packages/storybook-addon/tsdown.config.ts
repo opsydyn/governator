@@ -6,6 +6,7 @@ export default defineConfig({
   dts: true,
   clean: true,
   minify: true,
+  css: { inject: true },
   platform: "browser",
   target: "es2022",
   outDir: "dist",

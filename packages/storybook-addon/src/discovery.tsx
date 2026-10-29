@@ -15,10 +15,14 @@ export function Discovery({
   decisions,
   stories = {},
   selectStory,
+  focusDestination,
 }: {
   decisions: readonly Decision[];
   stories?: Record<string, StoryLink[]>;
-  selectStory?: (id: string) => boolean | void;
+  selectStory?:
+    | ((id: string) => boolean | void | { blockedBy: "tags" | "metadata" | "both" })
+    | undefined;
+  focusDestination?: () => void;
 }) {
   const [filter, setFilter] = useState<Filter>("attention");
   const [search, setSearch] = useState("");
@@ -102,11 +106,18 @@ export function Discovery({
                 type="button"
                 onClick={() => {
                   const selected = selectStory?.(story.id);
-                  setNavigationMessage(
+                  const blockedBy =
                     selected === false
-                      ? "Save or discard your tag edits before opening another story."
+                      ? "tags"
+                      : selected && typeof selected === "object"
+                        ? selected.blockedBy
+                        : undefined;
+                  setNavigationMessage(
+                    blockedBy
+                      ? `Save or discard your ${blockedBy === "both" ? "tag and metadata" : blockedBy === "tags" ? "tag" : "metadata"} edits before opening another story.`
                       : `Opening ${story.name}.`,
                   );
+                  if (!blockedBy) focusDestination?.();
                 }}
               >
                 Open {story.name}
