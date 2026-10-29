@@ -72,7 +72,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
-          for archive in candidate/opsydyn-governator-cli-0.1.0.tgz candidate/opsydyn-governator-mcp-0.1.0.tgz candidate/opsydyn-storybook-addon-governator-0.1.0.tgz; do
+          for archive in ./candidate/opsydyn-governator-cli-0.1.0.tgz ./candidate/opsydyn-governator-mcp-0.1.0.tgz ./candidate/opsydyn-storybook-addon-governator-0.1.0.tgz; do
             npm publish "$archive" --dry-run --ignore-scripts --access public --provenance=false --registry=https://registry.npmjs.org/
           done
       - name: Publish retained archives and verify npm readback
@@ -83,7 +83,7 @@ jobs:
           set -euo pipefail
           for entry in 'governator-cli 96d267cb8c07b48dcd1eb87170e6a7a3d21eb712ae5080249adbd40dc9be307c' 'governator-mcp 3c6a5bc34b663fd4e3852893c4b191729ac2563c897748f77ad6e046089bff84' 'storybook-addon-governator dc10d06cfff219ae9f17d4e308041b5e42d1b92174eb9b598062023b4b061ffa'; do
             read -r package digest <<< "$entry"
-            archive="candidate/opsydyn-${package}-0.1.0.tgz"
+            archive="./candidate/opsydyn-${package}-0.1.0.tgz"
             echo "$digest  $archive" | sha256sum --check
             npm_config_fetch_retries=0 npm publish "$archive" --ignore-scripts --access public --provenance --registry=https://registry.npmjs.org/
             metadata=$(curl --fail --silent --show-error -H "Authorization: Bearer $NODE_AUTH_TOKEN" "https://registry.npmjs.org/@opsydyn%2f${package}/0.1.0")
