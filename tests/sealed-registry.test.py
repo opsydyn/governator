@@ -24,4 +24,9 @@ class RegistryTests(unittest.TestCase):
         store.reset()
         self.assertIsNone(store.read(name))
 
+    def test_only_fixture_token_is_accepted(self):
+        self.assertTrue(fixture.is_fixture_authorized('Bearer dummy-fixture-token'))
+        self.assertFalse(fixture.is_fixture_authorized(None))
+        self.assertFalse(fixture.is_fixture_authorized('Bearer other'))
+
 if __name__ == '__main__': unittest.main()

@@ -31,6 +31,7 @@ describe("hosted release qualification workflow", () => {
     expect(JSON.stringify(value.jobs.custody)).not.toContain("secrets.NPM_TOKEN");
     expect(JSON.stringify(value.jobs.custody)).toContain("unshare --net --fork");
     expect(JSON.stringify(value.jobs.custody)).toContain("qualify-sealed-registry.py");
+    expect(JSON.stringify(value.jobs.custody)).toContain("qualify-parent-fence.py");
     expect(JSON.stringify(value.jobs.custody)).toContain("needs.build.outputs.artifact-id");
     expect(JSON.stringify(value.jobs.custody)).toContain("ARTIFACT_ID");
     expect(JSON.stringify(value.jobs.authentication)).toContain("secrets.NPM_TOKEN");
