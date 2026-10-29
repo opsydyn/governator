@@ -41,6 +41,15 @@ export function TagEditor({
     return () => onDirtyChange?.(false);
   }, [dirty, onDirtyChange]);
   useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+  useEffect(() => {
     if (!data) return;
     if (dirty) draftStore.set(storyId, { data, draft, input });
     else draftStore.delete(storyId);

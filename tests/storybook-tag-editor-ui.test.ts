@@ -147,6 +147,39 @@ test("Enter adds a valid tag and the editor explains format and file scope", asy
   await act(async () => root.unmount());
 });
 
+test("warns before leaving only while descriptive tags are dirty", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string | URL) =>
+      String(url).includes("index.json")
+        ? new Response(
+            JSON.stringify({
+              entries: { "button--primary": { importPath: "./Button.stories.tsx" } },
+            }),
+          )
+        : new Response(JSON.stringify({ tags: ["forms"], revision: "old" })),
+    ),
+  );
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  await act(async () => {
+    root.render(React.createElement(TagEditor, { storyId: "button--primary" }));
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  });
+  const clean = new Event("beforeunload", { cancelable: true });
+  window.dispatchEvent(clean);
+  expect(clean.defaultPrevented).toBe(false);
+  await act(async () =>
+    container.querySelector<HTMLButtonElement>('[aria-label="Remove forms"]')!.click(),
+  );
+  const dirty = new Event("beforeunload", { cancelable: true });
+  window.dispatchEvent(dirty);
+  expect(dirty.defaultPrevented).toBe(true);
+  await act(async () => root.unmount());
+});
+
 test("a hung tag read times out and offers an explicit retry", async () => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-10-29T12:00:00.000Z"));

@@ -13,6 +13,11 @@ spec.loader.exec_module(qualification)
 
 
 class QualificationSafety(unittest.TestCase):
+    def test_consumer_preview_exposes_editor_only_in_dev(self):
+        preview = qualification.consumer_preview_config()
+        self.assertIn("registryEditor:import.meta.env.DEV", preview)
+        self.assertNotIn("registryEditor:true", preview)
+
     def test_acceptance_record_starts_explicitly_open(self):
         case = qualification.new_case(Path('/tmp/consumer'), configured_report=True)
         self.assertEqual(case['buildNoReport'], 'not-run')
