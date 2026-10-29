@@ -96,13 +96,13 @@
 - Produces: bounded read/save requests; `Enter` token entry; explicit file scope; read-only display without error styling; unknown-outcome reconciliation; conflict view retaining copyable intended tags and current source.
 - Consumes: existing revision-checked tag endpoint and protected-tag preservation.
 
-- [ ] **Step 1: Write failing tests** for Enter-to-add, format guidance, read timeout/retry, save timeout/unknown outcome, static read-only mode, conflict draft retention and no blind retry.
-- [ ] **Step 2: Run focused tests and confirm RED** for each missing behavior.
-- [ ] **Step 3: Add bounded request handling** with abort cleanup and distinct definite failure / unknown write outcome messages.
-- [ ] **Step 4: Add keyboard token entry and explicit save scope** while retaining one deliberate source-file save.
-- [ ] **Step 5: Add conflict reconciliation** that preserves and exposes intended tags, reloads current source safely and requires an explicit reviewed reapply.
-- [ ] **Step 6: Run focused tests and confirm GREEN**, then run tag storage/CSF/server regressions.
-- [ ] **Step 7: Commit** as `feat: improve Storybook tag authoring recovery`.
+- [x] **Step 1: Write failing tests** for Enter-to-add, format guidance, read timeout/retry, save timeout/unknown outcome, static read-only mode, conflict draft retention and no blind retry.
+- [x] **Step 2: Run focused tests and confirm RED** for each missing behavior.
+- [x] **Step 3: Add bounded request handling** with abort cleanup and distinct definite failure / unknown write outcome messages.
+- [x] **Step 4: Add keyboard token entry and explicit save scope** while retaining one deliberate source-file save.
+- [x] **Step 5: Add conflict reconciliation** that preserves and exposes intended tags, reloads current source safely and requires an explicit reviewed reapply.
+- [x] **Step 6: Run focused tests and confirm GREEN**, then run tag storage/CSF/server regressions.
+- [x] **Step 7: Commit** as `feat: improve Storybook tag authoring recovery`.
 
 ### Task 4: Actionable registry editing and draft recovery
 
