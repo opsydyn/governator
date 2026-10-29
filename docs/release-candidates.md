@@ -43,7 +43,7 @@ Reports in schema 1 or 2 can optionally include a release summary. Storybook sho
 
 ## CI boundary
 
-.github/workflows/check.yml defines a read-only local qualification job: checks/builds/Storybook plus actual blocked patch/minor, missing-review major, simulated reviewed-major and tampered-artifact assertions. The fixture job is not a publish authorization. Consumers can require that job in repository settings and invoke release check directly for their candidate gate. No hosted run or branch-protection setting was configured or verified here. The publishing workflow remains disabled. The root release command also fails closed: it cannot invoke Changesets publish using local or simulated eligibility. Re-enable that path only with a trusted publishing adapter.
+.github/workflows/check.yml defines a read-only local qualification job: checks/builds/Storybook plus actual blocked patch/minor, missing-review major, simulated reviewed-major and tampered-artifact assertions. The fixture job is not a publish authorization. Consumers can require that job in repository settings and invoke release check directly for their candidate gate. No hosted run or branch-protection setting was configured or verified here. The 0.1.0 publishing workflow is manually dispatched and uses retained archives. The root release command also fails closed: it cannot invoke Changesets publish using local or simulated eligibility. Re-enable that path only with a trusted publishing adapter.
 
 Source package versions here are proposed candidate versions. Intent is applied to the explicit baseline version; stock changesets version must run on a pre-versioned release branch, not be applied again to these already prepared candidates. The exact version check catches double-bumps.
 

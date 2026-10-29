@@ -1,36 +1,94 @@
-name: Release (disabled M0 template)
+name: Publish Governator 0.1.0
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "Rehearse or publish the retained 0.1.0 archives"
+        type: choice
+        options: [rehearse, publish]
+        required: true
+        default: rehearse
+
+concurrency:
+  group: governator-npm-release
+  cancel-in-progress: false
 permissions:
   contents: read
+  actions: read
+  attestations: read
+  id-token: write
+
 jobs:
   release:
-    # Deliberately disabled until publishing is explicitly approved and packages qualify.
-    if: ${{ false }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      id-token: write
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.4.2"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24.15.0"
           registry-url: "https://registry.npmjs.org"
-      - run: bun install --frozen-lockfile
-      - uses: changesets/action@v1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          publish: bun run release
-          version: bun run version
-          title: "chore: release"
-          commit: "chore: release"
+          artifact-ids: "12892062222"
+          run-id: "40862362179"
+          github-token: ${{ github.token }}
+          merge-multiple: true
+          path: candidate
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          artifact-ids: "12892750225"
+          run-id: "40862362179"
+          github-token: ${{ github.token }}
+          merge-multiple: true
+          path: bundle
+      - name: Verify retained archives and attestations
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd candidate
+          sha256sum --check <<'SUMS'
+          96d267cb8c07b48dcd1eb87170e6a7a3d21eb712ae5080249adbd40dc9be307c  opsydyn-governator-cli-0.1.0.tgz
+          3c6a5bc34b663fd4e3852893c4b191729ac2563c897748f77ad6e046089bff84  opsydyn-governator-mcp-0.1.0.tgz
+          dc10d06cfff219ae9f17d4e308041b5e42d1b92174eb9b598062023b4b061ffa  opsydyn-storybook-addon-governator-0.1.0.tgz
+          SUMS
+          for archive in opsydyn-governator-cli-0.1.0.tgz opsydyn-governator-mcp-0.1.0.tgz opsydyn-storybook-addon-governator-0.1.0.tgz; do
+            gh attestation verify "$archive" --bundle ../bundle/attestation.jsonl --repo "$GITHUB_REPOSITORY" --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release-qualification.yml" --source-ref refs/heads/main --source-digest a737dc719ab0167d83569712e5b337dc2cc9413c
+          done
+      - name: Check npm identity and preflight all packages
+        env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$NODE_AUTH_TOKEN"
+          npm whoami --registry=https://registry.npmjs.org/ > /dev/null
+          for package in governator-cli governator-mcp storybook-addon-governator; do
+            status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' -H "Authorization: Bearer $NODE_AUTH_TOKEN" "https://registry.npmjs.org/@opsydyn%2f${package}/0.1.0")
+            if [ "$status" != 404 ]; then echo "Preflight stopped: @opsydyn/$package returned HTTP $status; inspect npm before proceeding."; exit 1; fi
+          done
+      - name: Rehearse npm archive commands without publication
+        if: ${{ inputs.mode == 'rehearse' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          for archive in candidate/opsydyn-governator-cli-0.1.0.tgz candidate/opsydyn-governator-mcp-0.1.0.tgz candidate/opsydyn-storybook-addon-governator-0.1.0.tgz; do
+            npm publish "$archive" --dry-run --ignore-scripts --access public --provenance=false --registry=https://registry.npmjs.org/
+          done
+      - name: Publish retained archives and verify npm readback
+        if: ${{ inputs.mode == 'publish' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          for entry in 'governator-cli 96d267cb8c07b48dcd1eb87170e6a7a3d21eb712ae5080249adbd40dc9be307c' 'governator-mcp 3c6a5bc34b663fd4e3852893c4b191729ac2563c897748f77ad6e046089bff84' 'storybook-addon-governator dc10d06cfff219ae9f17d4e308041b5e42d1b92174eb9b598062023b4b061ffa'; do
+            read -r package digest <<< "$entry"
+            archive="candidate/opsydyn-${package}-0.1.0.tgz"
+            echo "$digest  $archive" | sha256sum --check
+            npm_config_fetch_retries=0 npm publish "$archive" --ignore-scripts --access public --provenance --registry=https://registry.npmjs.org/
+            metadata=$(curl --fail --silent --show-error -H "Authorization: Bearer $NODE_AUTH_TOKEN" "https://registry.npmjs.org/@opsydyn%2f${package}/0.1.0")
+            url=$(printf '%s' "$metadata" | node -e 'let s="";process.stdin.on("data",x=>s+=x);process.stdin.on("end",()=>{let d=JSON.parse(s);if(d.name!==`@opsydyn/${process.argv[1]}`||d.version!=="0.1.0"||!d.dist?.tarball?.startsWith("https://registry.npmjs.org/"))process.exit(1);console.log(d.dist.tarball)})' "$package")
+            curl --fail --silent --show-error "$url" -o "$RUNNER_TEMP/npm-readback.tgz"
+            echo "$digest  $RUNNER_TEMP/npm-readback.tgz" | sha256sum --check
+            echo "Verified @opsydyn/$package@0.1.0 against retained archive." >> "$GITHUB_STEP_SUMMARY"
+          done

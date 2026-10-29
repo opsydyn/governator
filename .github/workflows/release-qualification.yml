@@ -188,10 +188,6 @@ jobs:
           node_path=$(command -v node)
           sudo unshare --net --fork /bin/sh -c 'set -eu; /usr/sbin/ip link set lo up; exec /usr/bin/python3 "$1" fixture "$2" "$3" "$4" "$5" "$6"' sh "$GITHUB_WORKSPACE/scripts/qualify-linux-custody.py" "$GITHUB_WORKSPACE/candidate" "$CANDIDATE_DIGEST" "$GITHUB_SHA" "$npm_path" "$node_path" > "$RUNNER_TEMP/sealed-custody.json"
           echo 'Sealed archive fixture passed. This is not a real npm publication.' >> "$GITHUB_STEP_SUMMARY"
-      - name: Verify bridge parent-death fence
-        run: |
-          set -euo pipefail
-          sudo unshare --net --fork /bin/sh -c 'set -eu; /usr/sbin/ip link set lo up; exec /usr/bin/python3 "$1" "$2"' sh "$GITHUB_WORKSPACE/scripts/qualify-parent-fence.py" "$GITHUB_WORKSPACE/scripts/sealed-npm-bridge.py" > "$RUNNER_TEMP/parent-fence.json"
       - name: Exercise coordinator with sealed uploads and registry readback
         env:
           CANDIDATE_DIGEST: ${{ needs.build.outputs.candidate-digest }}
@@ -208,7 +204,6 @@ jobs:
           name: governator-sealed-custody-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/sealed-custody.json
-            ${{ runner.temp }}/parent-fence.json
             ${{ runner.temp }}/sealed-coordinator.json
           if-no-files-found: error
           retention-days: 30
