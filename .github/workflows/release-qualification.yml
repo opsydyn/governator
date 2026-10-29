@@ -169,6 +169,11 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24.15.0"
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: "1.4.2"
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bunx moon run --force cli:build
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           artifact-ids: ${{ needs.build.outputs.artifact-id }}
@@ -183,10 +188,22 @@ jobs:
           node_path=$(command -v node)
           sudo unshare --net --fork /bin/sh -c 'set -eu; /usr/sbin/ip link set lo up; exec /usr/bin/python3 "$1" fixture "$2" "$3" "$4" "$5" "$6"' sh "$GITHUB_WORKSPACE/scripts/qualify-linux-custody.py" "$GITHUB_WORKSPACE/candidate" "$CANDIDATE_DIGEST" "$GITHUB_SHA" "$npm_path" "$node_path" > "$RUNNER_TEMP/sealed-custody.json"
           echo 'Sealed archive fixture passed. This is not a real npm publication.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Exercise coordinator with sealed uploads and registry readback
+        env:
+          CANDIDATE_DIGEST: ${{ needs.build.outputs.candidate-digest }}
+        run: |
+          set -euo pipefail
+          npm_path=$(command -v npm)
+          node_path=$(command -v node)
+          bun_path=$(command -v bun)
+          sudo unshare --net --fork /bin/sh -c 'set -eu; /usr/sbin/ip link set lo up; exec /usr/bin/python3 "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"' sh "$GITHUB_WORKSPACE/scripts/qualify-sealed-registry.py" "$GITHUB_WORKSPACE/candidate" "$CANDIDATE_DIGEST" "$GITHUB_SHA" "$npm_path" "$node_path" "$bun_path" "$GITHUB_WORKSPACE/scripts/qualify-sealed-coordinator.ts" > "$RUNNER_TEMP/sealed-coordinator.json"
+          echo 'Sealed coordinator fixture passed. This is not a real npm publication.' >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: governator-sealed-custody-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/sealed-custody.json
+          path: |
+            ${{ runner.temp }}/sealed-custody.json
+            ${{ runner.temp }}/sealed-coordinator.json
           if-no-files-found: error
           retention-days: 30
 
