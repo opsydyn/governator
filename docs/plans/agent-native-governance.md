@@ -23,7 +23,7 @@ Automated qualification completed:
 Remaining acceptance:
 
 - Manual browser, keyboard, accessibility and onboarding walkthroughs, deferred until last.
-- Remote staging and hosted rehearsal of the [locally prepared 0.2.0 publishing workflow](../qualification/0-2-publishing.md), before any separately authorized publication. The [versioned local candidate and automated consumer qualification](../qualification/0-2-candidate.md) are complete.
+- A separate publication decision after manual acceptance. [Remote staging and the hosted publishing rehearsal](../qualification/0-2-hosted-rehearsal.md) passed using the [qualified retained candidate](../qualification/0-2-candidate.md); no npm publication occurred.
 
 Future ideas outside this phase: hosted control plane, background agents, writable MCP tools, automatic client activation and autonomous publishing. The single-maintainer release model remains selected; dual custody remains deferred.
 

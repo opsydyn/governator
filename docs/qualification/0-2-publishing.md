@@ -2,6 +2,8 @@
 
 This prepares the single-maintainer workflow locally. It does not publish, stage a GitHub release, upload assets, dispatch Actions or push main. Manual acceptance remains last. The [candidate qualification](0-2-candidate.md) still describes the selected source and exact retained bytes.
 
+Subsequent authorized [remote staging and hosted rehearsal](0-2-hosted-rehearsal.md) succeeded with the same archives. The local preparation below remains a historical record; manual acceptance and npm publication are still pending.
+
 ## Prepared path
 
 The tracked `governance/publishing/0.2.0.json` pins the three archives from source `cfd81a9f7a2285a42ad850498071693b8d8cbf7a`, including their names, sizes, SHA-256 and SHA-512 integrity. The private Node 24 adapter `scripts/publish-retained.ts` reads those pins from the checkout. A downloaded record cannot replace them.
