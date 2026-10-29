@@ -66,25 +66,26 @@ export type SidebarStatus =
   | { kind: "mixed" }
   | { kind: "unknown" };
 
+function childStoryIds(child: unknown): string[] {
+  if (typeof child === "string") return [child];
+  if (child && typeof child === "object" && "id" in child && typeof child.id === "string")
+    return [child.id];
+  return [];
+}
+
 function itemStoryIds(
   item: SidebarItem,
   selected: SelectedReportStatus,
   components: Map<string, string>,
 ): string[] {
   if (item.type === "story") return [item.id];
-  if (item.type === "component")
-    return (item.children ?? []).flatMap((child) => {
-      if (typeof child === "string") return [child];
-      if (child && typeof child === "object" && "id" in child && typeof child.id === "string")
-        return [child.id];
-      return [];
-    });
+  if (item.type === "component") return (item.children ?? []).flatMap(childStoryIds);
   if (item.type !== "docs") return [];
   const raw = selected.index?.[item.id];
   if (!raw || typeof raw !== "object" || !("importPath" in raw)) return [];
   const importPath = raw.importPath;
   if (typeof importPath !== "string") return [];
-  const stories = Object.values(selected.index ?? {}).flatMap((entry) => {
+  function matchingStoryIds(entry: unknown): string[] {
     if (!entry || typeof entry !== "object") return [];
     const candidate = entry as Record<string, unknown>;
     return candidate.type === "story" &&
@@ -93,7 +94,8 @@ function itemStoryIds(
       typeof candidate.id === "string"
       ? [candidate.id]
       : [];
-  });
+  }
+  const stories = Object.values(selected.index ?? {}).flatMap(matchingStoryIds);
   return stories.length > 0 && stories.every((storyId) => components.has(storyId)) ? stories : [];
 }
 
@@ -101,10 +103,9 @@ export function sidebarStatus(item: SidebarItem, selected: SelectedReportStatus)
   if (!selected.report) return { kind: "unknown" };
   const components = storyComponents(selected.index, selected.mapping);
   const componentIds = new Set(
-    itemStoryIds(item, selected, components).flatMap((id) => {
-      const componentId = components.get(id);
-      return componentId ? [componentId] : [];
-    }),
+    itemStoryIds(item, selected, components)
+      .map((id) => components.get(id))
+      .filter((id): id is string => !!id),
   );
   if (componentIds.size === 0) return { kind: "unknown" };
   if (componentIds.size > 1) return { kind: "mixed" };

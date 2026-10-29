@@ -39,7 +39,7 @@ export function RegistryEditor({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [registryPath, setRegistryPath] = useState<string>();
   const section = useRef<HTMLElement>(null);
-  const latest = useRef<Draft>();
+  const latest = useRef<Draft | undefined>(undefined);
   const key = `${storyId}\0${componentId}`;
   const dirty =
     !!draft &&

@@ -1,5 +1,6 @@
 /** @jsxRuntime classic */
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import type { GovernanceReport } from "@governator/protocol";
 import type { HashEntry } from "storybook/manager-api";
 import {
   addons,
@@ -37,6 +38,24 @@ import "./manager.css";
 
 // Storybook may unmount the panel while the manager stays open.
 const tagDrafts = new Map<string, TagDraft>();
+
+type DetailedEvidence = Extract<
+  GovernanceReport,
+  { schemaVersion: 2 }
+>["decisions"][number]["checks"][number]["evidence"][number];
+
+function evidenceFor(
+  report: GovernanceReport,
+  componentId: string,
+  checkName: string,
+): readonly DetailedEvidence[] {
+  if (report.schemaVersion !== 2) return [];
+  return (
+    report.decisions
+      .find((decision) => decision.componentId === componentId)
+      ?.checks.find((check) => check.check === checkName)?.evidence ?? []
+  );
+}
 
 function useFreshness(
   state: ReportState,
@@ -393,7 +412,7 @@ function Panel() {
                 — {check.reason}
                 <div className="gn-small">Evidence: {check.evidenceIds.join(", ") || "None"}</div>
                 {report.schemaVersion === 2 ? (
-                  check.evidence.map((evidence) => {
+                  evidenceFor(report, component.componentId, check.check).map((evidence) => {
                     const href = sourceHref(evidence.sourceUrl);
                     return (
                       <details className="gn-small" key={evidence.id}>

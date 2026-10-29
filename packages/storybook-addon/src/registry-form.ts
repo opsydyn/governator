@@ -45,12 +45,13 @@ function relativePath(value: string): boolean {
 }
 
 function webUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password;
-  } catch {
-    return false;
-  }
+  if (!URL.canParse(value)) return false;
+  const url = new URL(value);
+  return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password;
+}
+
+function semanticVersionMessage(): string {
+  return "Use a complete semantic version such as 1.2.3 or 1.2.3-rc.1.";
 }
 
 export function buildRegistryComponent(
@@ -63,10 +64,10 @@ export function buildRegistryComponent(
       .split("\n")
       .map((part) => part.trim())
       .filter(Boolean);
-  const versionMessage = "Use a complete semantic version such as 1.2.3 or 1.2.3-rc.1.";
-  if (!semver.test(values.contractVersion ?? "")) fieldErrors.contractVersion = versionMessage;
+  if (!semver.test(values.contractVersion ?? ""))
+    fieldErrors.contractVersion = semanticVersionMessage();
   if (values.packageVersion && !semver.test(values.packageVersion))
-    fieldErrors.packageVersion = versionMessage;
+    fieldErrors.packageVersion = semanticVersionMessage();
   if (!lines("owners").length) fieldErrors.owners = "Add at least one owner, one per line.";
   if (!relativePath(values.source ?? ""))
     fieldErrors.source = "Use a repository-relative path without dot-dot segments or backslashes.";
