@@ -28,3 +28,9 @@ Remaining acceptance:
 Future ideas outside this phase: hosted control plane, background agents, writable MCP tools, automatic client activation and autonomous publishing. The single-maintainer release model remains selected; dual custody remains deferred.
 
 The demo remains pinned to published 0.1.0. These source additions require a future release; no publication or push is part of this implementation.
+
+## First-user completion supplement
+
+The release scope also includes explicit first-project `init plan/apply`, bundled `skill export`, parser-backed `capabilities --format json`, and workflow-aware diagnostics. Setup uses maintainer-selected registry/policy/mapping inputs, requires explicit owners, and refuses existing destinations. Skill export targets an explicit new contained directory and does not configure an agent client. Neither operation claims a multi-file transaction.
+
+[Automated onboarding qualification](../qualification/onboarding-automated.md) passed at implementation commit `d462bfd`: 830 tests across 80 files, all workspace checks, and an independent packed-consumer rehearsal. Manual acceptance stays last. No additional feature work is required by this enhancement scope before versioned-candidate preparation.
