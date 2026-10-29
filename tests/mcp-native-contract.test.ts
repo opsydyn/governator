@@ -24,6 +24,7 @@ test("a failed transport start does not keep the server connected", async () => 
   try {
     await server.connect(s);
     await client.connect(c);
+    expect(client.getServerVersion()?.version).toBe(manifest.version);
     expect((await client.listTools()).tools).toHaveLength(15);
   } finally {
     await client.close();

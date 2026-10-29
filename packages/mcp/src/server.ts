@@ -11,6 +11,7 @@ import {
   Stream,
 } from "effect";
 import { McpProtocol, McpSchema, McpServer } from "effect/ai";
+import manifest from "../package.json";
 import {
   toolNames,
   toolDescriptions,
@@ -142,7 +143,7 @@ export function createMcpServer(service: McpQueryService) {
         Layer.provide(
           McpServer.layerStdio({
             name: "governator",
-            version: "0.1.0",
+            version: manifest.version,
             protocols: [
               McpProtocol.v2026_07_28,
               McpProtocol.v2025_11_25,

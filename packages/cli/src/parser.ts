@@ -4,6 +4,7 @@ import * as BunServices from "@effect/platform-bun/BunServices";
 import { Console, Effect, Option, Result } from "effect";
 import { CliConfig, Command, Flag, GlobalFlag } from "effect/cli";
 import { GovernanceError, ensure } from "@governator/core";
+import manifest from "../package.json";
 
 type Selected = { kind: "command"; command: string; values: Map<string, string>; demo: boolean };
 export type ParsedCli = Selected | { kind: "help"; text: string };
@@ -180,7 +181,7 @@ export async function parseCli(
       ),
     ]),
   );
-  const command = Command.runWith(root, { version: "0.1.0", renderErrors: false })(
+  const command = Command.runWith(root, { version: manifest.version, renderErrors: false })(
     normalized.length ? normalized : ["--help"],
   );
   const parsed = await Effect.runPromise(

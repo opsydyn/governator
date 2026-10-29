@@ -13,6 +13,15 @@ spec.loader.exec_module(qualification)
 
 
 class QualificationSafety(unittest.TestCase):
+    def test_retained_candidate_version_is_explicit(self):
+        manifest = {'name': '@opsydyn/storybook-addon-governator', 'version': '0.2.0'}
+        qualification.validate_candidate_identity(manifest, '0.2.0')
+        for expected in ['0.1.0', '', 'latest']:
+            with self.assertRaises(ValueError):
+                qualification.validate_candidate_identity(manifest, expected)
+        with self.assertRaises(ValueError):
+            qualification.validate_candidate_identity({**manifest, 'name': '@other/addon'}, '0.2.0')
+
     def test_remote_lock_resolutions_fail_closed(self):
         for value in ['https://registry.npmjs.org/react', 'http://127.0.0.1:1234.evil.test/react', 'http://localhost:1234/react', 'http://127.0.0.1:12345/react']:
             with self.assertRaises(ValueError):

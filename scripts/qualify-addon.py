@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Independent npm/pnpm addon qualification. Local reconstructed cache only; never publish.
-Usage: python3 scripts/qualify-addon.py [extracted-cache] [copied-v2-report] [--archive PATH --sha256 DIGEST]
+Usage: python3 scripts/qualify-addon.py [extracted-cache] [copied-v2-report] [--archive PATH --sha256 DIGEST --version VERSION]
 Package-manager and build commands are OS-confined to loopback, after positive/negative probes.
 No existing files or directories are removed. Failed attempts remain available.
 """
@@ -108,6 +108,13 @@ def verify_retained_digest(archive, digest):
         raise ValueError('Candidate archive changed during consumer qualification')
 
 
+def validate_candidate_identity(manifest, expected_version):
+    if not re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', expected_version):
+        raise ValueError('Expected an explicit stable candidate version')
+    if manifest.get('name') != '@opsydyn/storybook-addon-governator' or manifest.get('version') != expected_version:
+        raise ValueError('Candidate identity differs from selected name/version')
+
+
 def assert_no_ancestor_modules(root):
     for ancestor in root.parents:
         if (ancestor / 'node_modules').exists():
@@ -120,6 +127,7 @@ def main():
     parser.add_argument('report', nargs='?')
     parser.add_argument('--archive', type=Path)
     parser.add_argument('--sha256')
+    parser.add_argument('--version', default='0.1.0', help='Expected retained archive version (default: historical 0.1.0)')
     args = parser.parse_args()
     if bool(args.archive) != bool(args.sha256):
         parser.error('--archive and --sha256 must be provided together')
@@ -198,8 +206,7 @@ assert.equal(denied,'EPERM');console.log(JSON.stringify({{loopback:'connected',e
         assert extracted.returncode == 0, 'Packed manifest read failed'
         candidate = extracted.stdout
         manifest = json.loads(candidate)
-        assert manifest['name'] == '@opsydyn/storybook-addon-governator'
-        assert manifest['version'] == ('0.1.0' if args.archive else json.loads((repo / 'packages/storybook-addon/package.json').read_text())['version'])
+        validate_candidate_identity(manifest, args.version if args.archive else json.loads((repo / 'packages/storybook-addon/package.json').read_text())['version'])
         assert manifest['peerDependencies'] == {'storybook': '10.6.4'}
         assert not manifest.get('dependencies')
         assert manifest['storybook']['supportedFrameworks'] == ['react']

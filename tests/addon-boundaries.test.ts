@@ -27,7 +27,7 @@ test("addon allows only Storybook peers and manager-provided React", () => {
 
 test("addon advertises only the qualified renderer and preserves preview metadata", () => {
   expect(manifest.storybook.supportedFrameworks).toEqual(["react"]);
-  expect(manifest.version).toBe("0.1.0");
+  expect(manifest.version).toBe("0.2.0");
   expect(manifest.private).toBe(false);
   expect(manifest.peerDependencies).toEqual({ storybook: "10.6.4" });
   expect("dependencies" in manifest).toBe(false);
