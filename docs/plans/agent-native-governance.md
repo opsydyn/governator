@@ -1,6 +1,6 @@
 # Agent-native governance implementation
 
-Approved direction: deterministic policy core, CLI operations, immutable MCP reads, shared local editing, and a portable onboarding skill. Implementation of the agreed phase is complete locally. Behavioral qualification is deferred by the maintainer; static validation does not qualify behavior for publication.
+Approved direction: deterministic policy core, CLI operations, immutable MCP reads, shared local editing, and a portable onboarding skill. Implementation of the agreed phase is complete locally. Automated qualification passed; manual acceptance is deferred until last. See [automated results](../qualification/agent-native-automated.md). These results do not authorize publication.
 
 Delivered:
 
@@ -11,14 +11,19 @@ Delivered:
 - Shared registry metadata operations consumed by Storybook and CLI.
 - Component registration and test mapping plans with before/after content and expected-revision application. Each command changes one existing file; no multi-file transaction or initial registry creation is claimed.
 - Optional installed Storybook authoring adapter for tag inspection, preview and revision-checked updates. Ordinary CLI consumers do not depend on Storybook.
-- Explicit snapshot refresh invoking the existing local producer, writing a fresh report and snapshot, and directing MCP restart. This produces governance-only snapshots; combined release snapshots use the existing report/release and export workflow. No refresh was executed while tests were deferred.
+- Explicit snapshot refresh invoking the existing local producer, writing a fresh report and snapshot, and directing MCP restart. This produces governance-only snapshots; combined release snapshots use the existing report/release and export workflow. Refresh was subsequently exercised automatically in disposable test repositories.
 - Architecture package map, command reference and recovery guidance.
 
-Acceptance work still deferred:
+Automated qualification completed:
 
-- Behavioral checks for registration, mapping, metadata/tag conflicts, malformed inputs, stale source/evidence, aliases, producer failure and snapshot refresh.
-- Skill onboarding in a fresh consumer, including intentionally missing configuration and deferred test execution.
-- Clean packed-consumer qualification of the next release, including absence of Storybook dependencies from ordinary CLI/MCP installs and optional authoring availability.
+- 825 tests across 79 files plus all workspace checks.
+- Fresh packed CLI/MCP consumer with fifteen-tool parity.
+- Independent npm/pnpm addon install/build and optional authoring adapter plan/update/read checks.
+
+Remaining acceptance:
+
+- Manual browser, keyboard, accessibility and onboarding walkthroughs, deferred until last.
+- A versioned next-release candidate and final qualification before publication.
 
 Future ideas outside this phase: hosted control plane, background agents, writable MCP tools, automatic client activation and autonomous publishing. The single-maintainer release model remains selected; dual custody remains deferred.
 
